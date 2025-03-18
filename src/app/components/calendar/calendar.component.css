@@ -1,0 +1,15 @@
+/* Limit the calendar width */
+.calendar-container {
+    max-width: 800px; /* Adjust as needed */
+    margin: auto;
+  }
+  
+
+  /* Make it even smaller on mobile */
+  @media (max-width: 600px) {
+    .cal-day-cell {
+      min-height: 50px;
+      font-size: 10px;
+    }
+  }
+  
