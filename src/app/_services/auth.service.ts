@@ -17,11 +17,25 @@ export class AuthService {
   }
 
   async signUp(email: string, password: string) {
-    return await createUserWithEmailAndPassword(this.auth, email, password);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
+      console.log('User signed up:', userCredential.user);
+      return userCredential.user;
+    } catch (error) {
+      console.error('Error signing up:', error);
+      throw error;
+    }
   }
 
   async login(email: string, password: string) {
-    return await signInWithEmailAndPassword(this.auth, email, password);
+    try {
+      const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
+      console.log('User logged in:', userCredential.user);
+      return userCredential.user;
+    } catch (error) {
+      console.error('Error logging in:', error);
+      throw error;
+    }
   }
 
   async logout() {
