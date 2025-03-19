@@ -69,7 +69,6 @@ export class AuthService {
   async signinWithGoogle() {
     try {
       const result = await signInWithPopup(this.auth, new GoogleAuthProvider());
-      console.log('User signed in with Google:', result.user);
       this.userSubject.next(result.user);
       this.router.navigate(['/dashboard']); // Redirect after Google login
       return result.user;
