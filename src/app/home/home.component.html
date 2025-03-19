@@ -1,13 +1,13 @@
 <app-header></app-header>
 <app-tab-card
 (tabChange)="onTabChange($event)"></app-tab-card>
-<div class="sm:w-full md:w-1/2 lg:w-1/2 xl:w-1/2 mx-auto mb-3 px-2 sm:px-2 md:px-2 lg:px-0 xl:px-0">
+<div class="sm:w-full md:w-1/2 lg:w-1/2 xl:w-1/3 mx-auto mb-3 px-2 sm:px-2 md:px-2 lg:px-0 xl:px-0">
     <div class="">
         <div *ngIf="activeTab === 'calendar'">
           <app-calendar></app-calendar>
         </div>
         <div *ngIf="activeTab === 'reports'" class="space-y-4">
-          <p class="text-gray-600">This is the Reports section where you can view your analytics and performance metrics.</p>
+          <app-reports></app-reports>
         
         </div>
         <div *ngIf="activeTab === 'other'" class="space-y-4">

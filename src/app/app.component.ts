@@ -1,16 +1,24 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { AuthService } from './_services/auth.service';
-import { Router } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { Auth, onAuthStateChanged } from '@angular/fire/auth';
+import { Router, RouterOutlet } from '@angular/router';
 
 @Component({
-  selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, CommonModule],
+  selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrls: ['./app.component.css'],
+  imports: [RouterOutlet]
 })
-export class AppComponent {
-  title = 'report_ease_app';
+export class AppComponent implements OnInit {
+  constructor(private auth: Auth, private router: Router) {}
+
+  ngOnInit() {
+    onAuthStateChanged(this.auth, (user) => {
+      if (user) {
+        this.router.navigateByUrl('/');
+      } else {
+        this.router.navigateByUrl('/login');
+      }
+    });
+  }
 }
