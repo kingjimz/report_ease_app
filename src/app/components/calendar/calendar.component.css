@@ -1,7 +1,18 @@
 /* Limit the calendar width */
-.calendar-container {
-    max-width: 800px; /* Adjust as needed */
-    margin: auto;
+
+  .custom-day-cell {
+    text-align: center;
+    padding: 5px;
+    min-height: 50px;
+  }
+  
+  .event-box {
+    background-color: #3f51b5; /* Blue background */
+    color: white;
+    padding: 3px;
+    margin-top: 3px;
+    border-radius: 4px;
+    font-size: 12px;
   }
   
 

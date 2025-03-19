@@ -1,8 +1,31 @@
-<div class="flex space-x-2 mb-4">
-    <button (click)="viewMode = 'month'" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700">Month</button>
-    <button (click)="viewMode = 'week'" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700">Week</button>
-    <button (click)="viewMode = 'day'" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700">Day</button>
-</div>
+
+    <div class="flex space-x-2 bg-gray-100 p-1 rounded-lg">
+        <button 
+          (click)="viewMode = 'month'" 
+          [class.bg-green-600]="viewMode === 'month'" 
+          [class.text-white]="viewMode === 'month'"
+          class="px-4 py-2 rounded-lg transition-colors duration-200 text-gray-800 hover:bg-green-500 hover:text-white"
+        >
+          Month
+        </button>
+        <button 
+          (click)="viewMode = 'week'" 
+          [class.bg-green-600]="viewMode === 'week'" 
+          [class.text-white]="viewMode === 'week'"
+          class="px-4 py-2 rounded-lg transition-colors duration-200 text-gray-800 hover:bg-green-500 hover:text-white"
+        >
+          Week
+        </button>
+        <button 
+          (click)="viewMode = 'day'" 
+          [class.bg-green-600]="viewMode === 'day'" 
+          [class.text-white]="viewMode === 'day'"
+          class="px-4 py-2 rounded-lg transition-colors duration-200 text-gray-800 hover:bg-green-500 hover:text-white"
+        >
+          Day
+        </button>
+      </div>
+      
 
 <div class="calendar-container">
     <mwl-calendar-month-view *ngIf="viewMode === 'month'"
@@ -44,6 +67,7 @@
                 <textarea id="is_joined_ministry" name="is_joined_ministry" rows="4" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
             </div>
         </form>
+        <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 me-2">Save</button>
         <button (click)="closeModal()" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-700">Close</button>
     </div>
 </div>

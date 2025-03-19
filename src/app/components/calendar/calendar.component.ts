@@ -17,6 +17,7 @@ export class CalendarComponent {
   selectedDate: Date | null = null;
   dailyNotes: string = '';
   savedNotes: string = '';
+  hours = 5;
   events: CalendarEvent[] = [];
   viewMode: 'month' | 'week' | 'day' = 'month';
 
