@@ -1,6 +1,24 @@
-<header class="bg-white shadow-md py-4 px-6 flex items-center">
+<header class="bg-white shadow-md py-4 px-6 flex items-center justify-between">
+  <!-- Logo & Title -->
+  <div class="flex items-center">
     <img src="/assets/images/logo.jpeg" alt="Logo" class="w-14 h-14 rounded-full">
-
     <h1 class="ml-4 text-xl font-semibold text-gray-800">Field Service Trackr</h1>
-  </header>
-  
+  </div>
+
+  <!-- Profile Dropdown -->
+  <div class="relative" (click)="toggleDropdown()">
+    <button class="flex items-center space-x-3 focus:outline-none">
+      <i class="bi bi-person-circle text-gray-800 text-2xl"></i>
+      <span class="text-gray-800 font-medium hidden sm:block">{{ userData?.email }}</span>
+      <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+      </svg>
+    </button>
+
+    <!-- Dropdown Menu -->
+    <div *ngIf="dropdownOpen" class="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg z-10">
+      <hr>
+      <button (click)="signOut()" class="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100">Sign Out</button>
+    </div>
+  </div>
+</header>

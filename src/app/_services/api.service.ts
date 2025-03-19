@@ -23,7 +23,6 @@ export class ApiService {
   
       await addDoc(reportsCollection, report);
   
-      console.log('Report successfully saved under:', `users/${user.uid}/reports`);
     } catch (error) {
       console.error('Error creating report:', error);
       throw error;
@@ -38,26 +37,39 @@ export class ApiService {
         throw new Error('User not logged in');
       }
   
-      // 🔹 Fetch from `users/{userId}/reports`
       const reportsCollection = collection(this.fireStore, 'users', user.uid, 'reports');
   
-      const querySnapshot = await getDocs(reportsCollection);
+      // 🔹 Try fetching from cache first
+      let querySnapshot;
+      try {
+        querySnapshot = await getDocs(reportsCollection);
+        // If cache is empty, force fetch from server
+        if (querySnapshot.empty) {
+          console.log('Cache is empty, fetching from Firestore...');
+          querySnapshot = await getDocs(reportsCollection);
+        } else {
+          console.log('Loaded from cache');
+        }
+      } catch (cacheError) {
+        console.warn('Cache unavailable, fetching from Firestore...', cacheError);
+        querySnapshot = await getDocs(reportsCollection);
+      }
   
       // 🔹 Extract reports and include document IDs
       const reportsData = querySnapshot.docs.map((doc) => ({
-        id: doc.id, // Include Firestore document ID
+        id: doc.id,
         ...doc.data(),
       }));
-
+  
       this.reportSignal.set(reportsData);
-
-      console.log('Fetched reports:', reportsData);
+      
       return reportsData;
     } catch (error) {
       console.error('Error getting reports:', error);
       throw error;
     }
   }
+  
 
   async updateReport(report: any) {
     try {

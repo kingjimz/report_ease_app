@@ -1,8 +1,8 @@
-<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 gap-6 p-6">
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-1 xl:grid-cols-1 gap-6 p-6">
 <div *ngIf="this.aggregatedReports().length > 0; else noReports">
     <div 
-      *ngFor="let report of this.aggregatedReports()" 
-      class="relative p-6 bg-white shadow-md rounded-xl border border-gray-300 transition duration-300 hover:shadow-2xl hover:border-gray-400"
+      *ngFor="let report of this.filteredReports(); let i = index" 
+      class="relative p-6 bg-white shadow-md rounded-xl border border-gray-300 transition duration-300 hover:shadow-2xl hover:border-gray-400 mt-3"
     >
       <div class="absolute top-2 right-2 px-3 py-1 bg-blue-100 text-blue-600 text-xs font-medium rounded-full shadow-sm">
         Monthly Report

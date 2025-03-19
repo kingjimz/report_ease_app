@@ -14,7 +14,6 @@ export class ReportsComponent {
 
   constructor(public api: ApiService) {
     this.reports = this.api.reportSignal(); // Get raw reports
-    console.log('Raw Reports:', this.reports);
   }
 
   // Computed property to aggregate reports by month
@@ -49,4 +48,16 @@ export class ReportsComponent {
     const date = new Date(timestamp.seconds * 1000);
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' }); // e.g., "March 2025"
   }
+
+  filteredReports(): any[] {
+    const reports = this.aggregatedReports();
+    if (!reports || reports.length === 0) return [];
+  
+    // Sort reports by date (assuming 'monthYear' is in 'YYYY-MM' format)
+    reports.sort((a, b) => new Date(b.monthYear).getTime() - new Date(a.monthYear).getTime());
+  
+    // Return only the latest two months
+    return reports.slice(0, 2);
+  }
+  
 }
