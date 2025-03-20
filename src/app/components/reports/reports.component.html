@@ -45,7 +45,15 @@
 
   <div class="mt-6">
     <h2 class="text-2xl font-bold text-gray-800 mb-4">Bible Studies / Return Visits</h2>
-    <table class="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+  
+    <!-- Show if there are no Bible studies -->
+    <div *ngIf="this.api.bibleStudySignal().length === 0" class="mb-4 p-2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 flex items-center justify-between shadow-md">
+      <p class="text-base">You have no Bible studies recorded.</p>
+      <i class="bi bi-exclamation-circle-fill text-yellow-500 text-xl"></i>
+    </div>
+  
+    <!-- Bible Studies Table -->
+    <table *ngIf="this.api.bibleStudySignal().length > 0" class="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
       <thead class="bg-gray-200">
         <tr>
           <th class="py-2 px-4 text-left text-gray-600 font-semibold">Name</th>
@@ -60,6 +68,7 @@
       </tbody>
     </table>
   </div>
+  
 
   <ng-container *ngIf="studySelected">
     <div class="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">

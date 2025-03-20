@@ -16,10 +16,12 @@ export class SettingsComponent {
   schedule: Date | null = null;
   type = 'rv';
   isSuccess = false;
+  isLoading = false;
 
   constructor(public api: ApiService) { }
 
   async onSubmit() {
+    this.isLoading = true;
     const data = {
       bible_study: this.bible_study,
       address: this.address,
@@ -35,6 +37,9 @@ export class SettingsComponent {
       this.isSuccess = true;
     } catch (error) {
       console.error('Error submitting data', error);
+      this.isLoading = false;
     }
+    this.isLoading = false;
   }
+
 }

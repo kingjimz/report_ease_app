@@ -46,14 +46,16 @@
             </div>
 
             <div *ngIf="isSuccess" class="mb-4 p-2 bg-green-100 border-l-4 border-green-500 text-green-700">
-                <p class="text-sm">Success: Your changes have been saved successfully.</p>
+                <p class="text-sm">Success: Your changes have been saved successfully. View reports section.</p>
             </div>
             <div *ngIf="!isSuccess" class="mb-4 p-2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700">
                 <p class="text-sm">Warning: Please verify your input carefully. Once saved, changes cannot be undone.</p>
             </div>
 
-            <input type="button" value="Save" (click)="onSubmit()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" />
-
+            <button (click)="onSubmit()" type="button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" [disabled]="isLoading">
+                <span *ngIf="isLoading" class="animate-spin rounded-full h-4 w-4 border-t-2 border-white inline-block mr-2"></span>
+                Save
+            </button>
         </Form>
     </div>
 </div>
