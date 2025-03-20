@@ -19,7 +19,7 @@ export class TabCardComponent {
     { 
       id: 'calendar', 
       title: 'Calendar', 
-      icon: 'fas fa-calendar-altbi bi-calendar-date-fill',
+      icon: 'bi bi-calendar-fill',
       description: 'View upcoming events'
     },
     { 

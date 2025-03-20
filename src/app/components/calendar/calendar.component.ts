@@ -27,6 +27,7 @@ export class CalendarComponent {
   report_date = '';
   created_at = '';
   updated_at = '';
+  isLoading = false;
 
 
 
@@ -64,8 +65,9 @@ export class CalendarComponent {
     }
   }
 
-  loadReports() {
-    this.api.getReports().then((data) => {
+  async loadReports() {
+    this.isLoading = true;
+    await this.api.getReports().then((data) => {
 
       this.events = data.map((report: any) => {
         return {
@@ -77,7 +79,9 @@ export class CalendarComponent {
   
     }).catch(error => {
       console.error('Error fetching reports:', error);
+      this.isLoading = false;
     });
+    this.isLoading = false;
   }
 
   closeModal() {

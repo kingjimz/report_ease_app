@@ -6,11 +6,12 @@ import { TabCardComponent } from '../components/tab-card/tab-card.component';
 import { HeaderComponent } from '../components/header/header.component';
 import { CommonModule } from '@angular/common';
 import { ReportsComponent } from '../components/reports/reports.component';
+import { SettingsComponent } from '../settings/settings.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CalendarComponent, TabCardComponent, HeaderComponent, CommonModule, ReportsComponent],
+  imports: [CalendarComponent, TabCardComponent, HeaderComponent, CommonModule, ReportsComponent, SettingsComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })

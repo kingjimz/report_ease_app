@@ -12,8 +12,13 @@ import { CommonModule } from '@angular/common';
 export class ReportsComponent {
   reports: any[]; // Raw reports data
 
+  bibleStudies: any[] = []; // Raw bible studies data
+  studySelected: any = null; // Selected bible study
+  isSelected = false;
+
   constructor(public api: ApiService) {
-    this.reports = this.api.reportSignal(); // Get raw reports
+    this.reports = this.api.reportSignal(); 
+    this.bibleStudies = this.api.bibleStudySignal();
   }
 
   // Computed property to aggregate reports by month
@@ -34,13 +39,12 @@ export class ReportsComponent {
       aggregated[monthYearKey].minutes += parseInt(report.minutes, 10) || 0;
     });
 
-    // Convert minutes into hours if they exceed 60
     Object.values(aggregated).forEach(entry => {
       entry.hours += Math.floor(entry.minutes / 60);
       entry.minutes = entry.minutes % 60;
     });
 
-    return Object.values(aggregated); // Convert object to array
+    return Object.values(aggregated); 
   });
 
   formatDate(timestamp: { seconds: number; nanoseconds: number }): string {
@@ -59,5 +63,21 @@ export class ReportsComponent {
     // Return only the latest two months
     return reports.slice(0, 2);
   }
+
+  formatDateTime(schedule: string): string {
+    const date = new Date(schedule);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true });
+  }
+
+  editStudy(study: any) {
+    this.isSelected = true;
+    this.studySelected = study;
+  }
+
+  closeStudyDetails() {
+    this.isSelected = false;
+    this.studySelected = null;
+  }
+
   
 }
