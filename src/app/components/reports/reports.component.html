@@ -63,7 +63,7 @@
       <tbody>
         <tr *ngFor="let study of this.api.bibleStudySignal()" (click)="editStudy(study)" class="cursor-pointer hover:bg-gray-100 transition duration-300">
           <td class="py-2 px-4 border-b border-gray-200">{{ study.bible_study }}</td>
-          <td class="py-2 px-4 border-b border-gray-200">{{ formatDateTime(study.schedule) }}</td>
+          <td class="py-2 px-4 border-b border-gray-200">{{ study.schedule }}</td>
         </tr>
       </tbody>
     </table>
@@ -85,7 +85,7 @@
         </div>
         <div class="mb-4">
           <label class="block text-gray-700 font-medium mb-2">Schedule</label>
-          <input type="text" class="w-full p-2 border border-gray-300 rounded" [value]="formatDateTime(studySelected.schedule)" readonly>
+          <input type="text" class="w-full p-2 border border-gray-300 rounded" [value]="studySelected.schedule" readonly>
         </div>
       </div>
     </div>

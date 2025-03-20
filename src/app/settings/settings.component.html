@@ -41,8 +41,8 @@
             </div>
 
             <div class="mb-4">
-                <label for="schedule" class="block text-sm font-medium text-gray-700">Schedule</label>
-                <input type="datetime-local" id="schedule" [(ngModel)]="schedule" name="schedule" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Schedule" />
+                <label for="schedule" class="block text-sm font-medium text-gray-700">Schedule <small>(e.g., Thursday, 10 AM)</small></label>
+                <input type="text" id="schedule" [(ngModel)]="schedule" name="schedule" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Schedule" />
             </div>
 
             <div *ngIf="isSuccess" class="mb-4 p-2 bg-green-100 border-l-4 border-green-500 text-green-700">
