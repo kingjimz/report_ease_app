@@ -15,6 +15,7 @@ export class SettingsComponent {
   address = '';
   schedule: Date | null = null;
   type = 'rv';
+  next_lesson = '';
   isSuccess = false;
   isLoading = false;
 
@@ -26,7 +27,9 @@ export class SettingsComponent {
       bible_study: this.bible_study,
       address: this.address,
       schedule: this.schedule,
-      type: this.type
+      type: this.type,
+      lesson: this.next_lesson,
+      updated_at: new Date(),
     }
     try {
       await this.api.addStudy(data);
@@ -34,6 +37,7 @@ export class SettingsComponent {
       this.address = '';
       this.schedule = null;
       this.type = '';
+      this.next_lesson = '';
       this.isSuccess = true;
     } catch (error) {
       console.error('Error submitting data', error);

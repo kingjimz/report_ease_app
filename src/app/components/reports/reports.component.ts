@@ -1,11 +1,12 @@
-import { Component, Signal, computed } from '@angular/core';
+import { Component, Signal, computed, OnInit } from '@angular/core';
 import { ApiService } from '../../_services/api.service';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-reports',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './reports.component.html',
   styleUrl: './reports.component.css'
 })
@@ -15,10 +16,21 @@ export class ReportsComponent {
   bibleStudies: any[] = []; // Raw bible studies data
   studySelected: any = null; // Selected bible study
   isSelected = false;
+  studyDelete = false;
+  next_lesson = '';
 
   constructor(public api: ApiService) {
     this.reports = this.api.reportSignal(); 
     this.bibleStudies = this.api.bibleStudySignal();
+  }
+
+  async loadBibLeStudies() {
+    await this.api.getBibleStudies().then(() => {
+     // this.bibleStudies = this.api.bibleStudySignal();
+     
+    }).catch(error => {
+      console.error('Error loading bible studies:', error);
+    });
   }
 
   // Computed property to aggregate reports by month
@@ -53,6 +65,12 @@ export class ReportsComponent {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' }); // e.g., "March 2025"
   }
 
+  formatDateToHumanReadable(timestamp: { seconds: number; nanoseconds: number }): string {
+    if (!timestamp || !timestamp.seconds) return 'Invalid Date';
+    const date = new Date(timestamp.seconds * 1000);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); // e.g., "Mar 25, 2025"
+  }
+
   filteredReports(): any[] {
     const reports = this.aggregatedReports();
     if (!reports || reports.length === 0) return [];
@@ -72,11 +90,63 @@ export class ReportsComponent {
   editStudy(study: any) {
     this.isSelected = true;
     this.studySelected = study;
+    this.next_lesson = study.lesson;
   }
 
   closeStudyDetails() {
     this.isSelected = false;
     this.studySelected = null;
+  }
+
+  deleteStudy(study: any) {
+    this.studyDelete = true;
+    this.studySelected = study;
+  }
+
+  async confirmDelete() {
+    this.studyDelete = false;
+    if (!this.studySelected?.id) return;
+
+    const study = this.studySelected;
+    console.log('Deleting study:', study);
+  
+    await this.api.deleteStudy(study).then(() => {
+      // Filter out the deleted study from the signal directly
+      this.loadBibLeStudies();
+    }).catch(error => {
+      console.error('Error deleting study:', error);
+    });
+  
+    this.closeStudyDetails();
+  }
+  closeDeleteModal() {
+    this.studyDelete = false;
+  }
+
+  updateStudy(study: any) {
+    this.isSelected = false;
+    this.studySelected = null;
+
+    if (this.next_lesson === study.lesson) {
+      return;
+    }
+
+    const studyData = {
+      bible_study: study.bible_study,
+      address: study.address,
+      schedule: study.schedule,
+      type: study.type,
+      lesson: this.next_lesson,
+      updated_at: new Date(),
+      id: study.id
+    }
+
+    this.api.updateStudy(studyData).then(() => {
+      this.loadBibLeStudies();
+    }).catch(error => {
+      console.error('Error updating study:', error);
+    });
+
   }
 
   

@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { Firestore, collection, doc, addDoc, getDocs, setDoc, CollectionReference, DocumentData, onSnapshot, query, updateDoc } from '@angular/fire/firestore';
+import { Firestore, collection, doc, addDoc, getDocs, setDoc, CollectionReference, DocumentData, onSnapshot, query, updateDoc, deleteDoc } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 
 
@@ -171,6 +171,50 @@ export class ApiService {
       console.error('Error getting studies:', error);
       throw error;
     }
+  }
+
+  async deleteStudy(study: any) {
+    try {
+      const user = this.auth.currentUser;
+      if (!user) {
+        throw new Error('User not logged in');
+      }
+  
+      if (!study?.id) {
+        throw new Error('Study ID is required');
+      }
+  
+      const studyDoc = doc(this.fireStore, 'users', user.uid, 'bibleStudies', study.id);
+      
+      await deleteDoc(studyDoc); // 🔥 Actually delete the document
+  
+      console.log('Study deleted successfully');
+    } catch (error) {
+      console.error('Error deleting study:', error);
+      throw error;
+    }
+  }
+
+  async updateStudy(study: any) {
+    try {
+      const user = this.auth.currentUser;
+      if (!user) {
+        throw new Error('User not logged in');
+      }
+  
+      if (!study?.id) {
+        throw new Error('Study ID is required');
+      }
+  
+      const studyDoc = doc(this.fireStore, 'users', user.uid, 'bibleStudies', study.id);
+
+      await updateDoc(studyDoc, { ...study }); // Only update existing fields
+
+    } catch (error) {
+      console.error('Error updating study:', error);
+      throw error;
+    }
+
   }
 }
 
