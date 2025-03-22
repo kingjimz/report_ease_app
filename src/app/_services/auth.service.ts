@@ -45,7 +45,6 @@ export class AuthService {
   async login(email: string, password: string) {
     try {
       const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
-      console.log('User logged in:', userCredential.user);
       this.userSubject.next(userCredential.user);
       this.router.navigate(['/dashboard']); // Redirect after login
       return userCredential.user;

@@ -67,23 +67,44 @@
           <div class="mb-4">
               <label for="hours" class="block text-sm font-medium text-gray-700">Hours</label>
               <input type="text" id="hours" name="title" [(ngModel)]="hours" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-          <div class="mb-4"></div>
+          </div>
+            <div class="mb-4" *ngIf="hasExistingEvent; else noEvent">
+              <label for="is_joined_ministry" class="block text-sm font-medium text-gray-700">Did you participate in the ministry today?</label>
+              <input type="text" id="is_joined_ministry" name="is_joined_ministry" [(ngModel)]="joined_ministry" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" readonly>
+            </div>
+            <ng-template #noEvent>
+              <div class="mb-4">
               <label for="is_joined_ministry" class="block text-sm font-medium text-gray-700">Did you participate in the ministry today?</label>
               <select id="is_joined_ministry" name="is_joined_ministry" [(ngModel)]="joined_ministry" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
               </select>
-          </div>
+              </div>
+            </ng-template>
+
           <div class="mb-4">
-              <label for="is_joined_ministry" class="block text-sm font-medium text-gray-700">Notes (Optional)</label>
-              <textarea id="is_joined_ministry" name="is_joined_ministry" [(ngModel)]="notes" rows="4" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Notes"></textarea>
+              <label for="note" class="block text-sm font-medium text-gray-700">Notes <span>(Optional)</span></label>
+                <textarea id="note" name="note" [(ngModel)]="note" rows="5" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </textarea>
           </div>
-          <div class="mb-4 p-2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700">
-              <p class="text-sm">Warning: Please verify your input carefully. Once saved, changes cannot be undone.</p>
-          </div>
+
+
+            <div *ngIf="noChangeDetected" class="mb-4 p-2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700">
+                <p class="text-sm">No modifications detected. The system will not commit any updates.</p>
+            </div>
+            <div *ngIf="!noChangeDetected" class="mb-4 p-2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700">
+              <p class="text-sm">Warning: Please verify your input carefully.</p>
+            </div>
+ 
       </form>
 
-      <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 me-2" (click)="saveReport()">Save</button>
+      <ng-container *ngIf="hasExistingEvent; else noExistingEvent">
+        <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 me-2" (click)="updateReport()" [disabled]="hours == 0 || !joined_ministry" [ngClass]="{'opacity-50 cursor-not-allowed': hours == 0 || !joined_ministry}">Update</button>
+      </ng-container>
+      <ng-template #noExistingEvent>
+        <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 me-2" (click)="saveReport()" [disabled]="hours == 0 || !joined_ministry" [ngClass]="{'opacity-50 cursor-not-allowed': hours == 0 || !joined_ministry}">Save</button>
+      </ng-template>
+    
       <button (click)="closeModal()" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-700">Close</button>
   </div>
 </div>

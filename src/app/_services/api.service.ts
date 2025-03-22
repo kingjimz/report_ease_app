@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { Firestore, collection, doc, addDoc, getDocs, setDoc, CollectionReference, DocumentData, onSnapshot, query } from '@angular/fire/firestore';
+import { Firestore, collection, doc, addDoc, getDocs, setDoc, CollectionReference, DocumentData, onSnapshot, query, updateDoc } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 
 
@@ -90,7 +90,6 @@ export class ApiService {
     }
   }
   
-
   async updateReport(report: any) {
     try {
       const user = this.auth.currentUser;
@@ -98,17 +97,20 @@ export class ApiService {
         throw new Error('User not logged in');
       }
   
-      // 🔹 Update inside `users/{userId}/reports/{reportId}`
+      if (!report?.id) {
+        throw new Error('Report ID is required');
+      }
+  
       const reportDoc = doc(this.fireStore, 'users', user.uid, 'reports', report.id);
   
-      await setDoc(reportDoc, report, { merge: true });
+      await updateDoc(reportDoc, { ...report }); // Only update existing fields
   
-      console.log('Report successfully updated under:', `users/${user.uid}/reports/${report.id}`);
     } catch (error) {
       console.error('Error updating report:', error);
       throw error;
     }
   }
+
 
   async addStudy(study: any) {
     try {

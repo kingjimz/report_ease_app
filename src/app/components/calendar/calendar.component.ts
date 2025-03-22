@@ -17,18 +17,19 @@ import { subMonths, addMonths } from 'date-fns';
 export class CalendarComponent {
   viewDate: Date = new Date();
   selectedDate: Date | null = null;
-  dailyNotes: string = '';
-  savedNotes: string = '';
   events: CalendarEvent[] = [];
   viewMode: 'month' | 'week' | 'day' = 'month';
   hours = 0;
-  joined_ministry = false;
+  joined_ministry = '';
   notes = '';
   report_date = '';
   created_at = '';
   updated_at = '';
   isLoading = false;
-
+  hasExistingEvent = false;
+  report_id = '';
+  note = '';
+  noChangeDetected = false;
 
 
   constructor(private api: ApiService) { }
@@ -38,42 +39,37 @@ export class CalendarComponent {
     this.loadReports();
   }
 
-  // Navigate to the previous month
-  previousMonth() {
-    this.viewDate = subMonths(this.viewDate, 1);
-  }
-
-  // Navigate to the next month
-  nextMonth() {
-    this.viewDate = addMonths(this.viewDate, 1);
-  }
-  
-
   async dayClicked(event: { date: Date }) {
     this.selectedDate = event.date;    
     // Check if there is an existing event on the selected date
     const existingEvent = this.events.find(e => e.start.toDateString() === this.selectedDate?.toDateString());
+    this.hasExistingEvent = existingEvent ? true : false;
     
     if (existingEvent) {
-      console.log('Existing event found:', existingEvent);
       this.hours = parseInt(existingEvent.title.split(' ')[0], 10);
-      this.notes = this.savedNotes;
-      this.selectedDate = null;
-    } else {
-      this.hours = 0;
-      this.notes = '';
+      this.report_id = existingEvent.meta.report_id;
+      this.selectedDate = existingEvent.start;
+      this.joined_ministry = this.capitalizeFirstLetter(existingEvent.meta.joined_ministry);
+      this.note = existingEvent.meta.notes;
+    } else { 
+      this.reInitializeVariables();
     }
   }
 
   async loadReports() {
     this.isLoading = true;
     await this.api.getReports().then((data) => {
-
       this.events = data.map((report: any) => {
+        this.report_id = report.id;
         return {
           title: report.hours + ' Hours',
           start: new Date(report.report_date.seconds * 1000),
           color: { primary: '#008000', secondary: '#90EE90' },
+          meta: {
+            report_id: report.id,
+            notes: report.notes,
+            joined_ministry: report.is_joined_ministry
+          }
         };
       });
   
@@ -84,37 +80,107 @@ export class CalendarComponent {
     this.isLoading = false;
   }
 
+  async saveReport() {
+    if (!this.selectedDate) {
+      return;
+    }
+
+    const report = {
+      hours: this.hours,
+      is_joined_ministry: this.joined_ministry,
+      notes: this.note,
+      report_date: this.selectedDate,
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+    
+      try {
+        await this.api.createReport(report);
+        this.noChangeDetected = false;
+        this.selectedDate = null;
+        await this.loadReports();
+        this.reInitializeVariables();
+      } catch (error) {
+        console.error('Error saving report:', error);
+      }
+    
+  }
+
+  async updateReport() {
+    if (!this.selectedDate) {
+      return;
+    }
+
+    const existingEvent = this.events.find(e => e.start.toDateString() === this.selectedDate?.toDateString());
+
+    if (existingEvent) {
+      const existingHours = parseInt(existingEvent.title.split(' ')[0], 10);
+      const existingJoinedMinistry = existingEvent.meta.joined_ministry;
+      const existingNotes = existingEvent.meta.notes;
+
+      if (
+        existingHours === this.hours &&
+        existingJoinedMinistry === this.joined_ministry &&
+        existingNotes === this.note
+      ) {
+        this.noChangeDetected = true;
+        return;
+      }
+    }
+
+    const report = {
+      id: this.report_id,
+      hours: this.hours,
+      is_joined_ministry: this.joined_ministry,
+      notes: this.note,
+      report_date: this.selectedDate,
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+    
+    try {
+      await this.api.updateReport(report);
+      this.noChangeDetected = false;
+      this.selectedDate = null;
+      await this.loadReports();
+      this.reInitializeVariables();
+    } catch (error) {
+      console.error('Error updating report:', error);
+    }
+  }
+
+
+  capitalizeFirstLetter(text: string) {
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+
+  previousMonth() {
+    this.viewDate = subMonths(this.viewDate, 1);
+  }
+
+  nextMonth() {
+    this.viewDate = addMonths(this.viewDate, 1);
+  }
+
   closeModal() {
     this.selectedDate = null;
+    this.noChangeDetected = false;
+  }
+
+  reInitializeVariables() {
+    this.hours = 0;
+    this.joined_ministry = '';
+    this.notes = '';
+    this.report_date = '';
+    this.created_at = '';
+    this.updated_at = '';
+    this.report_id = '';
+    this.note = '';
+
   }
 
   get dayOfWeek(): string {
     return this.viewDate.toLocaleDateString('en-US', { weekday: 'short' });
   }
-
-  saveReport() {
-    if (!this.selectedDate) {
-      console.error('No date selected');
-      return;
-    }
   
-    const report = {
-      hours: this.hours,
-      is_joined_ministry: this.joined_ministry,
-      notes: this.notes,
-      report_date: this.selectedDate,
-      created_at: new Date(),
-      updated_at: new Date(),
-    };
-      this.api.createReport(report)
-        .then(() => {
-          console.log('Report saved');
-          this.savedNotes = this.dailyNotes;
-          this.selectedDate = null;
-          this.loadReports();
-        })
-        .catch((error) => {
-          console.error('Error saving report:', error);
-        });
-      }
 }
