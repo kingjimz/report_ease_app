@@ -4,10 +4,21 @@
       *ngFor="let report of this.filteredReports(); let i = index" 
       class="relative p-6 bg-white shadow-md rounded-xl border border-gray-300 transition duration-300 hover:shadow-2xl hover:border-gray-400 mt-3"
     >
-      <div class="absolute top-2 right-2 px-3 py-1 bg-blue-100 text-blue-600 text-xs font-medium rounded-full shadow-sm">
-        Monthly Report
+    <div *ngIf="i === 0" class="absolute top-2 right-2">
+      <div class="relative">
+        <button class="px-3 py-1 bg-blue-100 text-blue-600 text-xs font-medium rounded-full shadow-sm" (click)="toggleDropdown()">
+          <i class="bi bi-download"></i> Download Report
+        </button>
+        <div *ngIf="dropdownOpen" class="absolute right-0 mt-2 w-48 bg-white border border-gray-300 rounded-lg shadow-lg">
+          <button class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100" (click)="downloadReport(report, true)">
+            Pioneer
+          </button>
+          <button class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100" (click)="downloadReport(report, false)">
+            Publisher
+          </button>
+        </div>
       </div>
-  
+    </div>
       <!-- Month & Year -->
       <div class="flex items-center gap-3 border-b pb-3 mb-3">
         <i class="bi bi-calendar-event text-indigo-500 text-2xl"></i>
@@ -44,16 +55,17 @@
   </div>
 
   <div class="mt-6">
-    <h2 class="text-2xl font-bold text-gray-800 mb-4">Bible Studies / Return Visits</h2>
+    <h2 class="text-2xl font-bold text-gray-800">Bible Studies / Return Visits</h2>
+    <small>Your active bible studies and return visits</small>
   
     <!-- Show if there are no Bible studies -->
-    <div *ngIf="this.api.bibleStudySignal().length === 0" class="mb-4 p-2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 flex items-center justify-between shadow-md">
+    <div *ngIf="this.api.bibleStudySignal().length === 0" class="mt-3 mb-4 p-2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 flex items-center justify-between shadow-md">
       <p class="text-base">You have no Bible studies recorded.</p>
       <i class="bi bi-exclamation-circle-fill text-yellow-500 text-xl"></i>
     </div>
   
     <!-- Bible Studies Table -->
-    <table *ngIf="this.api.bibleStudySignal().length > 0" class="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+    <table *ngIf="this.api.bibleStudySignal().length > 0" class="mt-3 min-w-full bg-white shadow-md rounded-lg overflow-hidden">
       <thead class="bg-gray-200">
         <tr>
           <th class="py-2 px-4 text-left text-gray-600 font-semibold">Name</th>
@@ -150,5 +162,8 @@
       </div>
     </div>
   </ng-container>
+
+
+
 
   

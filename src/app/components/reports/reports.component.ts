@@ -11,6 +11,7 @@ import { UtilService } from '../../_services/util.service';
   templateUrl: './reports.component.html',
   styleUrl: './reports.component.css'
 })
+
 export class ReportsComponent {
   reports: any[];
 
@@ -19,22 +20,26 @@ export class ReportsComponent {
   isSelected = false;
   studyDelete = false;
   next_lesson = '';
+  openDownloadModal = false;
+  isPioneer = false;
+  selectedReport: any = null;
+  dropdownOpen = false;
+  monthlyReportData: any = null;
 
   constructor(public api: ApiService, public util: UtilService) { 
     this.reports = this.api.reportSignal(); 
     this.bibleStudies = this.api.bibleStudySignal();
+    this.loadBibLeStudies();
   }
 
   async loadBibLeStudies() {
     await this.api.getBibleStudies().then(() => {
-     // this.bibleStudies = this.api.bibleStudySignal();
-     
+     // this.bibleStudies = this.api.bibleStudySignal() 
     }).catch(error => {
       console.error('Error loading bible studies:', error);
     });
   }
 
-  // Computed property to aggregate reports by month
   aggregatedReports = computed(() => {
     const aggregated: { [key: string]: { hours: number; minutes: number; monthYear: string, is_joined_ministry: boolean } } = {};
 
@@ -66,8 +71,6 @@ export class ReportsComponent {
   
     // Sort reports by date (assuming 'monthYear' is in 'YYYY-MM' format)
     reports.sort((a, b) => new Date(b.monthYear).getTime() - new Date(a.monthYear).getTime());
-  
-    // Return only the latest two months
     return reports.slice(0, 2);
   }
 
@@ -92,10 +95,8 @@ export class ReportsComponent {
     if (!this.studySelected?.id) return;
 
     const study = this.studySelected;
-    console.log('Deleting study:', study);
   
     await this.api.deleteStudy(study).then(() => {
-      // Filter out the deleted study from the signal directly
       this.loadBibLeStudies();
     }).catch(error => {
       console.error('Error deleting study:', error);
@@ -103,6 +104,7 @@ export class ReportsComponent {
   
     this.closeStudyDetails();
   }
+
   closeDeleteModal() {
     this.studyDelete = false;
   }
@@ -132,4 +134,82 @@ export class ReportsComponent {
     });
 
   }
+
+  downloadReport(report: any, isPioneer: boolean) {
+    this.selectedReport = report;
+    this.monthlyReportData = {
+      month: report.monthYear,
+      bibleStudies: this.filterBibleStudies(this.bibleStudies).length,
+      is_joined_ministry: report.is_joined_ministry,
+      hours: isPioneer ? report.hours : undefined
+    };
+
+    this.dropdownOpen = false;
+    this.generatePNG(this.monthlyReportData, isPioneer);
+  }
+
+  filterBibleStudies(studies: any[]): any[] {
+    return studies.filter(study => study.type !== 'rv');
+  }
+
+  closeDlModal(){
+    this.openDownloadModal = false;
+  }
+
+  toggleDropdown() {
+    this.dropdownOpen = !this.dropdownOpen;
+  }
+
+  generatePNG(report:any, isPioneer: boolean) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+  
+    if (!ctx) return;
+  
+    canvas.width = 400;
+    canvas.height = 200;
+  
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+    ctx.fillStyle = 'black';
+    ctx.font = '20px Arial';
+  
+    // Example Data
+    const data = this.monthlyReportData;
+
+    // Draw Text
+    const centerX = canvas.width / 2;
+    ctx.textAlign = 'center';
+
+    ctx.fillText(`Month: ${data.month}`, centerX, 30);
+    ctx.textAlign = 'left';
+    if (data.hours !== undefined) {
+      ctx.fillText(`Hours: ${data.hours}`, 10, 60);
+    }
+    ctx.fillText(`Bible Studies: ${data.bibleStudies}`, 10, data.hours !== undefined ? 90 : 60);
+    ctx.fillText(`Participated in Ministry: ${this.util.capitalizeFirstLetter(data.is_joined_ministry)}`, 10, data.hours !== undefined ? 120 : 90);
+    
+    // Draw horizontal line
+    ctx.beginPath();
+    ctx.moveTo(10, 140);
+    ctx.lineTo(canvas.width - 10, 140);
+    ctx.strokeStyle = 'black';
+    ctx.stroke();
+
+    ctx.font = '10px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Made with Field Service Tracker', centerX, 160);
+
+  
+    // Convert to PNG
+    const image = canvas.toDataURL('image/png');
+  
+    // Download the Image
+    const link = document.createElement('a');
+    link.href = image;
+    link.download = `${isPioneer ? 'Pioneer' : 'Publisher'}-report-${data.month}.png`;
+    link.click();
+  }
 }
+
