@@ -18,11 +18,7 @@ import { SettingsComponent } from '../settings/settings.component';
 export class HomeComponent {
   activeTab = 'calendar';
 
-  constructor(private auth: AuthService, private route: Router) {
-    this.auth.user$.subscribe((user) => {
-      //console.log(user);
-    });
-  }
+  constructor(private auth: AuthService, private route: Router) {}
   logout() {
     this.auth.logout();
     this.route.navigate(['/login']);

@@ -50,11 +50,11 @@
                 <textarea id="lesson" name="next_lesson" [(ngModel)]="next_lesson" rows="5" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Next lesson"></textarea>
             </div>
 
-            <div *ngIf="isSuccess" class="mb-4 p-2 bg-green-100 border-l-4 border-green-500 text-green-700">
-                <p class="text-sm">Success: Your changes have been saved successfully. View reports section.</p>
+            <div *ngIf="isSuccess">
+                <app-alerts [isSuccess]="isSuccess" [alertMessage]="alertMessage"></app-alerts>
             </div>
-            <div *ngIf="!isSuccess" class="mb-4 p-2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700">
-                <p class="text-sm">Warning: Please verify your input carefully. Once saved, changes cannot be undone.</p>
+            <div *ngIf="!isSuccess">
+                <app-alerts [isSuccess]="isSuccess" [alertMessage]="alertMessage"></app-alerts>
             </div>
 
             <button (click)="onSubmit()" type="button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" [disabled]="isLoading || !bible_study || !address || !schedule || !next_lesson" [ngClass]="{'opacity-50 cursor-not-allowed': !bible_study || !address || !schedule || !next_lesson}">

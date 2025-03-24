@@ -11,10 +11,11 @@ import { Router } from '@angular/router';
 @Injectable({
   providedIn: 'root'
 })
+
 export class AuthService {
   private userSubject = new BehaviorSubject<User | null>(null);
   user$ = this.userSubject.asObservable();
-  isLoading = new BehaviorSubject<boolean>(true);  // Loading state
+  isLoading = new BehaviorSubject<boolean>(true);  
 
   constructor(private auth: Auth, private router: Router) {
   
@@ -34,7 +35,7 @@ export class AuthService {
       const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
       console.log('User signed up:', userCredential.user);
       this.userSubject.next(userCredential.user);
-      this.router.navigate(['/dashboard']); // Redirect after sign-up
+      this.router.navigate(['/']); 
       return userCredential.user;
     } catch (error) {
       console.error('Error signing up:', error);
@@ -46,7 +47,7 @@ export class AuthService {
     try {
       const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
       this.userSubject.next(userCredential.user);
-      this.router.navigate(['/dashboard']); // Redirect after login
+      this.router.navigate(['/']); 
       return userCredential.user;
     } catch (error) {
       console.error('Error logging in:', error);
@@ -58,7 +59,7 @@ export class AuthService {
     try {
       await signOut(this.auth);
       this.userSubject.next(null);
-      this.router.navigate(['/login']); // Redirect after logout
+      this.router.navigate(['/login']); 
     } catch (error) {
       console.error('Error logging out:', error);
       throw error;
@@ -69,7 +70,7 @@ export class AuthService {
     try {
       const result = await signInWithPopup(this.auth, new GoogleAuthProvider());
       this.userSubject.next(result.user);
-      this.router.navigate(['/dashboard']); // Redirect after Google login
+      this.router.navigate(['/']); 
       return result.user;
     } catch (error) {
       console.error('Error signing in with Google:', error);

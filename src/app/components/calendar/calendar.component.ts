@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../_services/api.service';
 import { subMonths, addMonths } from 'date-fns';
+import { UtilService } from '../../_services/util.service';
 
 
 @Component({
@@ -32,7 +33,7 @@ export class CalendarComponent {
   noChangeDetected = false;
 
 
-  constructor(private api: ApiService) { }
+  constructor(private api: ApiService, private util: UtilService) { }
 
 
   ngOnInit() {
@@ -49,7 +50,7 @@ export class CalendarComponent {
       this.hours = parseInt(existingEvent.title.split(' ')[0], 10);
       this.report_id = existingEvent.meta.report_id;
       this.selectedDate = existingEvent.start;
-      this.joined_ministry = this.capitalizeFirstLetter(existingEvent.meta.joined_ministry);
+      this.joined_ministry = this.util.capitalizeFirstLetter(existingEvent.meta.joined_ministry);
       this.note = existingEvent.meta.notes;
     } else { 
       this.reInitializeVariables();
@@ -149,11 +150,6 @@ export class CalendarComponent {
     }
   }
 
-
-  capitalizeFirstLetter(text: string) {
-    return text.charAt(0).toUpperCase() + text.slice(1);
-  }
-
   previousMonth() {
     this.viewDate = subMonths(this.viewDate, 1);
   }
@@ -182,5 +178,4 @@ export class CalendarComponent {
   get dayOfWeek(): string {
     return this.viewDate.toLocaleDateString('en-US', { weekday: 'short' });
   }
-  
 }

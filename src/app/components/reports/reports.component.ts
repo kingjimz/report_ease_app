@@ -2,6 +2,7 @@ import { Component, Signal, computed, OnInit } from '@angular/core';
 import { ApiService } from '../../_services/api.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { UtilService } from '../../_services/util.service';
 
 @Component({
   selector: 'app-reports',
@@ -11,15 +12,15 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './reports.component.css'
 })
 export class ReportsComponent {
-  reports: any[]; // Raw reports data
+  reports: any[];
 
-  bibleStudies: any[] = []; // Raw bible studies data
-  studySelected: any = null; // Selected bible study
+  bibleStudies: any[] = []; 
+  studySelected: any = null; 
   isSelected = false;
   studyDelete = false;
   next_lesson = '';
 
-  constructor(public api: ApiService) {
+  constructor(public api: ApiService, public util: UtilService) { 
     this.reports = this.api.reportSignal(); 
     this.bibleStudies = this.api.bibleStudySignal();
   }
@@ -44,7 +45,7 @@ export class ReportsComponent {
       const monthYearKey = `${date.getFullYear()}-${date.getMonth() + 1}`; // e.g., "2025-3"
 
       if (!aggregated[monthYearKey]) {
-        aggregated[monthYearKey] = { hours: 0, minutes: 0, monthYear: this.formatDate(report.report_date), is_joined_ministry: report.is_joined_ministry };
+        aggregated[monthYearKey] = { hours: 0, minutes: 0, monthYear: this.util.formatDate(report.report_date), is_joined_ministry: report.is_joined_ministry };
       }
 
       aggregated[monthYearKey].hours += parseInt(report.hours, 10) || 0;
@@ -59,18 +60,6 @@ export class ReportsComponent {
     return Object.values(aggregated); 
   });
 
-  formatDate(timestamp: { seconds: number; nanoseconds: number }): string {
-    if (!timestamp || !timestamp.seconds) return 'Invalid Date';
-    const date = new Date(timestamp.seconds * 1000);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' }); // e.g., "March 2025"
-  }
-
-  formatDateToHumanReadable(timestamp: { seconds: number; nanoseconds: number }): string {
-    if (!timestamp || !timestamp.seconds) return 'Invalid Date';
-    const date = new Date(timestamp.seconds * 1000);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); // e.g., "Mar 25, 2025"
-  }
-
   filteredReports(): any[] {
     const reports = this.aggregatedReports();
     if (!reports || reports.length === 0) return [];
@@ -80,11 +69,6 @@ export class ReportsComponent {
   
     // Return only the latest two months
     return reports.slice(0, 2);
-  }
-
-  formatDateTime(schedule: string): string {
-    const date = new Date(schedule);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true });
   }
 
   editStudy(study: any) {
@@ -148,6 +132,4 @@ export class ReportsComponent {
     });
 
   }
-
-  
 }

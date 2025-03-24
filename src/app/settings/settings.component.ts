@@ -2,11 +2,12 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../_services/api.service';
+import { AlertsComponent } from '../components/alerts/alerts.component';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AlertsComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css'
 })
@@ -18,6 +19,7 @@ export class SettingsComponent {
   next_lesson = '';
   isSuccess = false;
   isLoading = false;
+  alertMessage = 'Warning: Please verify your input carefully.';
 
   constructor(public api: ApiService) { }
 
@@ -39,8 +41,11 @@ export class SettingsComponent {
       this.type = '';
       this.next_lesson = '';
       this.isSuccess = true;
+      this.alertMessage = 'Study added! View reports section.';
     } catch (error) {
       console.error('Error submitting data', error);
+      this.isSuccess = false;
+      this.alertMessage = 'Error submitting data';
       this.isLoading = false;
     }
     this.isLoading = false;
