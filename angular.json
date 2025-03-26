@@ -31,7 +31,7 @@
           },
           "configurations": {
             "production": {
-              "outputPath": "dist/report_ease_app",
+             "outputPath": "dist/report_ease_app/browser",
               "baseHref": "/",
               "deployUrl": "/",
               "fileReplacements": [
