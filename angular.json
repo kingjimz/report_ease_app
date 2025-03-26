@@ -32,8 +32,8 @@
           "configurations": {
             "production": {
               "outputPath": "dist/report_ease_app",
-              "baseHref": "/report_ease_app/",
-              "deployUrl": "/report_ease_app/",
+              "baseHref": "/",
+              "deployUrl": "/",
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
