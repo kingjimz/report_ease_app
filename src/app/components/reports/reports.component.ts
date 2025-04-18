@@ -13,7 +13,7 @@ import { UtilService } from '../../_services/util.service';
 })
 
 export class ReportsComponent {
-  reports: any[];
+  reports: any[] = [];
 
   bibleStudies: any[] = []; 
   studySelected: any = null; 
@@ -27,51 +27,67 @@ export class ReportsComponent {
   monthlyReportData: any = null;
 
   constructor(public api: ApiService, public util: UtilService) { 
-    this.reports = this.api.reportSignal(); 
-    this.bibleStudies = this.api.bibleStudySignal();
+    this.loadReports();
     this.loadBibLeStudies();
   }
 
   async loadBibLeStudies() {
-    await this.api.getBibleStudies().then(() => {
-     // this.bibleStudies = this.api.bibleStudySignal() 
+    await this.api.getBibleStudies().then((data) => {
+      this.bibleStudies = data;
     }).catch(error => {
-      console.error('Error loading bible studies:', error);
+      console.error('Error fetching Bible studies:', error);
     });
   }
 
-  aggregatedReports = computed(() => {
-    const aggregated: { [key: string]: { hours: number; minutes: number; monthYear: string, is_joined_ministry: boolean } } = {};
 
-    this.reports.forEach(report => {
-      if (!report.report_date) return;
-      
-      const date = new Date(report.report_date.seconds * 1000);
-      const monthYearKey = `${date.getFullYear()}-${date.getMonth() + 1}`; // e.g., "2025-3"
-
-      if (!aggregated[monthYearKey]) {
-        aggregated[monthYearKey] = { hours: 0, minutes: 0, monthYear: this.util.formatDate(report.report_date), is_joined_ministry: report.is_joined_ministry };
-      }
-
-      aggregated[monthYearKey].hours += parseInt(report.hours, 10) || 0;
-      aggregated[monthYearKey].minutes += parseInt(report.minutes, 10) || 0;
+  async loadReports() {
+    await this.api.getReports().then((data) => {
+      this.reports = data;
+      this.reports = this.aggregateReportsByMonth(data);
+    }).catch(error => {
+      console.error('Error fetching reports:', error);
     });
+  }
 
-    Object.values(aggregated).forEach(entry => {
-      entry.hours += Math.floor(entry.minutes / 60);
-      entry.minutes = entry.minutes % 60;
-    });
-
-    return Object.values(aggregated); 
-  });
-
-  filteredReports(): any[] {
-    const reports = this.aggregatedReports();
-    if (!reports || reports.length === 0) return [];
+  aggregateReportsByMonth(reports: any[]): any[] {
+    const aggregated: Record<string, any> = {};
   
-    // Sort reports by date (assuming 'monthYear' is in 'YYYY-MM' format)
-    reports.sort((a, b) => new Date(b.monthYear).getTime() - new Date(a.monthYear).getTime());
-    return reports.slice(0, 2);
+    reports.forEach(report => {
+      // Convert Firestore timestamp to Date
+      const reportDate = report.report_date instanceof Date 
+        ? report.report_date 
+        : new Date(report.report_date.seconds * 1000);
+      
+      // Group by Year-Month (e.g., "2024-04" for April 2024)
+      const yearMonth = `${reportDate.getFullYear()}-${String(reportDate.getMonth() + 1).padStart(2, '0')}`;
+      const hours = parseInt(report.hours) || 0;
+  
+      if (!aggregated[yearMonth]) {
+        aggregated[yearMonth] = {
+          year: reportDate.getFullYear(),
+          month: reportDate.getMonth() + 1,
+          month_name: reportDate.toLocaleString('default', { month: 'long' }),
+          total_hours: 0,
+          report_count: 0,
+          is_joined_ministry: "no", // Default to "no" unless a "yes" is found
+          reports: []
+        };
+      }
+  
+      aggregated[yearMonth].total_hours += hours;
+      aggregated[yearMonth].report_count++;
+      aggregated[yearMonth].reports.push(report);
+  
+      // Update is_joined_ministry if any report says "yes"
+      if (report.is_joined_ministry?.toLowerCase() === "yes") {
+        aggregated[yearMonth].is_joined_ministry = "yes";
+      }
+    });
+  
+    // Sort by year-month (newest first)
+    return Object.values(aggregated).sort((a, b) => 
+      b.year - a.year || b.month - a.month
+    );
   }
 
   editStudy(study: any) {
@@ -138,78 +154,86 @@ export class ReportsComponent {
   downloadReport(report: any, isPioneer: boolean) {
     this.selectedReport = report;
     this.monthlyReportData = {
-      month: report.monthYear,
+      month: `${report.month_name} ${report.year}`, // Format: "April 2024"
       bibleStudies: this.filterBibleStudies(this.bibleStudies).length,
       is_joined_ministry: report.is_joined_ministry,
-      hours: isPioneer ? report.hours : undefined
+      hours: isPioneer ? report.total_hours : undefined, // Use total_hours from aggregation
+      report_count: report.report_count // Optional: Include count of reports
     };
-
+  
     this.dropdownOpen = false;
     this.generatePNG(this.monthlyReportData, isPioneer);
   }
-
+  
   filterBibleStudies(studies: any[]): any[] {
     return studies.filter(study => study.type !== 'rv');
   }
-
-  closeDlModal(){
+  
+  generatePNG(report: any, isPioneer: boolean) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) return;
+    
+    // Increased canvas height to accommodate additional info
+    canvas.width = 400;
+    canvas.height = 250;
+    
+    // Background
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Text styling
+    ctx.fillStyle = 'black';
+    ctx.font = 'bold 22px Arial';
+    
+    // Header
+    const centerX = canvas.width / 2;
+    ctx.textAlign = 'center';
+    ctx.fillText(`Monthly Report - ${report.month}`, centerX, 30);
+    
+    // Report details
+    ctx.font = '18px Arial';
+    ctx.textAlign = 'left';
+    let yPosition = 70;
+    
+    if (report.hours !== undefined) {
+      ctx.fillText(`Hours: ${report.hours}`, 20, yPosition);
+      yPosition += 30;
+    }
+    
+    ctx.fillText(`Bible Studies: ${report.bibleStudies}`, 20, yPosition);
+    yPosition += 30;
+    
+    ctx.fillText(`Participated in Ministry: ${this.util.capitalizeFirstLetter(report.is_joined_ministry)}`, 20, yPosition);
+    yPosition += 30;
+  
+    
+    // Footer line and credit
+    ctx.beginPath();
+    ctx.moveTo(20, yPosition);
+    ctx.lineTo(canvas.width - 20, yPosition);
+    ctx.strokeStyle = 'black';
+    ctx.stroke();
+    
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Generated by Field Service Tracker', centerX, yPosition + 20);
+    
+    // Download the Image
+    const image = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.href = image;
+    link.download = `${isPioneer ? 'Pioneer' : 'Publisher'}-report-${report.month.replace(' ', '-')}.png`;
+    link.click();
+  }
+  
+  // Existing helper methods remain the same
+  closeDlModal() {
     this.openDownloadModal = false;
   }
-
+  
   toggleDropdown() {
     this.dropdownOpen = !this.dropdownOpen;
   }
-
-  generatePNG(report:any, isPioneer: boolean) {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-  
-    if (!ctx) return;
-  
-    canvas.width = 400;
-    canvas.height = 200;
-  
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
-    ctx.fillStyle = 'black';
-    ctx.font = '20px Arial';
-  
-    // Example Data
-    const data = this.monthlyReportData;
-
-    // Draw Text
-    const centerX = canvas.width / 2;
-    ctx.textAlign = 'center';
-
-    ctx.fillText(`Month: ${data.month}`, centerX, 30);
-    ctx.textAlign = 'left';
-    if (data.hours !== undefined) {
-      ctx.fillText(`Hours: ${data.hours}`, 10, 60);
-    }
-    ctx.fillText(`Bible Studies: ${data.bibleStudies}`, 10, data.hours !== undefined ? 90 : 60);
-    ctx.fillText(`Participated in Ministry: ${this.util.capitalizeFirstLetter(data.is_joined_ministry)}`, 10, data.hours !== undefined ? 120 : 90);
-    
-    // Draw horizontal line
-    ctx.beginPath();
-    ctx.moveTo(10, 140);
-    ctx.lineTo(canvas.width - 10, 140);
-    ctx.strokeStyle = 'black';
-    ctx.stroke();
-
-    ctx.font = '10px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('Made with Field Service Tracker', centerX, 160);
-
-  
-    // Convert to PNG
-    const image = canvas.toDataURL('image/png');
-  
-    // Download the Image
-    const link = document.createElement('a');
-    link.href = image;
-    link.download = `${isPioneer ? 'Pioneer' : 'Publisher'}-report-${data.month}.png`;
-    link.click();
-  }
 }
-
