@@ -25,10 +25,16 @@ export class ReportsComponent {
   selectedReport: any = null;
   dropdownOpen = false;
   monthlyReportData: any = null;
+  loading = true; // Loading state
 
-  constructor(public api: ApiService, public util: UtilService) { 
+  constructor(public api: ApiService, public util: UtilService) { }
+
+  ngOnInit() {
     this.loadReports();
     this.loadBibLeStudies();
+    setTimeout(() => {
+      this.loading = false;
+    }, 2000);
   }
 
   async loadBibLeStudies() {
