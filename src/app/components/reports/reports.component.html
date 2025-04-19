@@ -91,7 +91,15 @@
       </div>
       <div class="mb-2 p-2 bg-gray-100 rounded-lg">
         <label class="block text-gray-700 font-medium mb-1">Next Lesson <small>(e.g., Lesson 1: Title)</small></label>
-        <textarea class="w-full p-1 border border-gray-300 rounded" [(ngModel)]="next_lesson"></textarea>
+        <div class="flex">
+          <textarea class="w-full p-1 border border-gray-300 rounded" [(ngModel)]="next_lesson"></textarea>
+            <button class="ml-2 px-4 py-2 text-white rounded bg-blue-600 transition duration-200 flex items-center" (click)="copyToClipboard()">
+            <i [class]="isCopied ? 'bi bi-check-circle text-white' : 'bi bi-clipboard text-white'"></i>
+            <span class="ml-2 text-sm" [class.text-green-200]="isCopied" [class.text-white]="!isCopied">
+              {{ isCopied ? 'Copied' : 'Copy' }}
+            </span>
+            </button>
+        </div>
       </div>
 
       <p class="mb-2">

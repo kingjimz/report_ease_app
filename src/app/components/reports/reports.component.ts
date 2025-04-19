@@ -29,6 +29,7 @@ export class ReportsComponent {
   dropdownOpen = false;
   monthlyReportData: any = null;
   loading = true; 
+  isCopied = false;
 
   constructor(public api: ApiService, public util: UtilService) { }
 
@@ -105,15 +106,18 @@ export class ReportsComponent {
   closeStudyDetails() {
     this.isSelected = false;
     this.studySelected = null;
+    this.isCopied = false;
   }
 
   deleteStudy(study: any) {
     this.studyDelete = true;
     this.studySelected = study;
+    this.isCopied = false;
   }
 
   async confirmDelete() {
     this.studyDelete = false;
+    this.isCopied = false;
     if (!this.studySelected?.id) return;
 
     const study = this.studySelected;
@@ -129,11 +133,13 @@ export class ReportsComponent {
 
   closeDeleteModal() {
     this.studyDelete = false;
+    this.isCopied = false;
   }
 
   updateStudy(study: any) {
     this.isSelected = false;
     this.studySelected = null;
+    this.isCopied = false;
 
     if (this.next_lesson === study.lesson) {
       return;
@@ -237,9 +243,24 @@ export class ReportsComponent {
   // Existing helper methods remain the same
   closeDlModal() {
     this.openDownloadModal = false;
+    this.isCopied = false;
   }
   
   toggleDropdown() {
     this.dropdownOpen = !this.dropdownOpen;
+  }
+
+  copyToClipboard(): void {
+    if (!this.next_lesson) return;
+    
+    navigator.clipboard.writeText(this.next_lesson)
+      .then(() => {
+        this.isCopied = true;
+        console.log('Text copied to clipboard');
+      })
+      .catch(err => {
+        this.isCopied = false;
+        console.error('Failed to copy text: ', err);
+      });
   }
 }
