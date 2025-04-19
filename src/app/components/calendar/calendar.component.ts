@@ -6,12 +6,13 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../_services/api.service';
 import { subMonths, addMonths } from 'date-fns';
 import { UtilService } from '../../_services/util.service';
+import { LoaderComponent } from '../loader/loader.component';
 
 
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [AngularCalendarModule, CommonModule, FormsModule],
+  imports: [AngularCalendarModule, CommonModule, FormsModule, LoaderComponent],
   templateUrl: './calendar.component.html',
   styleUrl: './calendar.component.css'
 })

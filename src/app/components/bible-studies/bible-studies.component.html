@@ -1,0 +1,25 @@
+<div class="mt-6">
+    <h2 class="text-2xl font-bold text-gray-800">Bible Studies / Return Visits</h2>
+    <small>Your active bible studies and return visits</small>
+  
+    <div *ngIf="this.bibleStudies.length === 0" class="mt-3 mb-4 p-2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 flex items-center justify-between shadow-md">
+      <p class="text-base">You have no Bible studies recorded.</p>
+      <i class="bi bi-exclamation-circle-fill text-yellow-500 text-xl"></i>
+    </div>
+  
+    <table *ngIf="this.bibleStudies.length > 0" class="mt-3 min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+      <thead class="bg-gray-200">
+        <tr>
+          <th class="py-2 px-4 text-left text-gray-600 font-semibold">Name</th>
+          <th class="py-2 px-4 text-left text-gray-600 font-semibold">Schedule</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let study of this.bibleStudies; let i = index" (click)="editStudy(study)" class="cursor-pointer hover:bg-gray-100 transition duration-300">
+          <td class="py-2 px-4 border-b border-gray-200">{{ study.bible_study }}</td>
+          <td class="py-2 px-4 border-b border-gray-200">{{ study.schedule }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  

@@ -3,11 +3,14 @@ import { ApiService } from '../../_services/api.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UtilService } from '../../_services/util.service';
+import { ModalComponent } from '../modal/modal.component';
+import { BibleStudiesComponent } from '../bible-studies/bible-studies.component';
+import { LoaderComponent } from '../loader/loader.component';
 
 @Component({
   selector: 'app-reports',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ModalComponent, BibleStudiesComponent, LoaderComponent],
   templateUrl: './reports.component.html',
   styleUrl: './reports.component.css'
 })
@@ -25,7 +28,7 @@ export class ReportsComponent {
   selectedReport: any = null;
   dropdownOpen = false;
   monthlyReportData: any = null;
-  loading = true; // Loading state
+  loading = true; 
 
   constructor(public api: ApiService, public util: UtilService) { }
 
@@ -34,7 +37,7 @@ export class ReportsComponent {
     this.loadBibLeStudies();
     setTimeout(() => {
       this.loading = false;
-    }, 2000);
+    }, 1000);
   }
 
   async loadBibLeStudies() {
@@ -59,7 +62,6 @@ export class ReportsComponent {
     const aggregated: Record<string, any> = {};
   
     reports.forEach(report => {
-      // Convert Firestore timestamp to Date
       const reportDate = report.report_date instanceof Date 
         ? report.report_date 
         : new Date(report.report_date.seconds * 1000);
@@ -75,7 +77,7 @@ export class ReportsComponent {
           month_name: reportDate.toLocaleString('default', { month: 'long' }),
           total_hours: 0,
           report_count: 0,
-          is_joined_ministry: "no", // Default to "no" unless a "yes" is found
+          is_joined_ministry: "no", 
           reports: []
         };
       }
@@ -83,14 +85,12 @@ export class ReportsComponent {
       aggregated[yearMonth].total_hours += hours;
       aggregated[yearMonth].report_count++;
       aggregated[yearMonth].reports.push(report);
-  
-      // Update is_joined_ministry if any report says "yes"
+
       if (report.is_joined_ministry?.toLowerCase() === "yes") {
         aggregated[yearMonth].is_joined_ministry = "yes";
       }
     });
   
-    // Sort by year-month (newest first)
     return Object.values(aggregated).sort((a, b) => 
       b.year - a.year || b.month - a.month
     );

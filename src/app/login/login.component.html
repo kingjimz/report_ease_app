@@ -3,9 +3,8 @@
     (submit)="login(); $event.preventDefault()"
     class="w-full max-w-md"
   >
-    <!-- Card with subtle shadow and soft border radius -->
     <div class="bg-white rounded-xl shadow-xl overflow-hidden">
-      <!-- Header section with modern gradient -->
+
       <div class="bg-gradient-to-r from-blue-500 to-indigo-600 px-8 py-6">
         <h2 class="text-2xl font-bold text-white">Welcome back</h2>
         <p class="text-blue-100 mt-1">Sign in to continue</p>
@@ -13,7 +12,7 @@
 
       <div class="p-8 space-y-6">
         <div class="space-y-4">
-          <!-- Email field with modern styling -->
+
           <div class="relative">
             <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <div class="relative">
@@ -46,7 +45,7 @@
             </div>
           </div>
 
-          <!-- Password field with modern styling -->
+
           <div class="relative">
             <div class="flex items-center justify-between mb-1">
               <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
@@ -83,30 +82,34 @@
           </div>
         </div>
 
-        <!-- Login button with subtle hover effect -->
         <button
-          type="submit"
-          class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition duration-300 font-semibold shadow-md"
+        type="submit"
+        class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition duration-300 font-semibold shadow-md"
+        [disabled]="isLoading"
+      >
+        <svg
+          *ngIf="!isLoading"
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-            <polyline points="10 17 15 12 10 7"></polyline>
-            <line x1="15" y1="12" x2="3" y2="12"></line>
-          </svg>
-          Sign In
-        </button>
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+          <polyline points="10 17 15 12 10 7"></polyline>
+          <line x1="15" y1="12" x2="3" y2="12"></line>
+        </svg>
+        <span *ngIf="!isLoading">Sign In</span>
+        <div
+          *ngIf="isLoading"
+          class="w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin"
+        ></div>
+      </button>
 
-        <!-- Divider -->
         <div class="relative my-6">
           <div class="absolute inset-0 flex items-center">
             <div class="w-full border-t border-gray-200"></div>
@@ -116,22 +119,24 @@
           </div>
         </div>
 
-        <!-- Google button with improved styling -->
         <button
-          type="button"
-          (click)="signInWithGoogle()"
-          class="w-full flex items-center justify-center gap-3 bg-white text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition duration-300 border border-gray-300 shadow-sm font-medium"
-        >
-          <svg class="w-5 h-5" viewBox="0 0 24 24">
-            <path
-              fill="currentColor"
-              d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 10 10.22 10 5.35 0 9.25-3.67 9.25-9.09 0-1.15-.15-1.81-.15-1.81z"
-            />
-          </svg>
-          Sign in with Google
-        </button>
-
-        <!-- Registration link -->
+  type="button"
+  (click)="signInWithGoogle()"
+  class="w-full flex items-center justify-center gap-3 bg-white text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition duration-300 border border-gray-300 shadow-sm font-medium"
+  [disabled]="isLoading"
+>
+  <svg *ngIf="!isLoading" class="w-5 h-5" viewBox="0 0 24 24">
+    <path
+      fill="currentColor"
+      d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 10 10.22 10 5.35 0 9.25-3.67 9.25-9.09 0-1.15-.15-1.81-.15-1.81z"
+    />
+  </svg>
+  <span *ngIf="!isLoading">Sign in with Google</span>
+  <div
+    *ngIf="isLoading"
+    class="w-5 h-5 border-2 border-t-transparent border-gray-700 rounded-full animate-spin"
+  ></div>
+</button>
         <div class="text-center mt-6">
           <p class="text-sm text-gray-600">
             Don't have an account?
@@ -141,7 +146,6 @@
           </p>
         </div>
 
-        <!-- Error message -->
         <p *ngIf="errorMessage" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
           {{ errorMessage }}
         </p>
