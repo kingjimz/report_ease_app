@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../_services/api.service';
 import { AlertsComponent } from '../components/alerts/alerts.component';
+import { ModalComponent } from '../components/modal/modal.component';
+import { MapComponent } from '../components/map/map.component';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, AlertsComponent],
+  imports: [CommonModule, FormsModule, AlertsComponent, ModalComponent, MapComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css'
 })
@@ -20,6 +22,7 @@ export class SettingsComponent {
   isSuccess = false;
   isLoading = false;
   alertMessage = 'Warning: Please verify your input carefully.';
+  showMap = false;
 
   constructor(public api: ApiService) { }
 
@@ -49,6 +52,9 @@ export class SettingsComponent {
       this.isLoading = false;
     }
     this.isLoading = false;
+  }
+
+  saveLocation() {
   }
 
 }

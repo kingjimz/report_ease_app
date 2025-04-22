@@ -50,6 +50,21 @@
                 <textarea id="lesson" name="next_lesson" [(ngModel)]="next_lesson" rows="5" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Next lesson"></textarea>
             </div>
 
+            <div class="mb-4">
+                <button type="button" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded" (click)="showMap = !showMap">
+                    Select Location
+                </button>
+                <app-modal *ngIf="showMap">
+                    <app-map></app-map>
+                    <button type="button" class="bg-green-500 hover:bg-green-700 text-white font-medium py-2 px-4 rounded mt-4 me-2" (click)="saveLocation()">
+                        Save Location
+                    </button>
+                    <button type="button" class="bg-red-500 hover:bg-red-700 text-white font-medium py-2 px-4 rounded mt-4" (click)="showMap = false">
+                        Close Map
+                    </button>
+                </app-modal>
+            </div>
+
             <div *ngIf="isSuccess">
                 <app-alerts [isSuccess]="isSuccess" [alertMessage]="alertMessage"></app-alerts>
             </div>
