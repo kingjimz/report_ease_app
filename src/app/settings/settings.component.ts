@@ -5,11 +5,14 @@ import { ApiService } from '../_services/api.service';
 import { AlertsComponent } from '../components/alerts/alerts.component';
 import { ModalComponent } from '../components/modal/modal.component';
 import { MapComponent } from '../components/map/map.component';
+import { LoaderComponent } from '../components/loader/loader.component';
+      
+declare const google: any;
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, AlertsComponent, ModalComponent, MapComponent],
+  imports: [CommonModule, FormsModule, AlertsComponent, ModalComponent, MapComponent, LoaderComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css'
 })
@@ -23,6 +26,12 @@ export class SettingsComponent {
   isLoading = false;
   alertMessage = 'Warning: Please verify your input carefully.';
   showMap = false;
+  openModalConfirm = false;
+  location = {
+    lat: 0,
+    lng: 0,
+    locationName: ''
+  }
 
   constructor(public api: ApiService) { }
 
@@ -54,7 +63,18 @@ export class SettingsComponent {
     this.isLoading = false;
   }
 
-  saveLocation() {
+  saveLocation(location: { lat: number; lng: number, locationName: string }) {
+    this.address = location.locationName;
+    this.openModalConfirm = false;
   }
 
-}
+  getLocation(event: { lat: number; lng: number, locationName: string }) {
+    this.location = event;
+    if(this.location) {
+      this.address = this.location.locationName;
+      this.showMap = false;
+    }
+  }
+
+  }
+

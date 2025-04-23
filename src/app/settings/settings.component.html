@@ -28,8 +28,22 @@
             </div>
 
             <div class="mb-4">
-                <label for="lesson" class="block text-sm font-medium text-gray-700">Address</label>
-                <input type="text" id="address" name="address" [(ngModel)]="address" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Address" />
+                <label for="address" class="block text-sm font-medium text-gray-700">Address</label>
+                <div class="flex items-center">
+                    <input type="text" id="address" name="address" [(ngModel)]="address" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Address" disabled />
+                    <button type="button" class="ml-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded" (click)="showMap = !showMap">
+                        <i class="bi bi-geo-alt"></i>
+                    </button>
+                </div>
+                <app-modal *ngIf="showMap">
+                    <div class="mt-5">
+                        <app-map (mapClicked)="getLocation($event)"></app-map>
+                    </div>
+            
+                    <button type="button" class="absolute top-1 right-1 text-black font-large py-2 px-4 text-xl" (click)="showMap = false">
+                        <i class="bi bi-x-lg font-bold"></i>
+                    </button>
+                </app-modal>
             </div>
 
             <div class="mb-4">
@@ -48,21 +62,6 @@
             <div class="mb-4">
                 <label for="lesson" class="block text-sm font-medium text-gray-700">Next Topic / Lesson <small>(e.g., Chapter 1, Title, Point Number)</small></label>
                 <textarea id="lesson" name="next_lesson" [(ngModel)]="next_lesson" rows="5" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Next lesson"></textarea>
-            </div>
-
-            <div class="mb-4">
-                <button type="button" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded" (click)="showMap = !showMap">
-                    Select Location
-                </button>
-                <app-modal *ngIf="showMap">
-                    <app-map></app-map>
-                    <button type="button" class="bg-green-500 hover:bg-green-700 text-white font-medium py-2 px-4 rounded mt-4 me-2" (click)="saveLocation()">
-                        Save Location
-                    </button>
-                    <button type="button" class="bg-red-500 hover:bg-red-700 text-white font-medium py-2 px-4 rounded mt-4" (click)="showMap = false">
-                        Close Map
-                    </button>
-                </app-modal>
             </div>
 
             <div *ngIf="isSuccess">
