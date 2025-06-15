@@ -7,9 +7,9 @@ import { CalendarComponent } from '../calendar/calendar.component';
   standalone: true,
   selector: 'app-tab-card',
   templateUrl: './tab-card.component.html',
-  styleUrls: ['./tab-card.component.scss'],
+  styleUrls: ['./tab-card.component.css'],
   imports:
-    [CommonModule, CalendarComponent],
+    [CommonModule],
 })
 export class TabCardComponent {
   @Output() tabChange = new EventEmitter<string>();

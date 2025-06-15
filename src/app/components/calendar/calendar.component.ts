@@ -1,68 +1,195 @@
-import { Component, signal, OnInit } from '@angular/core';
-import { CalendarView, CalendarEvent, CalendarMonthViewComponent } from 'angular-calendar';
-import { AngularCalendarModule } from './calendar.module';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../_services/api.service';
-import { subMonths, addMonths } from 'date-fns';
 import { UtilService } from '../../_services/util.service';
 import { LoaderComponent } from '../loader/loader.component';
 
+interface CalendarDay {
+  date: Date;
+  isCurrentMonth: boolean;
+  isToday: boolean;
+}
+
+interface CalendarEvent {
+  title: string;
+  start: Date;
+  color: { primary: string; secondary: string };
+  meta: {
+    report_id: string;
+    notes: string;
+    joined_ministry: string;
+  };
+}
 
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [AngularCalendarModule, CommonModule, FormsModule, LoaderComponent],
+  imports: [CommonModule, FormsModule, LoaderComponent],
   templateUrl: './calendar.component.html',
-  styleUrl: './calendar.component.css'
+  styleUrls: ['./calendar.component.css']
 })
-export class CalendarComponent {
-  viewDate: Date = new Date();
-  selectedDate: Date | null = null;
-  events: CalendarEvent[] = [];
+export class CalendarComponent implements OnInit {
+  
+  // Loading state
+  isLoading = false;
+  
+  // View modes and date
   viewMode: 'month' | 'week' | 'day' = 'month';
+  viewDate = new Date();
+  
+  // Calendar data
+  calendarDays: CalendarDay[] = [];
+  weekDays: Date[] = [];
+  daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  
+  // Events data
+  events: CalendarEvent[] = [];
+  
+  // Modal properties
+  selectedDate: Date | null = null;
   hours = 0;
   joined_ministry = '';
   notes = '';
   report_date = '';
   created_at = '';
   updated_at = '';
-  isLoading = false;
   hasExistingEvent = false;
   report_id = '';
   note = '';
   noChangeDetected = false;
 
-
   constructor(private api: ApiService, private util: UtilService) { }
 
-
   ngOnInit() {
+    this.generateCalendar();
+    this.generateWeekDays();
     this.loadReports();
   }
 
-  async dayClicked(event: { date: Date }) {
-    this.selectedDate = event.date;    
-    // Check if there is an existing event on the selected date
-    const existingEvent = this.events.find(e => e.start.toDateString() === this.selectedDate?.toDateString());
-    this.hasExistingEvent = existingEvent ? true : false;
+  // Calendar generation methods
+  generateCalendar() {
+    const year = this.viewDate.getFullYear();
+    const month = this.viewDate.getMonth();
     
-    if (existingEvent) {
-      this.hours = parseInt(existingEvent.title.split(' ')[0], 10);
-      this.report_id = existingEvent.meta.report_id;
-      this.selectedDate = existingEvent.start;
-      this.joined_ministry = this.util.capitalizeFirstLetter(existingEvent.meta.joined_ministry);
-      this.note = existingEvent.meta.notes;
-    } else { 
-      this.reInitializeVariables();
+    // Get first day of month and how many days in month
+    const firstDayOfMonth = new Date(year, month, 1);
+    const lastDayOfMonth = new Date(year, month + 1, 0);
+    const daysInMonth = lastDayOfMonth.getDate();
+    
+    // Get first day of week (0 = Sunday)
+    const firstDayOfWeek = firstDayOfMonth.getDay();
+    
+    // Calculate total cells needed (6 weeks * 7 days)
+    const totalCells = 42;
+    this.calendarDays = [];
+    
+    // Add previous month's trailing days
+    for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+      const date = new Date(year, month, -i);
+      this.calendarDays.push({
+        date: date,
+        isCurrentMonth: false,
+        isToday: this.isToday(date)
+      });
+    }
+    
+    // Add current month's days
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      this.calendarDays.push({
+        date: date,
+        isCurrentMonth: true,
+        isToday: this.isToday(date)
+      });
+    }
+    
+    // Add next month's leading days
+    const remainingCells = totalCells - this.calendarDays.length;
+    for (let day = 1; day <= remainingCells; day++) {
+      const date = new Date(year, month + 1, day);
+      this.calendarDays.push({
+        date: date,
+        isCurrentMonth: false,
+        isToday: this.isToday(date)
+      });
+    }
+  }
+  
+  generateWeekDays() {
+    const startOfWeek = this.getStartOfWeek(this.viewDate);
+    this.weekDays = [];
+    
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(startOfWeek);
+      date.setDate(startOfWeek.getDate() + i);
+      this.weekDays.push(date);
+    }
+  }
+  
+  getStartOfWeek(date: Date): Date {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day;
+    return new Date(d.setDate(diff));
+  }
+
+  // Navigation methods
+  previousMonth() {
+    if (this.viewMode === 'month') {
+      this.viewDate = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() - 1, 1);
+      this.generateCalendar();
+    } else if (this.viewMode === 'week') {
+      this.viewDate = new Date(this.viewDate.getTime() - (7 * 24 * 60 * 60 * 1000));
+      this.generateWeekDays();
+    } else if (this.viewMode === 'day') {
+      this.viewDate = new Date(this.viewDate.getTime() - (24 * 60 * 60 * 1000));
+    }
+  }
+  
+  nextMonth() {
+    if (this.viewMode === 'month') {
+      this.viewDate = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() + 1, 1);
+      this.generateCalendar();
+    } else if (this.viewMode === 'week') {
+      this.viewDate = new Date(this.viewDate.getTime() + (7 * 24 * 60 * 60 * 1000));
+      this.generateWeekDays();
+    } else if (this.viewMode === 'day') {
+      this.viewDate = new Date(this.viewDate.getTime() + (24 * 60 * 60 * 1000));
     }
   }
 
+  // Event-related methods
+  hasEvent(date: Date): boolean {
+    return this.events.some(event => 
+      event.start.toDateString() === date.toDateString()
+    );
+  }
+
+  getEventHours(date: Date): string {
+    const event = this.events.find(e => 
+      e.start.toDateString() === date.toDateString()
+    );
+    if (event) {
+      const hours = parseInt(event.title.split(' ')[0], 10);
+      return `${hours}h`;
+    }
+    return '';
+  }
+
+  getEventPreview(date: Date): string {
+    const event = this.events.find(e => 
+      e.start.toDateString() === date.toDateString()
+    );
+    return event ? event.title : '';
+  }
+
+  // API methods
   async loadReports() {
     this.isLoading = true;
-    await this.api.getReports().then((data) => {
+    try {
+      const data = await this.api.getReports();
       this.events = data.map((report: any) => {
-        this.report_id = report.id;
         return {
           title: report.hours + ' Hours',
           start: new Date(report.report_date.seconds * 1000),
@@ -74,11 +201,9 @@ export class CalendarComponent {
           }
         };
       });
-  
-    }).catch(error => {
+    } catch (error) {
       console.error('Error fetching reports:', error);
-      this.isLoading = false;
-    });
+    }
     this.isLoading = false;
   }
 
@@ -96,16 +221,15 @@ export class CalendarComponent {
       updated_at: new Date(),
     };
     
-      try {
-        await this.api.createReport(report);
-        this.noChangeDetected = false;
-        this.selectedDate = null;
-        await this.loadReports();
-        this.reInitializeVariables();
-      } catch (error) {
-        console.error('Error saving report:', error);
-      }
-    
+    try {
+      await this.api.createReport(report);
+      this.noChangeDetected = false;
+      this.selectedDate = null;
+      await this.loadReports();
+      this.reInitializeVariables();
+    } catch (error) {
+      console.error('Error saving report:', error);
+    }
   }
 
   async updateReport() {
@@ -113,7 +237,9 @@ export class CalendarComponent {
       return;
     }
 
-    const existingEvent = this.events.find(e => e.start.toDateString() === this.selectedDate?.toDateString());
+    const existingEvent = this.events.find(e => 
+      e.start.toDateString() === this.selectedDate?.toDateString()
+    );
 
     if (existingEvent) {
       const existingHours = parseInt(existingEvent.title.split(' ')[0], 10);
@@ -151,14 +277,45 @@ export class CalendarComponent {
     }
   }
 
-  previousMonth() {
-    this.viewDate = subMonths(this.viewDate, 1);
+  // Utility methods
+  isToday(date: Date): boolean {
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
   }
 
-  nextMonth() {
-    this.viewDate = addMonths(this.viewDate, 1);
+  getMonthYearDisplay(): string {
+    return this.viewDate.toLocaleDateString('en-US', { 
+      month: 'long', 
+      year: 'numeric' 
+    });
   }
 
+  trackByDay(index: number, day: CalendarDay): string {
+    return day.date.toISOString();
+  }
+
+  // Click handlers
+  onDayClick(day: CalendarDay) {
+    this.selectedDate = new Date(day.date);
+    
+    // Check if there is an existing event on the selected date
+    const existingEvent = this.events.find(e => 
+      e.start.toDateString() === this.selectedDate?.toDateString()
+    );
+    this.hasExistingEvent = existingEvent ? true : false;
+    
+    if (existingEvent) {
+      this.hours = parseInt(existingEvent.title.split(' ')[0], 10);
+      this.report_id = existingEvent.meta.report_id;
+      this.selectedDate = existingEvent.start;
+      this.joined_ministry = this.util.capitalizeFirstLetter(existingEvent.meta.joined_ministry);
+      this.note = existingEvent.meta.notes;
+    } else { 
+      this.reInitializeVariables();
+    }
+  }
+
+  // Modal methods
   closeModal() {
     this.selectedDate = null;
     this.noChangeDetected = false;
@@ -173,7 +330,6 @@ export class CalendarComponent {
     this.updated_at = '';
     this.report_id = '';
     this.note = '';
-
   }
 
   get dayOfWeek(): string {

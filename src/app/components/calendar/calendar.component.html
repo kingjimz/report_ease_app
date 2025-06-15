@@ -1,5 +1,5 @@
 <!-- Loader -->
-<div *ngIf="isLoading" >
+<div *ngIf="isLoading">
   <app-loader [loadingMessage]="'Loading your reports...'"></app-loader>
 </div>
 
@@ -8,7 +8,7 @@
     <button (click)="previousMonth()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">
       ◀ 
     </button>
-    <h2 class="text-xl font-semibold">{{ viewDate | date: 'MMMM yyyy' }}</h2>
+    <h2 class="text-xl font-semibold">{{ getMonthYearDisplay() }}</h2>
     <button (click)="nextMonth()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">
       ▶
     </button>
@@ -38,22 +38,82 @@
     </button>
   </div>
 
-  <div class="calendar-container">
-    <mwl-calendar-month-view *ngIf="viewMode === 'month'"
-      [viewDate]="viewDate"
-      [events]="events"
-      (dayClicked)="dayClicked($event.day)">
-    </mwl-calendar-month-view>
+  <!-- Month View -->
+  <div *ngIf="viewMode === 'month'" class="calendar-container bg-white rounded-lg shadow-md overflow-hidden mt-4">
+    <!-- Days of week header -->
+    <div class="grid grid-cols-7 bg-gray-50">
+      <div *ngFor="let day of daysOfWeek" class="p-3 text-center font-medium text-gray-700 border-r border-gray-200 last:border-r-0">
+        {{ day }}
+      </div>
+    </div>
+    
+    <!-- Calendar grid -->
+    <div class="grid grid-cols-7">
+      <div *ngFor="let day of calendarDays; trackBy: trackByDay" 
+           class="min-h-[100px] border-r border-b border-gray-200 last:border-r-0 p-2 cursor-pointer hover:bg-gray-50 transition-colors relative"
+           [class.bg-gray-100]="!day.isCurrentMonth"
+           [class.bg-blue-50]="day.isToday"
+           [class.border-blue-300]="day.isToday"
+           (click)="onDayClick(day)">
+        
+        <div class="flex justify-between items-start mb-1">
+          <span class="text-sm font-medium"
+                [class.text-gray-400]="!day.isCurrentMonth"
+                [class.text-blue-600]="day.isToday">
+            {{ day.date.getDate() }}
+          </span>
+          
+          <!-- Event indicator dot -->
+          <div *ngIf="hasEvent(day.date)" class="w-2 h-2 bg-green-500 rounded-full"></div>
+        </div>
+        
+        <!-- Hours display -->
+        <div *ngIf="hasEvent(day.date)" class="text-xs text-green-700 font-medium bg-green-100 rounded px-1 py-0.5 inline-block">
+          {{ getEventHours(day.date) }}
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <mwl-calendar-week-view *ngIf="viewMode === 'week'"
-      [viewDate]="viewDate"
-      [events]="events">
-    </mwl-calendar-week-view>
+  <!-- Week View -->
+  <div *ngIf="viewMode === 'week'" class="calendar-container bg-white rounded-lg shadow-md overflow-hidden mt-4">
+    <div class="grid grid-cols-7 bg-gray-50">
+      <div *ngFor="let day of weekDays" class="p-3 text-center font-medium text-gray-700 border-r border-gray-200 last:border-r-0">
+        <div>{{ day | date: 'EEE' }}</div>
+        <div class="text-lg" [class.text-blue-600]="isToday(day)">{{ day | date: 'd' }}</div>
+      </div>
+    </div>
+    
+    <div class="grid grid-cols-7">
+      <div *ngFor="let day of weekDays" 
+           class="min-h-[200px] border-r border-b border-gray-200 last:border-r-0 cursor-pointer hover:bg-gray-50 p-2 relative"
+           (click)="onDayClick({date: day, isCurrentMonth: true, isToday: isToday(day)})">
+        
+        <!-- Hours display for week view -->
+        <div *ngIf="hasEvent(day)" class="text-xs text-green-700 font-medium bg-green-100 rounded px-2 py-1 inline-block">
+          {{ getEventHours(day) }}
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <mwl-calendar-day-view *ngIf="viewMode === 'day'"
-      [viewDate]="viewDate"
-      [events]="events">
-    </mwl-calendar-day-view>
+  <!-- Day View -->
+  <div *ngIf="viewMode === 'day'" class="calendar-container bg-white rounded-lg shadow-md overflow-hidden mt-4">
+    <div class="bg-gray-50 p-4 border-b">
+      <h3 class="text-lg font-medium">{{ viewDate | date: 'fullDate' }}</h3>
+    </div>
+    
+    <div class="min-h-[400px] cursor-pointer hover:bg-gray-50 p-4 flex flex-col items-center justify-center text-gray-500"
+         (click)="onDayClick({date: viewDate, isCurrentMonth: true, isToday: isToday(viewDate)})">
+      
+      <div *ngIf="hasEvent(viewDate)" class="text-lg text-green-700 font-medium bg-green-100 rounded px-3 py-2 mb-2">
+        {{ getEventHours(viewDate) }}
+      </div>
+      
+      <span class="text-sm">
+        {{ hasEvent(viewDate) ? 'Click to edit report' : 'Click to add report for this day' }}
+      </span>
+    </div>
   </div>
 </div>
 
@@ -98,10 +158,10 @@
       </form>
 
       <ng-container *ngIf="hasExistingEvent; else noExistingEvent">
-        <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 me-2" (click)="updateReport()" [disabled]="hours == 0 || !joined_ministry" [ngClass]="{'opacity-50 cursor-not-allowed': hours == 0 || !joined_ministry}">Update</button>
+        <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 me-2" (click)="updateReport()" [disabled]="!hours || +hours === 0 || !joined_ministry" [ngClass]="{'opacity-50 cursor-not-allowed': !hours || +hours === 0 || !joined_ministry}">Update</button>
       </ng-container>
       <ng-template #noExistingEvent>
-        <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 me-2" (click)="saveReport()" [disabled]="hours == 0 || !joined_ministry" [ngClass]="{'opacity-50 cursor-not-allowed': hours == 0 || !joined_ministry}">Save</button>
+        <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 me-2" (click)="saveReport()" [disabled]="!hours || +hours === 0 || !joined_ministry" [ngClass]="{'opacity-50 cursor-not-allowed': !hours || +hours === 0 || !joined_ministry}">Save</button>
       </ng-template>
     
       <button (click)="closeModal()" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-700">Close</button>
