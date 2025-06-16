@@ -30,6 +30,8 @@ export class ReportsComponent {
   monthlyReportData: any = null;
   loading = true; 
   isCopied = false;
+  numberOfBibleStudies = 0;
+  numberOfReturnVisits = 0;
 
   constructor(public api: ApiService, public util: UtilService) { }
 
@@ -44,6 +46,8 @@ export class ReportsComponent {
   async loadBibLeStudies() {
     await this.api.getBibleStudies().then((data) => {
       this.bibleStudies = data;
+      this.numberOfBibleStudies = this.bibleStudies.filter(study => study.type === 'bs').length;
+      this.numberOfReturnVisits = this.bibleStudies.filter(study => study.type === 'rv').length;
     }).catch(error => {
       console.error('Error fetching Bible studies:', error);
     });

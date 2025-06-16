@@ -57,6 +57,18 @@
 </div>
 
 <div *ngIf="!loading">
+  <div class="flex items-center gap-4 mb-4 mt-5">
+    <div class="flex items-center bg-green-100 text-green-800 px-4 py-2 rounded-lg shadow-sm">
+      <i class="bi bi-book-half text-2xl mr-2"></i>
+      <span class="font-bold text-lg">{{ numberOfBibleStudies }}</span>
+      <span class="ml-1 text-sm">Active Bible Studies</span>
+    </div>
+    <div class="flex items-center bg-blue-100 text-blue-800 px-4 py-2 rounded-lg shadow-sm">
+      <i class="bi bi-arrow-repeat text-2xl mr-2"></i>
+      <span class="font-bold text-lg">{{ numberOfReturnVisits }}</span>
+      <span class="ml-1 text-sm">Return Visits</span>
+    </div>
+  </div>
   <app-bible-studies [bibleStudies]="bibleStudies" (edit)="editStudy($event)"></app-bible-studies>
 </div>
 

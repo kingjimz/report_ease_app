@@ -1,5 +1,5 @@
-<div class="flex flex-col items-center py-4 space-y-6 w-full max-w-3xl mx-auto">
-    <div class="bg-white shadow-md border-t border-gray-200 w-full">
+
+    <div class="bg-white w-full">
       <div class="flex justify-around p-4">
         <div
           *ngFor="let tab of tabs"
@@ -10,9 +10,8 @@
             'text-gray-500': activeTab !== tab.id
           }"
         >
-          <div class="text-lg font-semibold"><i [class]="tab.icon"></i> {{ tab.title }}</div>
+          <i [class]="tab.icon" class="text-lg"></i>
+          <div class="text-sm font-semibold text-center">{{ tab.title }}</div>
         </div>
       </div>
     </div>
-    
-  </div>

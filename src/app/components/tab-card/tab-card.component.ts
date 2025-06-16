@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter, Input, OnInit } from '@angular/core';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { CommonModule } from '@angular/common';
 import { CalendarComponent } from '../calendar/calendar.component';
@@ -11,8 +11,10 @@ import { CalendarComponent } from '../calendar/calendar.component';
   imports:
     [CommonModule],
 })
-export class TabCardComponent {
+export class TabCardComponent implements OnInit {
   @Output() tabChange = new EventEmitter<string>();
+  @Input() selectedTab: string = 'calendar';
+
   activeTab = 'calendar';
   
   tabs = [
@@ -25,16 +27,22 @@ export class TabCardComponent {
     { 
       id: 'reports', 
       title: 'Reports', 
-      icon: 'bi bi-clipboard2-data',
+      icon: 'bi bi-book-half',
       description: 'Track your progress'
     },
-    { 
+    {   
       id: 'other', 
       title: 'Settings', 
       icon: 'bi bi-gear-fill',
       description: 'Customize options'
     }
   ];
+
+  ngOnInit(): void {
+        if (this.selectedTab && this.selectedTab !== this.activeTab) {
+      this.activeTab = this.selectedTab;
+    }
+  }
   
   getActiveTabTitle(): string {
     const activeTab = this.tabs.find(tab => tab.id === this.activeTab);

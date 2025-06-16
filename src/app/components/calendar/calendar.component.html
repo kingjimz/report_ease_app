@@ -20,21 +20,14 @@
       [class.bg-green-600]="viewMode === 'month'" 
       [class.text-white]="viewMode === 'month'"
       class="px-4 py-2 rounded-lg transition-colors duration-200 text-gray-800 hover:bg-green-500 hover:text-white">
-      Month
+      <i class="bi bi-calendar me-1"></i> Month
     </button>
     <button 
       (click)="viewMode = 'week'" 
       [class.bg-green-600]="viewMode === 'week'" 
       [class.text-white]="viewMode === 'week'"
       class="px-4 py-2 rounded-lg transition-colors duration-200 text-gray-800 hover:bg-green-500 hover:text-white">
-      Week
-    </button>
-    <button 
-      (click)="viewMode = 'day'" 
-      [class.bg-green-600]="viewMode === 'day'" 
-      [class.text-white]="viewMode === 'day'"
-      class="px-4 py-2 rounded-lg transition-colors duration-200 text-gray-800 hover:bg-green-500 hover:text-white">
-      Day
+      <i class="bi bi-calendar-week me-1"></i> Week
     </button>
   </div>
 
@@ -94,25 +87,6 @@
           {{ getEventHours(day) }}
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Day View -->
-  <div *ngIf="viewMode === 'day'" class="calendar-container bg-white rounded-lg shadow-md overflow-hidden mt-4">
-    <div class="bg-gray-50 p-4 border-b">
-      <h3 class="text-lg font-medium">{{ viewDate | date: 'fullDate' }}</h3>
-    </div>
-    
-    <div class="min-h-[400px] cursor-pointer hover:bg-gray-50 p-4 flex flex-col items-center justify-center text-gray-500"
-         (click)="onDayClick({date: viewDate, isCurrentMonth: true, isToday: isToday(viewDate)})">
-      
-      <div *ngIf="hasEvent(viewDate)" class="text-lg text-green-700 font-medium bg-green-100 rounded px-3 py-2 mb-2">
-        {{ getEventHours(viewDate) }}
-      </div>
-      
-      <span class="text-sm">
-        {{ hasEvent(viewDate) ? 'Click to edit report' : 'Click to add report for this day' }}
-      </span>
     </div>
   </div>
 </div>
