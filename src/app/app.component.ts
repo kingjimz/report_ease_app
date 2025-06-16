@@ -44,15 +44,16 @@ export class AppComponent implements OnInit {
   }
 
   installPWA() {
-    if (this.deferredPrompt) {
-      this.deferredPrompt.prompt();
-      this.deferredPrompt.userChoice.then((choiceResult: any) => {
-        if (choiceResult.outcome === 'accepted') {
-          console.log('PWA setup accepted');
-        }
-        this.deferredPrompt = null;
-        this.showInstallButton = false;
-      });
-    }
+  if (this.deferredPrompt) {
+    this.deferredPrompt.prompt(); // ✅ this shows the prompt
+    this.deferredPrompt.userChoice.then((choiceResult: any) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('PWA setup accepted');
+      }
+      this.deferredPrompt = null;
+      this.showInstallButton = false;
+    });
   }
+}
+
 }
