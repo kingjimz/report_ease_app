@@ -23,18 +23,23 @@ export class HomeComponent {
   constructor(private auth: AuthService, private route: Router) {}
 
   private lastScrollTop = 0;
+  private scrollThreshold = 40;
 
   @HostListener('window:scroll', [])
   onWindowScroll() {
     const st = window.pageYOffset || document.documentElement.scrollTop;
-    if (st > this.lastScrollTop) {
-      this.showTab = false;
-      this.selectedTab = this.activeTab; 
-    } else {
-      this.showTab = true;
-      this.activeTab = this.selectedTab; 
+    const diff = Math.abs(st - this.lastScrollTop);
+
+    if (diff > this.scrollThreshold) {
+      if (st > this.lastScrollTop) {
+        this.showTab = false;
+        this.selectedTab = this.activeTab; 
+      } else {
+        this.showTab = true;
+        this.activeTab = this.selectedTab; 
+      }
+      this.lastScrollTop = st <= 0 ? 0 : st;
     }
-    this.lastScrollTop = st <= 0 ? 0 : st;
   }
   
   logout() {
