@@ -58,7 +58,7 @@ export class CalendarComponent implements OnInit {
   report_id = '';
   note = '';
   noChangeDetected = false;
-
+  reports: any[] = [];
   constructor(private api: ApiService, private util: UtilService) { }
 
   ngOnInit() {
@@ -189,6 +189,9 @@ export class CalendarComponent implements OnInit {
     this.isLoading = true;
     try {
       const data = await this.api.getReports();
+      this.reports = this.util.aggregateReportsByMonth(data);
+      this.api.updateAggregatedData(this.reports);
+     
       this.events = data.map((report: any) => {
         return {
           title: report.hours + ' Hours',

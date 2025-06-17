@@ -42,6 +42,11 @@ export class SettingsComponent {
       this.next_lesson = '';
       this.isSuccess = true;
       this.alertMessage = 'Study added! View reports section.';
+      this.api.getBibleStudies().then((data) => {
+        this.api.updateBibleStudies(data);
+      }).catch(error => {
+        console.error('Error updating Bible studies:', error);
+      });
     } catch (error) {
       console.error('Error submitting data', error);
       this.isSuccess = false;

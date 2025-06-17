@@ -36,4 +36,42 @@ export class UtilService {
   capitalizeFirstLetter(text: string) {
     return text.charAt(0).toUpperCase() + text.slice(1);
   }
+
+  aggregateReportsByMonth(reports: any[]): any[] {
+     const aggregated: Record<string, any> = {};
+   
+     reports.forEach(report => {
+       const reportDate = report.report_date instanceof Date 
+         ? report.report_date 
+         : new Date(report.report_date.seconds * 1000);
+       
+       // Group by Year-Month (e.g., "2024-04" for April 2024)
+       const yearMonth = `${reportDate.getFullYear()}-${String(reportDate.getMonth() + 1).padStart(2, '0')}`;
+       const hours = parseInt(report.hours) || 0;
+   
+       if (!aggregated[yearMonth]) {
+         aggregated[yearMonth] = {
+           year: reportDate.getFullYear(),
+           month: reportDate.getMonth() + 1,
+           month_name: reportDate.toLocaleString('default', { month: 'long' }),
+           total_hours: 0,
+           report_count: 0,
+           is_joined_ministry: "no", 
+           reports: []
+         };
+       }
+   
+       aggregated[yearMonth].total_hours += hours;
+       aggregated[yearMonth].report_count++;
+       aggregated[yearMonth].reports.push(report);
+ 
+       if (report.is_joined_ministry?.toLowerCase() === "yes") {
+         aggregated[yearMonth].is_joined_ministry = "yes";
+       }
+     });
+   
+     return Object.values(aggregated).sort((a, b) => 
+       b.year - a.year || b.month - a.month
+     );
+   }
 }

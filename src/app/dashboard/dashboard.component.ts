@@ -31,6 +31,7 @@ export class DashboardComponent implements OnInit {
    numberOfReturnVisits = 0;
    monthlyHours = 0;
    prevMonthHours = 0;
+   allReports: any[] = [];
  
    constructor(public api: ApiService, public util: UtilService) { }
  
@@ -45,18 +46,20 @@ export class DashboardComponent implements OnInit {
    async loadBibLeStudies() {
      await this.api.getBibleStudies().then((data) => {
        this.bibleStudies = data;
+       this.api.updateBibleStudies(data);
        this.numberOfBibleStudies = this.bibleStudies.filter(study => study.type === 'bs').length;
        this.numberOfReturnVisits = this.bibleStudies.filter(study => study.type === 'rv').length;
      }).catch(error => {
        console.error('Error fetching Bible studies:', error);
      });
-   }
+    }
  
  
    async loadReports() {
      await this.api.getReports().then((data) => {
+       this.allReports = data;
        this.reports = data;
-       this.reports = this.aggregateReportsByMonth(data);
+       this.reports = this.util.aggregateReportsByMonth(data);
        this.api.updateAggregatedData(this.reports);
         // Only get total_hours for the latest (first) month/index
         this.monthlyHours = this.reports.length > 0 ? (this.reports[0].total_hours || 0) : 0;
@@ -68,42 +71,5 @@ export class DashboardComponent implements OnInit {
      });
    }
  
-   aggregateReportsByMonth(reports: any[]): any[] {
-     const aggregated: Record<string, any> = {};
-   
-     reports.forEach(report => {
-       const reportDate = report.report_date instanceof Date 
-         ? report.report_date 
-         : new Date(report.report_date.seconds * 1000);
-       
-       // Group by Year-Month (e.g., "2024-04" for April 2024)
-       const yearMonth = `${reportDate.getFullYear()}-${String(reportDate.getMonth() + 1).padStart(2, '0')}`;
-       const hours = parseInt(report.hours) || 0;
-   
-       if (!aggregated[yearMonth]) {
-         aggregated[yearMonth] = {
-           year: reportDate.getFullYear(),
-           month: reportDate.getMonth() + 1,
-           month_name: reportDate.toLocaleString('default', { month: 'long' }),
-           total_hours: 0,
-           report_count: 0,
-           is_joined_ministry: "no", 
-           reports: []
-         };
-       }
-   
-       aggregated[yearMonth].total_hours += hours;
-       aggregated[yearMonth].report_count++;
-       aggregated[yearMonth].reports.push(report);
- 
-       if (report.is_joined_ministry?.toLowerCase() === "yes") {
-         aggregated[yearMonth].is_joined_ministry = "yes";
-       }
-     });
-   
-     return Object.values(aggregated).sort((a, b) => 
-       b.year - a.year || b.month - a.month
-     );
-   }
  
 }

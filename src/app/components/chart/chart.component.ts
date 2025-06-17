@@ -1,5 +1,5 @@
 // chart.component.ts
-import { Component, Input, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, Input, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef, SimpleChanges, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 // Import Chart.js
@@ -20,39 +20,11 @@ Chart.register(...registerables);
   templateUrl: './chart.component.html',
   styleUrl: './chart.component.css'
 })
-export class ChartComponent implements OnInit, AfterViewInit, OnDestroy {
+export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
   @ViewChild('chartCanvas', { static: false }) chartCanvas!: ElementRef<HTMLCanvasElement>;
   
   private chart: Chart | null = null;
-
-  // Default chart data for testing
-  @Input() chartData: any = {
-    labels: ['Apple', 'Banana', 'Cherry', 'Date', 'Elderberry', 'Fig'],
-    datasets: [
-      {
-        label: 'Fruit Sales',
-        data: [15, 9, 13, 7, 6, 11],
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.8)',
-          'rgba(255, 206, 86, 0.8)',
-          'rgba(75, 192, 192, 0.8)',
-          'rgba(153, 102, 255, 0.8)',
-          'rgba(54, 162, 235, 0.8)',
-          'rgba(255, 159, 64, 0.8)'
-        ],
-        borderColor: [
-          'rgba(255,99,132,1)',
-          'rgba(255, 206, 86, 1)',
-          'rgba(75, 192, 192, 1)',
-          'rgba(153, 102, 255, 1)',
-          'rgba(54, 162, 235, 1)',
-          'rgba(255, 159, 64, 1)'
-        ],
-        borderWidth: 2
-      }
-    ]
-  };
-
+  @Input() reportData: any[] = [];
   @Input() chartType: ChartType = 'line';
   @Input() chartOptions: any = {
     responsive: true,
@@ -64,8 +36,8 @@ export class ChartComponent implements OnInit, AfterViewInit, OnDestroy {
         position: 'top' as const
       },
       title: {
-        display: true,
-        text: 'Sample Chart'
+        display: false,
+        text:  'Monthly Report',
       }
     },
     scales: {
@@ -87,21 +59,79 @@ export class ChartComponent implements OnInit, AfterViewInit, OnDestroy {
     },
     elements: {
       point: {
-        radius: 0, // Remove dots at intersection
+        radius: 0,
         hoverRadius: 0
       },
       line: {
-        tension: 0.4 // Make the line smooth
+        tension: 0.4 
       }
     }
   };
 
-  ngOnInit() {
-    // Component initialization
+  chartData: ChartConfiguration['data'] = {
+    labels: [],
+    datasets: [
+      {
+        label: 'Hours',
+        data: [], // Default data for testing
+        fill: true,
+        pointRadius: 0, 
+        pointHoverRadius: 0
+      }
+    ]
+  };
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['reportData'] && this.reportData && this.reportData.length) {
+      const sortedData = [...this.reportData].sort((a: any, b: any) => {
+        return a.report_date.seconds - b.report_date.seconds;
+      });
+
+      const N = 8;
+      const latestData = sortedData.slice(-N);
+
+      this.chartData.labels = latestData.map((item: any) => {
+        // Use UTC date to avoid timezone offset issues
+        const date = new Date(item.report_date.seconds * 1000);
+        return date.toLocaleDateString('en-CA');
+      });
+
+      this.chartData.datasets[0].data = latestData.map((item: any) => Number(item.hours));
+
+      if (this.chart) {
+        this.chart.data.labels = this.chartData.labels;
+        this.chart.data.datasets[0].data = this.chartData.datasets[0].data;
+        this.chart.update();
+      }
+    }
+
+    if (this.chartOptions && this.chartOptions.scales) {
+      if (!this.chartOptions.scales.x) {
+        this.chartOptions.scales.x = {};
+      }
+      this.chartOptions.scales.x.ticks = { display: false };
+
+      if (!this.chartOptions.scales.y) {
+        this.chartOptions.scales.y = {};
+      }
+      this.chartOptions.scales.y.ticks = {
+        ...this.chartOptions.scales.y.ticks,
+        callback: function(value: any) {
+          // Only show whole numbers
+          if (Number.isInteger(value)) {
+            return value;
+          }
+          return '';
+        },
+        stepSize: 1
+      };
+    }
+
+    if (this.chartOptions && this.chartOptions.plugins && this.chartOptions.plugins.legend) {
+      this.chartOptions.plugins.legend.display = false;
+    }
   }
 
   ngAfterViewInit() {
-    // Create chart after view is initialized
     setTimeout(() => {
       this.createChart();
     }, 0);
@@ -121,7 +151,7 @@ export class ChartComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    // Destroy existing chart if it exists
+  
     if (this.chart) {
       this.chart.destroy();
     }

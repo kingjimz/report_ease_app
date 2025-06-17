@@ -45,12 +45,12 @@ export class ReportsComponent {
   }
 
   async loadBibLeStudies() {
-    await this.api.getBibleStudies().then((data) => {
-      this.bibleStudies = data;
-      this.numberOfBibleStudies = this.bibleStudies.filter(study => study.type === 'bs').length;
-      this.numberOfReturnVisits = this.bibleStudies.filter(study => study.type === 'rv').length;
-    }).catch(error => {
-      console.error('Error fetching Bible studies:', error);
+    this.api.bibleStudies$.subscribe((data) => {
+      if (data && data.length > 0) {
+        this.bibleStudies = data;
+        this.numberOfBibleStudies = this.bibleStudies.filter(study => study.type === 'bs').length;
+        this.numberOfReturnVisits = this.bibleStudies.filter(study => study.type === 'rv').length;
+      }
     });
   }
 
@@ -59,7 +59,6 @@ export class ReportsComponent {
    this.api.aggregatedData$.subscribe((data) => {
     if (data && data.length > 0) {
       this.reports = data;
-      console.log('Reports loaded:', this.reports);
     }
   });
 }
@@ -90,12 +89,20 @@ export class ReportsComponent {
     const study = this.studySelected;
   
     await this.api.deleteStudy(study).then(() => {
-      this.loadBibLeStudies();
+      this.closeStudyDetails();
+      this.refreshBibleStudies();
     }).catch(error => {
       console.error('Error deleting study:', error);
     });
-  
-    this.closeStudyDetails();
+  }
+
+  refreshBibleStudies() {
+    this.api.getBibleStudies().then((data) => {
+      this.bibleStudies = data;
+      this.api.updateBibleStudies(data);
+    }).catch(error => {
+      console.error('Error refreshing Bible studies:', error);
+    });
   }
 
   closeDeleteModal() {

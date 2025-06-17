@@ -1,4 +1,4 @@
-<div>
+<div class="md:mb-8 lg:mb-4">
     <div class="container mx-auto p-4">
         <h1 class="text-2xl font-bold mb-4">Dashboard</h1>
         <p class="text-gray-700">Welcome to your dashboard! Here you can find an overview of your activities.</p>
@@ -36,5 +36,9 @@
                 <p class="text-lg font-semibold">{{ numberOfReturnVisits }}</p>
             </div>
         </div>
-         <app-chart ></app-chart>
+        <div class="mt-5 shadow-md bg-white rounded-lg p-6">
+            <h2 class="text-xl font-semibold">Daily Report</h2>
+            <p class="text-gray-600 mb-4">Track your daily report statistics below.</p>
+            <app-chart [reportData]="allReports"></app-chart>
+        </div>
 </div>

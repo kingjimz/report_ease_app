@@ -27,10 +27,10 @@
        <div *ngIf="i === 0" class="absolute top-3 right-3 z-10">
          <div class="relative">
            <button 
-             class="group px-3 py-1.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
+             class="group px-3 py-1.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
              (click)="toggleDropdown()"
            >
-             <i class="bi bi-download mr-1 group-hover:animate-bounce"></i> 
+             <i class="bi bi-download mr-1"></i> 
              <span class="hidden sm:inline">Download Report</span><span class="sm:hidden">Download</span>
              <i class="bi bi-chevron-down ml-1 transition-transform duration-200" [class.rotate-180]="dropdownOpen"></i>
            </button>

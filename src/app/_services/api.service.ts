@@ -12,6 +12,12 @@ export class ApiService {
   private aggregatedDataSubject = new BehaviorSubject<any>({});
   aggregatedData$ = this.aggregatedDataSubject.asObservable();
 
+  private bibleStudiesSubject = new BehaviorSubject<any[]>([]);
+  bibleStudies$ = this.bibleStudiesSubject.asObservable();
+
+  private reportsSubject = new BehaviorSubject<any[]>([]);
+  reports$ = this.reportsSubject.asObservable();
+
   reportSignal = signal<any[]>([]);
   bibleStudySignal = signal<any[]>([]); 
   
@@ -22,6 +28,14 @@ export class ApiService {
 
   updateAggregatedData(data: any) {
     this.aggregatedDataSubject.next(data);
+  }
+
+  updateBibleStudies(data: any[]) {
+    this.bibleStudiesSubject.next(data);
+  }
+
+  updateReports(data: any[]) {
+    this.reportsSubject.next(data);
   }
 
 
@@ -52,7 +66,7 @@ export class ApiService {
       const reportsCollection = collection(this.fireStore, 'users', user.uid, 'reports');
       await addDoc(reportsCollection, report);
   
-      console.log('Report added successfully');
+      this.getReports(); // Refresh the reports list after adding a new report
     } catch (error) {
       console.error('Error creating report:', error);
       throw error;
@@ -90,8 +104,13 @@ export class ApiService {
         id: doc.id,
         ...doc.data(),
       }));
-  
-      this.reportSignal.set(reportsData);
+
+      const reportsArray = reportsData.map((report: any) => ({
+        ...report,
+        report_date: report.report_date ? new Date(report.report_date.seconds * 1000) : null, // Convert Firestore timestamp to Date
+      }));
+
+      this.updateReports(reportsArray); // Update the BehaviorSubject with new data
       
       return reportsData;
     } catch (error) {
@@ -114,6 +133,8 @@ export class ApiService {
       const reportDoc = doc(this.fireStore, 'users', user.uid, 'reports', report.id);
   
       await updateDoc(reportDoc, { ...report }); // Only update existing fields
+
+      this.getReports(); // Refresh the reports list after updating
   
     } catch (error) {
       console.error('Error updating report:', error);
@@ -135,7 +156,6 @@ export class ApiService {
       // 🔹 Manually update signal for instant UI feedback
       this.bibleStudySignal.set([...this.bibleStudySignal(), { id: docRef.id, ...study }]);
   
-      console.log('Bible study added successfully:', docRef.id);
     } catch (error) {
       console.error('Error adding study:', error);
       throw error;
@@ -163,6 +183,10 @@ export class ApiService {
         } else {
           console.log('Loaded from cache');
         }
+        this.updateBibleStudies(querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })));
       } catch (cacheError) {
         console.warn('Cache unavailable, fetching from Firestore...', cacheError);
         querySnapshot = await getDocs(bibleStudiesCollection);
@@ -174,7 +198,7 @@ export class ApiService {
         ...doc.data(),
       }));
 
-      this.bibleStudySignal.set(studiesData);
+      this.updateBibleStudies(studiesData); 
   
       return studiesData;
     } catch (error) {
@@ -199,6 +223,7 @@ export class ApiService {
       await deleteDoc(studyDoc); // 🔥 Actually delete the document
   
       console.log('Study deleted successfully');
+      await this.getBibleStudies(); // Refresh the list after deletion
     } catch (error) {
       console.error('Error deleting study:', error);
       throw error;
@@ -219,6 +244,8 @@ export class ApiService {
       const studyDoc = doc(this.fireStore, 'users', user.uid, 'bibleStudies', study.id);
 
       await updateDoc(studyDoc, { ...study }); // Only update existing fields
+
+      this.getBibleStudies();
 
     } catch (error) {
       console.error('Error updating study:', error);

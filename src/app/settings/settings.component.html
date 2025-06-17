@@ -17,7 +17,7 @@
 </div>
 
 
-<div class="bg-white mt-4">
+<div class="bg-white mt-4 md:py-8 lg:py-8">
     <div class="max-w-7xl mx-auto">
         <h1 class="font-bold text-2xl">Bible Study / Return Visit</h1>
         <small class="text-gray-500">Add a new Bible Study or Return Visit</small>
@@ -57,7 +57,7 @@
                 <app-alerts [isSuccess]="isSuccess" [alertMessage]="alertMessage"></app-alerts>
             </div>
 
-            <button (click)="onSubmit()" type="button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" [disabled]="isLoading || !bible_study || !address || !schedule || !next_lesson" [ngClass]="{'opacity-50 cursor-not-allowed': !bible_study || !address || !schedule || !next_lesson}">
+            <button (click)="onSubmit()" type="button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-8" [disabled]="isLoading || !bible_study || !address || !schedule || !next_lesson" [ngClass]="{'opacity-50 cursor-not-allowed': !bible_study || !address || !schedule || !next_lesson}">
                 <span *ngIf="isLoading" class="animate-spin rounded-full h-4 w-4 border-t-2 border-white inline-block mr-2"></span>
                 Save
             </button>
