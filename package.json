@@ -29,7 +29,6 @@
     "date-fns": "^4.1.0",
     "lucide-angular": "^0.482.0",
     "lucide-react": "^0.482.0",
-    "ng2-charts": "^6.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.3"
