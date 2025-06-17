@@ -13,11 +13,17 @@ import { CalendarComponent } from '../calendar/calendar.component';
 })
 export class TabCardComponent implements OnInit {
   @Output() tabChange = new EventEmitter<string>();
-  @Input() selectedTab: string = 'calendar';
+  @Input() selectedTab: string = 'dashboard';
 
-  activeTab = 'calendar';
+  activeTab = 'dashboard';
   
   tabs = [
+    {
+      id: 'dashboard', 
+      title: 'Dashboard',
+      icon: 'bi bi-house-fill',
+      description: 'Overview of your activities'
+    },
     { 
       id: 'calendar', 
       title: 'Calendar', 

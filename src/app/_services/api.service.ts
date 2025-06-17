@@ -1,17 +1,27 @@
 import { Injectable, signal } from '@angular/core';
 import { Firestore, collection, doc, addDoc, getDocs, setDoc, CollectionReference, DocumentData, onSnapshot, query, updateDoc, deleteDoc } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
+import { Observable, BehaviorSubject } from 'rxjs';
 
 
 @Injectable({
   providedIn: 'root'
 })
+
 export class ApiService {
+  private aggregatedDataSubject = new BehaviorSubject<any>({});
+  aggregatedData$ = this.aggregatedDataSubject.asObservable();
+
   reportSignal = signal<any[]>([]);
   bibleStudySignal = signal<any[]>([]); 
+  
 
   constructor(private auth: Auth, private fireStore: Firestore) { 
     this.listenToReports();
+  }
+
+  updateAggregatedData(data: any) {
+    this.aggregatedDataSubject.next(data);
   }
 
 

@@ -25,9 +25,11 @@
     "@fortawesome/fontawesome-free": "^6.7.2",
     "angular-calendar": "^0.31.1",
     "bootstrap-icons": "^1.11.3",
+    "chart.js": "^4.5.0",
     "date-fns": "^4.1.0",
     "lucide-angular": "^0.482.0",
     "lucide-react": "^0.482.0",
+    "ng2-charts": "^8.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.3"

@@ -1,8 +1,11 @@
 <app-header></app-header>
 <div 
-  class="sm:w-full md:w-1/2 lg:w-1/2 xl:w-1/2 mx-auto mb-3 px-2 sm:px-2 md:px-2 lg:px-0 xl:px-0 mt-4">
+  class="sm:w-full md:w-full  lg:w-1/2 xl:w-1/2 mx-auto mb-3 px-2 sm:px-2 md:px-2 lg:px-0 xl:px-0 mt-4">
   <div class="">
-    <div *ngIf="activeTab === 'calendar'">
+    <div *ngIf="activeTab === 'dashboard'" class="space-y-4">
+      <app-dashboard></app-dashboard>
+      </div>
+    <div *ngIf="activeTab === 'calendar'"  class="space-y-4">
       <app-calendar></app-calendar>
     </div>
     <div *ngIf="activeTab === 'reports'" class="space-y-4">

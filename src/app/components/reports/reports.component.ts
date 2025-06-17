@@ -32,6 +32,7 @@ export class ReportsComponent {
   isCopied = false;
   numberOfBibleStudies = 0;
   numberOfReturnVisits = 0;
+  hoveredReport: number | null = null;
 
   constructor(public api: ApiService, public util: UtilService) { }
 
@@ -54,52 +55,14 @@ export class ReportsComponent {
   }
 
 
-  async loadReports() {
-    await this.api.getReports().then((data) => {
+  loadReports() {
+   this.api.aggregatedData$.subscribe((data) => {
+    if (data && data.length > 0) {
       this.reports = data;
-      this.reports = this.aggregateReportsByMonth(data);
-    }).catch(error => {
-      console.error('Error fetching reports:', error);
-    });
-  }
-
-  aggregateReportsByMonth(reports: any[]): any[] {
-    const aggregated: Record<string, any> = {};
-  
-    reports.forEach(report => {
-      const reportDate = report.report_date instanceof Date 
-        ? report.report_date 
-        : new Date(report.report_date.seconds * 1000);
-      
-      // Group by Year-Month (e.g., "2024-04" for April 2024)
-      const yearMonth = `${reportDate.getFullYear()}-${String(reportDate.getMonth() + 1).padStart(2, '0')}`;
-      const hours = parseInt(report.hours) || 0;
-  
-      if (!aggregated[yearMonth]) {
-        aggregated[yearMonth] = {
-          year: reportDate.getFullYear(),
-          month: reportDate.getMonth() + 1,
-          month_name: reportDate.toLocaleString('default', { month: 'long' }),
-          total_hours: 0,
-          report_count: 0,
-          is_joined_ministry: "no", 
-          reports: []
-        };
-      }
-  
-      aggregated[yearMonth].total_hours += hours;
-      aggregated[yearMonth].report_count++;
-      aggregated[yearMonth].reports.push(report);
-
-      if (report.is_joined_ministry?.toLowerCase() === "yes") {
-        aggregated[yearMonth].is_joined_ministry = "yes";
-      }
-    });
-  
-    return Object.values(aggregated).sort((a, b) => 
-      b.year - a.year || b.month - a.month
-    );
-  }
+      console.log('Reports loaded:', this.reports);
+    }
+  });
+}
 
   editStudy(study: any) {
     this.isSelected = true;
@@ -266,5 +229,62 @@ export class ReportsComponent {
         this.isCopied = false;
         console.error('Failed to copy text: ', err);
       });
+  }
+
+    getReportCardClasses(index: number): string {
+    const baseClasses = 'group relative bg-white shadow-xl rounded-2xl border border-gray-200 transition-all duration-500 ease-out hover:shadow-2xl hover:-translate-y-2 hover:scale-[1.01] overflow-hidden';
+    const borderColor = this.getReportBorderColor(index);
+    const ringClass = this.hoveredReport === index ? 'ring-2 ring-purple-200 ring-opacity-60' : '';
+    
+    return `${baseClasses} ${borderColor} ${ringClass}`;
+  }
+
+  getReportGradientOverlayClasses(index: number): string {
+    const gradient = this.getReportGradientColor(index);
+    return `absolute top-0 right-0 w-40 h-40 bg-gradient-to-br ${gradient} opacity-5 rounded-bl-full transform translate-x-20 -translate-y-20 group-hover:scale-125 transition-transform duration-700`;
+  }
+
+  getMonthIconClasses(index: number): string {
+    const gradient = this.getReportGradientColor(index);
+    return `bg-gradient-to-br ${gradient} text-white rounded-xl p-4 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:rotate-6`;
+  }
+
+  getMinistryIconClasses(isParticipated: boolean): string {
+    if (isParticipated) {
+      return 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-xl p-3 shadow-lg';
+    } else {
+      return 'bg-gradient-to-br from-red-500 to-orange-600 text-white rounded-xl p-3 shadow-lg';
+    }
+  }
+
+  getReportRippleClasses(index: number): string {
+    const gradient = this.getReportGradientColor(index);
+    return `absolute inset-0 bg-gradient-to-r ${gradient} opacity-0 group-hover:opacity-[0.03] transition-opacity duration-300 rounded-2xl`;
+  }
+
+  getProgressWidth(hours: number): number {
+    // Assuming 70 hours is the maximum goal, adjust as needed
+    const maxHours = 70;
+    return Math.min((hours / maxHours) * 100, 100);
+  }
+
+  private getReportGradientColor(index: number): string {
+    const gradients = [
+      'from-purple-500 to-pink-600',
+      'from-blue-500 to-indigo-600',
+      'from-emerald-500 to-cyan-600',
+      'from-orange-500 to-red-600'
+    ];
+    return gradients[index % gradients.length];
+  }
+
+  private getReportBorderColor(index: number): string {
+    const colors = [
+      'border-l-4 border-purple-500',
+      'border-l-4 border-blue-500',
+      'border-l-4 border-emerald-500',
+      'border-l-4 border-orange-500'
+    ];
+    return colors[index % colors.length];
   }
 }

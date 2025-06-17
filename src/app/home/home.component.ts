@@ -7,18 +7,19 @@ import { HeaderComponent } from '../components/header/header.component';
 import { CommonModule } from '@angular/common';
 import { ReportsComponent } from '../components/reports/reports.component';
 import { SettingsComponent } from '../settings/settings.component';
+import { DashboardComponent } from '../dashboard/dashboard.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CalendarComponent, TabCardComponent, HeaderComponent, CommonModule, ReportsComponent, SettingsComponent],
+  imports: [CalendarComponent, TabCardComponent, HeaderComponent, CommonModule, ReportsComponent, SettingsComponent, DashboardComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
 export class HomeComponent {
-  activeTab = 'calendar';
+  activeTab = 'dashboard';
   showTab = true;
-  selectedTab: string = 'calendar';
+  selectedTab: string = 'dashboard';
 
   constructor(private auth: AuthService, private route: Router) {}
 

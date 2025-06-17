@@ -1,25 +1,52 @@
-<div class="mt-6">
-    <h2 class="text-2xl font-bold text-gray-800">Bible Studies / Return Visits</h2>
-    <small>Your active bible studies and return visits</small>
-  
-    <div *ngIf="this.bibleStudies.length === 0" class="mt-3 mb-4 p-2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 flex items-center justify-between shadow-md">
-      <p class="text-base">You have no Bible studies recorded.</p>
-      <i class="bi bi-exclamation-circle-fill text-yellow-500 text-xl"></i>
+<div *ngIf="bibleStudies.length > 0" class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header Section -->
+    <div class="mb-5">
+      <h1 class="text-2xl font-bold text-gray-800">Bible Studies</h1>
+      <span class="text-gray-600 text-sm">Manage your Bible studies and schedules</span>
     </div>
-  
-    <table *ngIf="this.bibleStudies.length > 0" class="mt-3 min-w-full bg-white shadow-md rounded-lg overflow-hidden">
-      <thead class="bg-gray-200">
-        <tr>
-          <th class="py-2 px-4 text-left text-gray-600 font-semibold">Name</th>
-          <th class="py-2 px-4 text-left text-gray-600 font-semibold">Schedule</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let study of this.bibleStudies; let i = index" (click)="editStudy(study)" class="cursor-pointer hover:bg-gray-100 transition duration-300">
-          <td class="py-2 px-4 border-b border-gray-200">{{ study.bible_study }}</td>
-          <td class="py-2 px-4 border-b border-gray-200">{{ study.schedule }}</td>
-        </tr>
-      </tbody>
-    </table>
+
+    <!-- Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+      <div 
+        *ngFor="let study of bibleStudies; let i = index"
+        (click)="editStudy(study)"
+        [class]="getCardClasses(i)"
+      >
+        <div [class]="getGradientOverlayClasses(i)"></div>
+        
+        <div class="relative p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center">
+              <div [class]="getAvatarClasses(i)">
+                {{ getInitials(study.bible_study) }}
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-800 group-hover:text-gray-900 transition-colors">
+                  {{ study.bible_study }}
+                </h3>
+              </div>
+            </div>
+            <i class="bi bi-chevron-right w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-all duration-300 group-hover:translate-x-1"></i>
+          </div>
+
+          <!-- Schedule Info -->
+          <div class="bg-gray-50 rounded-xl p-4 mb-4 group-hover:bg-blue-50 transition-colors duration-300">
+            <div class="flex items-center text-gray-700 group-hover:text-blue-700 transition-colors">
+              <i class="bi bi-calendar-event mr-2"></i>
+              <span class="font-medium mr-2">Schedule:</span>
+              <span>{{ study.schedule }}</span>
+            </div>
+          </div>
+
+          <!-- Bottom Action Hint -->
+          <div class="mt-4 pt-4 border-t border-gray-100 text-center text-sm text-gray-400 group-hover:text-blue-500 transition-colors duration-300">
+            <i class="bi bi-book mr-1"></i>
+            Click to view or edit study
+          </div>
+        </div>
+
+      </div>
+    </div>
   </div>
-  
+</div>
