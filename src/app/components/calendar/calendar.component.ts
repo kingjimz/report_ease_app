@@ -57,8 +57,10 @@ export class CalendarComponent implements OnInit {
   hasExistingEvent = false;
   report_id = '';
   note = '';
+  minutes = 0;
   noChangeDetected = false;
   reports: any[] = [];
+  public Math = Math; // Expose Math for use in templates
   constructor(private api: ApiService, private util: UtilService) { }
 
   ngOnInit() {
@@ -217,6 +219,7 @@ export class CalendarComponent implements OnInit {
 
     const report = {
       hours: this.hours,
+      minutes: this.minutes,
       is_joined_ministry: this.joined_ministry,
       notes: this.note,
       report_date: this.selectedDate,
@@ -262,6 +265,7 @@ export class CalendarComponent implements OnInit {
     const report = {
       id: this.report_id,
       hours: this.hours,
+      minutes: this.minutes,
       is_joined_ministry: this.joined_ministry,
       notes: this.note,
       report_date: this.selectedDate,
@@ -326,6 +330,7 @@ export class CalendarComponent implements OnInit {
 
   reInitializeVariables() {
     this.hours = 0;
+    this.minutes = 0;
     this.joined_ministry = '';
     this.notes = '';
     this.report_date = '';

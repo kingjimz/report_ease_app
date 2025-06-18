@@ -100,10 +100,51 @@
   <div class="bg-white p-4 rounded shadow-lg sm:w-full md:w-1/2 lg:w-1/3 xl:w-1/3 max-h-full overflow-auto">
       <h3 class="text-lg font-medium mb-2">Report for {{ selectedDate | date: 'fullDate' }}</h3>
       <form>
-          <div class="mb-4">
-              <label for="hours" class="block text-sm font-medium text-gray-700">Hours</label>
-              <input type="text" id="hours" name="title" [(ngModel)]="hours" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-          </div>
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700">Hours</label>
+              <div class="flex items-center space-x-6">
+              <!-- Hours -->
+              <div class="flex items-center space-x-2">
+              <button type="button"
+              class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-lg"
+              (click)="hours = Math.max(0, (+hours || 0) - 1)">
+              &#9664;
+              </button>
+              <input type="text"
+               id="hours"
+               name="hours"
+               [(ngModel)]="hours"
+               class="w-12 text-center px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-xs"
+               readonly>
+              <button type="button"
+              class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-lg"
+              (click)="hours = (+hours || 0) + 1">
+               &#9654;
+              </button>
+              <span class="ml-1 text-gray-500">hrs</span>
+              </div>
+              <!-- Minutes -->
+              <div class="flex items-center space-x-2">
+              <button type="button"
+              class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-lg"
+              (click)="minutes = Math.max(0, (+minutes || 0) - 5)">
+              &#9664;
+              </button>
+              <input type="text"
+               id="minutes"
+               name="minutes"
+               [(ngModel)]="minutes"
+               class="w-12 text-center px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-xs"
+               readonly>
+              <button type="button"
+              class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-lg"
+              (click)="minutes = Math.min(55, (+minutes || 0) + 5)">
+               &#9654;
+              </button>
+              <span class="ml-1 text-gray-500">min</span>
+              </div>
+              </div>
+            </div>
             <div class="mb-4" *ngIf="hasExistingEvent; else noEvent">
               <label for="is_joined_ministry" class="block text-sm font-medium text-gray-700">Did you participate in the ministry today?</label>
               <input type="text" id="is_joined_ministry" name="is_joined_ministry" [(ngModel)]="joined_ministry" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" readonly>
