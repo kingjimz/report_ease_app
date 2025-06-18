@@ -37,10 +37,10 @@ export class TabCardComponent implements OnInit {
       description: 'Track your progress'
     },
     {   
-      id: 'other', 
-      title: 'Settings', 
-      icon: 'bi bi-gear-fill',
-      description: 'Customize options'
+      id: 'goals', 
+      title: 'Goals', 
+      icon: 'bi bi-flag-fill',
+      description: 'Set and manage your goals'
     }
   ];
 

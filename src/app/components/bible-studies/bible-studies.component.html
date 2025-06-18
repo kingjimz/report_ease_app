@@ -1,6 +1,15 @@
 <div *ngIf="bibleStudies.length > 0" class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
   <div class="max-w-7xl mx-auto">
-    <!-- Header Section -->
+    <div class="flex justify-end mb-4">
+      <button 
+        class="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition-colors font-semibold"
+        aria-label="Add Bible Study"
+        (click)="showModal = true"
+      >
+        <i class="bi bi-plus-lg mr-2"></i>
+        Add Study
+      </button>
+    </div>
     <div class="mb-5">
       <h1 class="text-2xl font-bold text-gray-800">Bible Studies</h1>
       <span class="text-gray-600 text-sm">Manage your Bible studies and schedules</span>
@@ -45,8 +54,65 @@
             Click to view or edit study
           </div>
         </div>
-
       </div>
     </div>
   </div>
 </div>
+
+
+  <app-modal *ngIf="showModal">
+    <div class="flex justify-between items-center pb-3 mt-3">
+        <button (click)="showModal = false" class="text-gray-500 hover:text-gray-700">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div >
+<div class="bg-white mt-3">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="font-bold text-2xl">Bible Study / Return Visit</h1>
+        <small class="text-gray-500">Add a new Bible Study or Return Visit</small>
+        <Form>
+            <div class="mt-3 mb-4">
+                <label for="bible-study" class="block text-sm font-medium text-gray-700">Name</label>
+                <input type="text" id="bible-study" name="bible-study" [(ngModel)]="bible_study" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Name" />
+            </div>
+
+            <div class="mb-4">
+                <label for="lesson" class="block text-sm font-medium text-gray-700">Address</label>
+                <input type="text" id="address" name="address" [(ngModel)]="address" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Address" />
+            </div>
+
+            <div class="mb-4">
+                <label for="type" class="block text-sm font-medium text-gray-700">Type</label>
+                <select id="type" name="type" [(ngModel)]="type" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="rv">Return Visit</option>
+                    <option value="bs">Bible Study</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label for="schedule" class="block text-sm font-medium text-gray-700">Schedule <small>(e.g., Thursday, 10 AM)</small></label>
+                <input type="text" id="schedule" [(ngModel)]="schedule" name="schedule" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Schedule" />
+            </div>
+
+            <div class="mb-4">
+                <label for="lesson" class="block text-sm font-medium text-gray-700">Next Topic / Lesson <small>(e.g., Chapter 1, Title, Point Number)</small></label>
+                <textarea id="lesson" name="next_lesson" [(ngModel)]="next_lesson" rows="5" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Next lesson"></textarea>
+            </div>
+
+            <div *ngIf="isSuccess">
+                <app-alerts [isSuccess]="isSuccess" [alertMessage]="alertMessage"></app-alerts>
+            </div>
+            <div *ngIf="!isSuccess">
+                <app-alerts [isSuccess]="isSuccess" [alertMessage]="alertMessage"></app-alerts>
+            </div>
+
+            <div class="flex justify-between">
+              <button (click)="onSubmit()" type="button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-8" [disabled]="isLoading || !bible_study || !address || !schedule || !next_lesson" [ngClass]="{'opacity-50 cursor-not-allowed': !bible_study || !address || !schedule || !next_lesson}">
+                <span *ngIf="isLoading" class="animate-spin rounded-full h-4 w-4 border-t-2 border-white inline-block mr-2"></span>
+                Save
+              </button>
+              </div>
+            </Form>
+    </div>
+</div>
+</app-modal>
