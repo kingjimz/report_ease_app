@@ -72,53 +72,44 @@ export class ApiService {
       throw error;
     }
   }
-
   
-  async getReports() {
-    try {
-      const user = this.auth.currentUser;
-      if (!user) {
-        throw new Error('User not logged in');
-      }
-  
-      const reportsCollection = collection(this.fireStore, 'users', user.uid, 'reports');
-  
-      // 🔹 Try fetching from cache first
-      let querySnapshot;
-      try {
-        querySnapshot = await getDocs(reportsCollection);
-        // If cache is empty, force fetch from server
-        if (querySnapshot.empty) {
-          console.log('Cache is empty, fetching from Firestore...');
-          querySnapshot = await getDocs(reportsCollection);
-        } else {
-          console.log('Loaded from cache');
-        }
-      } catch (cacheError) {
-        console.warn('Cache unavailable, fetching from Firestore...', cacheError);
-        querySnapshot = await getDocs(reportsCollection);
-      }
-  
-      // 🔹 Extract reports and include document IDs
-      const reportsData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      const reportsArray = reportsData.map((report: any) => ({
-        ...report,
-        report_date: report.report_date ? new Date(report.report_date.seconds * 1000) : null, // Convert Firestore timestamp to Date
-      }));
-
-      this.updateReports(reportsArray); // Update the BehaviorSubject with new data
-      
-      return reportsData;
-    } catch (error) {
-      console.error('Error getting reports:', error);
-      throw error;
+async getReports() {
+  try {
+    const user = this.auth.currentUser;
+    if (!user) {
+      throw new Error('User not logged in');
     }
-  }
+
+    const reportsCollection = collection(this.fireStore, 'users', user.uid, 'reports');
+
+    let querySnapshot = await getDocs(reportsCollection);
   
+    
+    // Only log when fresh data is fetched and cached
+    if (!querySnapshot.metadata.fromCache) {
+      console.log('Fresh data fetched and cached');
+    }
+
+    // 🔹 Extract reports and include document IDs
+    const reportsData = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    const reportsArray = reportsData.map((report: any) => ({
+      ...report,
+      report_date: report.report_date ? new Date(report.report_date.seconds * 1000) : null,
+    }));
+
+    this.updateReports(reportsArray);
+    
+    return reportsData;
+  } catch (error) {
+    console.error('Error getting reports:', error);
+    throw error;
+  }
+}
+
   async updateReport(report: any) {
     try {
       const user = this.auth.currentUser;

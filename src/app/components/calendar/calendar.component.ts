@@ -19,6 +19,8 @@ interface CalendarEvent {
     report_id: string;
     notes: string;
     joined_ministry: string;
+    hours: number;
+    minutes: number;
   };
 }
 
@@ -30,23 +32,15 @@ interface CalendarEvent {
   styleUrls: ['./calendar.component.css']
 })
 export class CalendarComponent implements OnInit {
-  
-  // Loading state
   isLoading = false;
-  
-  // View modes and date
   viewMode: 'month' | 'week' | 'day' = 'month';
   viewDate = new Date();
   
-  // Calendar data
   calendarDays: CalendarDay[] = [];
   weekDays: Date[] = [];
   daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  
-  // Events data
   events: CalendarEvent[] = [];
   
-  // Modal properties
   selectedDate: Date | null = null;
   hours = 0;
   joined_ministry = '';
@@ -60,7 +54,7 @@ export class CalendarComponent implements OnInit {
   minutes = 0;
   noChangeDetected = false;
   reports: any[] = [];
-  public Math = Math; // Expose Math for use in templates
+  public Math = Math; 
   constructor(private api: ApiService, private util: UtilService) { }
 
   ngOnInit() {
@@ -69,7 +63,6 @@ export class CalendarComponent implements OnInit {
     this.loadReports();
   }
 
-  // Calendar generation methods
   generateCalendar() {
     const year = this.viewDate.getFullYear();
     const month = this.viewDate.getMonth();
@@ -136,7 +129,6 @@ export class CalendarComponent implements OnInit {
     return new Date(d.setDate(diff));
   }
 
-  // Navigation methods
   previousMonth() {
     if (this.viewMode === 'month') {
       this.viewDate = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() - 1, 1);
@@ -169,12 +161,16 @@ export class CalendarComponent implements OnInit {
   }
 
   getEventHours(date: Date): string {
-    const event = this.events.find(e => 
+    const event = this.events.find(e =>
       e.start.toDateString() === date.toDateString()
     );
     if (event) {
-      const hours = parseInt(event.title.split(' ')[0], 10);
-      return `${hours}h`;
+      const hours = event.meta.hours || 0;
+      const minutes = event.meta.minutes || 0;
+      if (minutes === 0) {
+        return `${hours}h`;
+      }
+      return `${hours}h ${minutes}m`;
     }
     return '';
   }
@@ -186,7 +182,6 @@ export class CalendarComponent implements OnInit {
     return event ? event.title : '';
   }
 
-  // API methods
   async loadReports() {
     this.isLoading = true;
     try {
@@ -200,6 +195,8 @@ export class CalendarComponent implements OnInit {
           start: new Date(report.report_date.seconds * 1000),
           color: { primary: '#008000', secondary: '#90EE90' },
           meta: {
+            hours: report.hours || 0,
+            minutes: report.minutes || 0,
             report_id: report.id,
             notes: report.notes,
             joined_ministry: report.is_joined_ministry
@@ -248,17 +245,19 @@ export class CalendarComponent implements OnInit {
     );
 
     if (existingEvent) {
-      const existingHours = parseInt(existingEvent.title.split(' ')[0], 10);
+      const existingHours = existingEvent.meta.hours || 0;
+      const existingMinutes = existingEvent.meta.minutes || 0;
       const existingJoinedMinistry = existingEvent.meta.joined_ministry;
       const existingNotes = existingEvent.meta.notes;
 
       if (
-        existingHours === this.hours &&
-        existingJoinedMinistry === this.joined_ministry &&
-        existingNotes === this.note
+      existingHours === this.hours &&
+      existingMinutes === this.minutes &&
+      existingJoinedMinistry === this.joined_ministry &&
+      existingNotes === this.note
       ) {
-        this.noChangeDetected = true;
-        return;
+      this.noChangeDetected = true;
+      return;
       }
     }
 
@@ -284,7 +283,6 @@ export class CalendarComponent implements OnInit {
     }
   }
 
-  // Utility methods
   isToday(date: Date): boolean {
     const today = new Date();
     return date.toDateString() === today.toDateString();
@@ -301,18 +299,16 @@ export class CalendarComponent implements OnInit {
     return day.date.toISOString();
   }
 
-  // Click handlers
   onDayClick(day: CalendarDay) {
     this.selectedDate = new Date(day.date);
-    
-    // Check if there is an existing event on the selected date
     const existingEvent = this.events.find(e => 
       e.start.toDateString() === this.selectedDate?.toDateString()
     );
     this.hasExistingEvent = existingEvent ? true : false;
     
     if (existingEvent) {
-      this.hours = parseInt(existingEvent.title.split(' ')[0], 10);
+      this.hours = existingEvent.meta.hours || 0;
+      this.minutes = existingEvent.meta.minutes || 0;
       this.report_id = existingEvent.meta.report_id;
       this.selectedDate = existingEvent.start;
       this.joined_ministry = this.util.capitalizeFirstLetter(existingEvent.meta.joined_ministry);
@@ -321,8 +317,7 @@ export class CalendarComponent implements OnInit {
       this.reInitializeVariables();
     }
   }
-
-  // Modal methods
+  
   closeModal() {
     this.selectedDate = null;
     this.noChangeDetected = false;
