@@ -176,7 +176,15 @@
       </form>
 
       <ng-container *ngIf="hasExistingEvent; else noExistingEvent">
-        <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 me-2" (click)="updateReport()" [disabled]="!hours || +hours === 0 || !joined_ministry" [ngClass]="{'opacity-50 cursor-not-allowed': !hours || +hours === 0 || !joined_ministry}">Update</button>
+        <button 
+          class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 me-2" 
+          (click)="updateReport()" 
+          [disabled]="noChangeDetected"
+          [ngClass]="{
+            'opacity-50 cursor-not-allowed': noChangeDetected
+          }">
+          Update
+        </button>
       </ng-container>
       <ng-template #noExistingEvent>
         <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 me-2"
