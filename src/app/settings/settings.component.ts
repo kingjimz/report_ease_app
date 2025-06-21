@@ -12,48 +12,90 @@ import { AlertsComponent } from '../components/alerts/alerts.component';
   styleUrl: './settings.component.css'
 })
 export class SettingsComponent {
-  bible_study = '';
-  address = '';
-  schedule: Date | null = null;
-  type = 'rv';
-  next_lesson = '';
-  isSuccess = false;
-  isLoading = false;
-  alertMessage = 'Warning: Please verify your input carefully.';
+  target_date: Date | null = null;
+  category = '';
+  goal_title = '';
+  goal_description = '';
+  goals: any[] = []; // Initialize goals array
+  showCompletedGoals = false; // Flag to toggle completed goals view
+  completedGoals: any[] = []; // Array to hold completed goals
 
-  constructor(public api: ApiService) { }
 
-  async onSubmit() {
-    this.isLoading = true;
-    const data = {
-      bible_study: this.bible_study,
-      address: this.address,
-      schedule: this.schedule,
-      type: this.type,
-      lesson: this.next_lesson,
-      updated_at: new Date(),
-    }
-    try {
-      await this.api.addStudy(data);
-      this.bible_study = '';
-      this.address = '';
-      this.schedule = null;
-      this.type = '';
-      this.next_lesson = '';
-      this.isSuccess = true;
-      this.alertMessage = 'Study added! View reports section.';
-      this.api.getBibleStudies().then((data) => {
-        this.api.updateBibleStudies(data);
-      }).catch(error => {
-        console.error('Error updating Bible studies:', error);
-      });
-    } catch (error) {
-      console.error('Error submitting data', error);
-      this.isSuccess = false;
-      this.alertMessage = 'Error submitting data';
-      this.isLoading = false;
-    }
-    this.isLoading = false;
+  constructor(public api: ApiService) { 
+    this.loadGoals();
+    this.loadCompletedGoals();
   }
 
+  async onSubmit() {
+    this.api.addGoal({
+      target_date: this.target_date,
+      category: this.category,
+      goal_title: this.goal_title,
+      goal_description: this.goal_description
+    }).then(() => {
+      this.target_date = null;
+      this.category = '';
+      this.goal_title = '';
+      this.goal_description = '';
+    }).catch((error) => {
+      console.error('Error adding goal:', error);
+    });
+  }
+
+  async loadGoals() {
+    try {
+      this.goals = await this.api.getGoals();
+      
+    } catch (error) {
+      console.error('Error loading goals:', error);
+    }
+  }
+
+  async loadCompletedGoals() {
+    try {
+      const completedGoals = await this.api.getCompletedGoals();
+      this.completedGoals = completedGoals || [];
+      
+    } catch (error) {
+      console.error('Error loading completed goals:', error);
+    }
+  }
+
+  markAsCompleted(goal: any) {
+   this.api.moveGoalToCompleted(goal).then(() => {
+      this.loadGoals(); // Reload goals after marking as completed
+      this.loadCompletedGoals(); // Reload completed goals after marking
+    }).catch((error) => {
+      console.error('Error marking goal as completed:', error);
+    } );
+  }
+
+  markAsInProgress(goal: any) {
+    this.api.markGoalAsInProgress(goal).then(() => {
+      this.deleteCompletedGoal(goal); // Delete the goal from the active list
+      this.loadGoals(); 
+      this.loadCompletedGoals();
+    }).catch((error) => {
+      console.error('Error marking goal as in progress:', error);
+    });
+  }
+
+deleteGoal(goal: any) {
+  console.log('Deleting goal:', goal);
+  this.api.deleteGoal(goal).then(() => {
+    this.loadGoals(); // Reload goals after deletion
+    this.loadCompletedGoals(); // Reload completed goals after deletion
+  }).catch((error) => {
+    console.error('Error deleting goal:', error);
+  });
+}
+
+deleteCompletedGoal(goal: any) {
+  console.log('Deleting completed goal:', goal);
+  this.api.deleteCompletedGoal(goal).then(() => {
+    this.loadCompletedGoals(); // Reload completed goals after deletion
+  }).catch((error) => {
+    console.error('Error deleting completed goal:', error);
+  });
+}
 }

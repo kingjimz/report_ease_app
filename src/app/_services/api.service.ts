@@ -244,6 +244,167 @@ async getReports() {
     }
 
   }
+
+  //goals section
+  async getGoals() {
+    try {
+      const user = this.auth.currentUser;
+      if (!user) {
+        throw new Error('User not logged in');
+      }
+  
+      const goalsCollection = collection(this.fireStore, 'users', user.uid, 'goals');
+      const querySnapshot = await getDocs(goalsCollection);
+  
+      // 🔹 Extract goals and include document IDs
+      const goalsData = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+  
+      return goalsData;
+    } catch (error) {
+      console.error('Error getting goals:', error);
+      throw error;
+    }
+  }
+
+  async addGoal(goal: any) {
+    try {
+      const user = this.auth.currentUser;
+      if (!user) {
+        throw new Error('User not logged in');
+      }
+  
+      const goalsCollection = collection(this.fireStore, 'users', user.uid, 'goals');
+      const docRef = await addDoc(goalsCollection, goal);
+  
+    } catch (error) {
+      console.error('Error adding goal:', error);
+      throw error;
+    }
+  }
+
+  async moveGoalToCompleted(goal: any) {
+    try {
+      const user = this.auth.currentUser;
+      if (!user) {
+        throw new Error('User not logged in');
+      }
+  
+      if (!goal?.id) {
+        throw new Error('Goal ID is required');
+      }
+  
+      const goalDoc = doc(this.fireStore, 'users', user.uid, 'goals', goal.id);
+  
+      // 🔥 Move goal to completed collection
+      const completedCollection = collection(this.fireStore, 'users', user.uid, 'goals_completed');
+      await addDoc(completedCollection, { ...goal, completed_at: new Date() });
+  
+      // 🔥 Delete the original goal
+      await deleteDoc(goalDoc);
+  
+    } catch (error) {
+      console.error('Error moving goal to completed:', error);
+      throw error;
+    }
+  }
+
+  async getCompletedGoals() {
+    try {
+      const user = this.auth.currentUser;
+      if (!user) {
+        throw new Error('User not logged in');
+      }
+  
+      const completedCollection = collection(this.fireStore, 'users', user.uid, 'goals_completed');
+      const querySnapshot = await getDocs(completedCollection);
+  
+      // 🔹 Extract completed goals and include document IDs
+      const completedGoalsData = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+  
+      return completedGoalsData;
+    } catch (error) {
+      console.error('Error getting completed goals:', error);
+      throw error;
+    }
+  }
+
+  async markGoalAsInProgress(goal: any) {
+    try {
+      const user = this.auth.currentUser;
+      if (!user) {
+        throw new Error('User not logged in');
+      }
+  
+      if (!goal?.id) {
+        throw new Error('Goal ID is required');
+      }
+  
+      const completedDoc = doc(this.fireStore, 'users', user.uid, 'goals_completed', goal.id);
+  
+      // 🔥 Move goal back to active goals collection
+      const goalsCollection = collection(this.fireStore, 'users', user.uid, 'goals');
+      await addDoc(goalsCollection, { ...goal, in_progress_at: new Date() });
+  
+      // 🔥 Delete the completed goal
+      await deleteDoc(completedDoc);
+  
+    } catch (error) {
+      console.error('Error marking goal as in progress:', error);
+      throw error;
+    }
+  }
+
+  async deleteGoal(goal: any) {
+    try {
+      const user = this.auth.currentUser;
+      if (!user) {
+        throw new Error('User not logged in');
+      }
+  
+      if (!goal?.id) {
+        throw new Error('Goal ID is required');
+      }
+  
+      const goalDoc = doc(this.fireStore, 'users', user.uid, 'goals', goal.id);
+      
+      await deleteDoc(goalDoc); // 🔥 Actually delete the document
+  
+      console.log('Goal deleted successfully');
+    } catch (error) {
+      console.error('Error deleting goal:', error);
+      throw error;
+    }
+  }
+
+  async deleteCompletedGoal(goal: any) {
+    try {
+      const user = this.auth.currentUser;
+      if (!user) {
+        throw new Error('User not logged in');
+      }
+  
+      if (!goal?.id) {
+        throw new Error('Goal ID is required');
+      }
+  
+      const completedDoc = doc(this.fireStore, 'users', user.uid, 'goals_completed', goal.id);
+      
+      await deleteDoc(completedDoc); // 🔥 Actually delete the document
+  
+      console.log('Completed goal deleted successfully');
+    } catch (error) {
+      console.error('Error deleting completed goal:', error);
+      throw error;
+    }
+  }
+
+
 }
 
 
