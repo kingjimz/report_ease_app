@@ -17,8 +17,8 @@ export class SettingsComponent {
   goal_title = '';
   goal_description = '';
   goals: any[] = [];
-  showCompletedGoals = false;
-  completedGoals: any[] = [];
+  goalFilter = '';
+  showGoalModal = false;
 
   constructor(public api: ApiService) {
     this.loadGoals();
@@ -47,13 +47,13 @@ export class SettingsComponent {
   async loadGoals() {
     try {
       this.goals = await this.api.getGoals();
+      this.api.notifyGoalChange(this.goals);
     } catch (error) {
       console.error('Error loading goals:', error);
     }
   }
 
   deleteGoal(goal: any) {
-    console.log('Deleting goal:', goal);
     this.api
       .deleteGoal(goal)
       .then(() => {
@@ -62,5 +62,16 @@ export class SettingsComponent {
       .catch((error) => {
         console.error('Error deleting goal:', error);
       });
+  }
+
+  filteredGoals() {
+    if (!this.goalFilter) {
+      return this.goals;
+    }
+    return this.goals.filter(
+      (goal) =>
+        goal.category &&
+        goal.category.toLowerCase().includes(this.goalFilter.toLowerCase()),
+    );
   }
 }

@@ -31,6 +31,8 @@ export class DashboardComponent implements OnInit {
   monthlyHours = 0;
   prevMonthHours = 0;
   allReports: any[] = [];
+  goals: any[] = [];
+  randomizedGoals: any[] = [];
 
   constructor(
     public api: ApiService,
@@ -40,6 +42,15 @@ export class DashboardComponent implements OnInit {
   ngOnInit() {
     this.loadReports();
     this.loadBibLeStudies();
+    this.api.goals$.subscribe((goals) => {
+      if (goals.length > 0) {
+        this.goals = goals;
+      } else {
+        this.loadGoals();
+      }
+      this.randomizeGoals(this.goals);
+    });
+
     setTimeout(() => {
       this.loading = false;
     }, 1000);
@@ -71,15 +82,39 @@ export class DashboardComponent implements OnInit {
         this.reports = data;
         this.reports = this.util.aggregateReportsByMonth(data);
         this.api.updateAggregatedData(this.reports);
-        // Only get total_hours for the latest (first) month/index
         this.monthlyHours =
           this.reports.length > 0 ? this.reports[0].total_hours || 0 : 0;
-        // Get previous month hours if available
         this.prevMonthHours =
           this.reports.length > 1 ? this.reports[1].total_hours || 0 : 0;
       })
       .catch((error) => {
         console.error('Error fetching reports:', error);
       });
+  }
+
+  loadGoals() {
+    this.api
+      .getGoals()
+      .then((goals) => {
+        this.goals = goals;
+        this.randomizeGoals(this.goals);
+        this.api.notifyGoalChange(goals);
+      })
+      .catch((error) => {
+        console.error('Error loading goals:', error);
+      });
+  }
+
+  shuffle(array: any[]) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr.slice(0, 2);
+  }
+
+  randomizeGoals(goals: any[]) {
+    this.randomizedGoals = this.shuffle(goals);
   }
 }

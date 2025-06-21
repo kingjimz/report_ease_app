@@ -29,6 +29,9 @@ export class ApiService {
   private reportsSubject = new BehaviorSubject<any[]>([]);
   reports$ = this.reportsSubject.asObservable();
 
+  private goalsSubject = new BehaviorSubject<any[]>([]);
+  goals$ = this.goalsSubject.asObservable();
+
   reportSignal = signal<any[]>([]);
   bibleStudySignal = signal<any[]>([]);
 
@@ -49,6 +52,10 @@ export class ApiService {
 
   updateReports(data: any[]) {
     this.reportsSubject.next(data);
+  }
+
+  notifyGoalChange(data: any[]) {
+    this.goalsSubject.next(data);
   }
 
   private listenToReports() {
