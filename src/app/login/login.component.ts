@@ -9,7 +9,7 @@ import { Router, RouterLink } from '@angular/router';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
+  styleUrl: './login.component.css',
 })
 export class LoginComponent {
   email = '';
@@ -17,7 +17,10 @@ export class LoginComponent {
   errorMessage = '';
   isLoading = false;
 
-  constructor(private auth: AuthService, private route: Router) {}
+  constructor(
+    private auth: AuthService,
+    private route: Router,
+  ) {}
 
   async login() {
     try {
@@ -27,18 +30,18 @@ export class LoginComponent {
     } catch (error) {
       this.errorMessage = (error as Error).message;
       this.isLoading = false;
+    }
   }
-}
 
-async signInWithGoogle() {
-  try {
-    this.isLoading = true;
-    await this.auth.signinWithGoogle();
-    this.isLoading = false;
-    this.route.navigate(['/']);
-  } catch (error) {
-    this.errorMessage = (error as Error).message;
-    this.isLoading = false;
+  async signInWithGoogle() {
+    try {
+      this.isLoading = true;
+      await this.auth.signinWithGoogle();
+      this.isLoading = false;
+      this.route.navigate(['/']);
+    } catch (error) {
+      this.errorMessage = (error as Error).message;
+      this.isLoading = false;
+    }
   }
-}
 }

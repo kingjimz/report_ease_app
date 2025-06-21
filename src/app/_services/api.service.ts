@@ -1,13 +1,24 @@
 import { Injectable, signal } from '@angular/core';
-import { Firestore, collection, doc, addDoc, getDocs, setDoc, CollectionReference, DocumentData, onSnapshot, query, updateDoc, deleteDoc } from '@angular/fire/firestore';
+import {
+  Firestore,
+  collection,
+  doc,
+  addDoc,
+  getDocs,
+  setDoc,
+  CollectionReference,
+  DocumentData,
+  onSnapshot,
+  query,
+  updateDoc,
+  deleteDoc,
+} from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import { Observable, BehaviorSubject } from 'rxjs';
 
-
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
-
 export class ApiService {
   private aggregatedDataSubject = new BehaviorSubject<any>({});
   aggregatedData$ = this.aggregatedDataSubject.asObservable();
@@ -19,10 +30,12 @@ export class ApiService {
   reports$ = this.reportsSubject.asObservable();
 
   reportSignal = signal<any[]>([]);
-  bibleStudySignal = signal<any[]>([]); 
-  
+  bibleStudySignal = signal<any[]>([]);
 
-  constructor(private auth: Auth, private fireStore: Firestore) { 
+  constructor(
+    private auth: Auth,
+    private fireStore: Firestore,
+  ) {
     this.listenToReports();
   }
 
@@ -38,12 +51,16 @@ export class ApiService {
     this.reportsSubject.next(data);
   }
 
-
   private listenToReports() {
     const user = this.auth.currentUser;
     if (!user) return; // Ensure user is authenticated
 
-    const reportsCollection = collection(this.fireStore, 'users', user.uid, 'reports');
+    const reportsCollection = collection(
+      this.fireStore,
+      'users',
+      user.uid,
+      'reports',
+    );
     const reportsQuery = query(reportsCollection);
 
     // 🔥 Firestore real-time listener
@@ -62,53 +79,109 @@ export class ApiService {
       if (!user) {
         throw new Error('User not logged in');
       }
-  
-      const reportsCollection = collection(this.fireStore, 'users', user.uid, 'reports');
+
+      const reportsCollection = collection(
+        this.fireStore,
+        'users',
+        user.uid,
+        'reports',
+      );
       await addDoc(reportsCollection, report);
-  
+
       this.getReports(); // Refresh the reports list after adding a new report
     } catch (error) {
       console.error('Error creating report:', error);
       throw error;
     }
   }
-  
-async getReports() {
-  try {
-    const user = this.auth.currentUser;
-    if (!user) {
-      throw new Error('User not logged in');
+
+  async getReports() {
+    try {
+      const user = this.auth.currentUser;
+      if (!user) {
+        throw new Error('User not logged in');
+      }
+
+      const reportsCollection = collection(
+        this.fireStore,
+        'users',
+        user.uid,
+        'reports',
+      );
+
+      let querySnapshot = await getDocs(reportsCollection);
+
+      // Only log when fresh data is fetched and cached
+      if (!querySnapshot.metadata.fromCache) {
+        console.log('Fresh data fetched and cached');
+      }
+
+      // 🔹 Extract reports and include document IDs
+      const reportsData = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      const reportsArray = reportsData.map((report: any) => ({
+        ...report,
+        report_date: report.report_date
+          ? new Date(report.report_date.seconds * 1000)
+          : null,
+      }));
+
+      this.updateReports(reportsArray);
+
+      return reportsData;
+    } catch (error) {
+      console.error('Error getting reports:', error);
+      throw error;
     }
-
-    const reportsCollection = collection(this.fireStore, 'users', user.uid, 'reports');
-
-    let querySnapshot = await getDocs(reportsCollection);
-  
-    
-    // Only log when fresh data is fetched and cached
-    if (!querySnapshot.metadata.fromCache) {
-      console.log('Fresh data fetched and cached');
-    }
-
-    // 🔹 Extract reports and include document IDs
-    const reportsData = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    const reportsArray = reportsData.map((report: any) => ({
-      ...report,
-      report_date: report.report_date ? new Date(report.report_date.seconds * 1000) : null,
-    }));
-
-    this.updateReports(reportsArray);
-    
-    return reportsData;
-  } catch (error) {
-    console.error('Error getting reports:', error);
-    throw error;
   }
-}
+  async getGoals() {
+    try {
+      const user = this.auth.currentUser;
+      if (!user) {
+        throw new Error('User not logged in');
+      }
+
+      const goalsCollection = collection(
+        this.fireStore,
+        'users',
+        user.uid,
+        'goals',
+      );
+
+      let querySnapshot;
+      try {
+        querySnapshot = await getDocs(goalsCollection);
+        // If cache is empty, force fetch from server
+        if (querySnapshot.empty) {
+          console.log('Cache is empty, fetching from Firestore...');
+          querySnapshot = await getDocs(goalsCollection);
+        } else if (!querySnapshot.metadata.fromCache) {
+          console.log('Fresh data fetched and cached');
+        } else {
+          console.log('Loaded from cache');
+        }
+      } catch (cacheError) {
+        console.warn(
+          'Cache unavailable, fetching from Firestore...',
+          cacheError,
+        );
+        querySnapshot = await getDocs(goalsCollection);
+      }
+
+      const goalsData = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      return goalsData;
+    } catch (error) {
+      console.error('Error getting goals:', error);
+      throw error;
+    }
+  }
 
   async updateReport(report: any) {
     try {
@@ -116,23 +189,27 @@ async getReports() {
       if (!user) {
         throw new Error('User not logged in');
       }
-  
+
       if (!report?.id) {
         throw new Error('Report ID is required');
       }
-  
-      const reportDoc = doc(this.fireStore, 'users', user.uid, 'reports', report.id);
-  
+
+      const reportDoc = doc(
+        this.fireStore,
+        'users',
+        user.uid,
+        'reports',
+        report.id,
+      );
+
       await updateDoc(reportDoc, { ...report }); // Only update existing fields
 
       this.getReports(); // Refresh the reports list after updating
-  
     } catch (error) {
       console.error('Error updating report:', error);
       throw error;
     }
   }
-
 
   async addStudy(study: any) {
     try {
@@ -140,19 +217,25 @@ async getReports() {
       if (!user) {
         throw new Error('User not logged in');
       }
-  
-      const bibleStudiesCollection = collection(this.fireStore, 'users', user.uid, 'bibleStudies');
+
+      const bibleStudiesCollection = collection(
+        this.fireStore,
+        'users',
+        user.uid,
+        'bibleStudies',
+      );
       const docRef = await addDoc(bibleStudiesCollection, study);
-  
+
       // 🔹 Manually update signal for instant UI feedback
-      this.bibleStudySignal.set([...this.bibleStudySignal(), { id: docRef.id, ...study }]);
-  
+      this.bibleStudySignal.set([
+        ...this.bibleStudySignal(),
+        { id: docRef.id, ...study },
+      ]);
     } catch (error) {
       console.error('Error adding study:', error);
       throw error;
     }
   }
-  
 
   async getBibleStudies() {
     try {
@@ -160,9 +243,14 @@ async getReports() {
       if (!user) {
         throw new Error('User not logged in');
       }
-  
-      const bibleStudiesCollection = collection(this.fireStore, 'users', user.uid, 'bibleStudies');
-  
+
+      const bibleStudiesCollection = collection(
+        this.fireStore,
+        'users',
+        user.uid,
+        'bibleStudies',
+      );
+
       // 🔹 Try fetching from cache first
       let querySnapshot;
       try {
@@ -174,23 +262,28 @@ async getReports() {
         } else {
           console.log('Loaded from cache');
         }
-        this.updateBibleStudies(querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })));
+        this.updateBibleStudies(
+          querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          })),
+        );
       } catch (cacheError) {
-        console.warn('Cache unavailable, fetching from Firestore...', cacheError);
+        console.warn(
+          'Cache unavailable, fetching from Firestore...',
+          cacheError,
+        );
         querySnapshot = await getDocs(bibleStudiesCollection);
       }
-  
+
       // 🔹 Extract studies and include document IDs
       const studiesData = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
 
-      this.updateBibleStudies(studiesData); 
-  
+      this.updateBibleStudies(studiesData);
+
       return studiesData;
     } catch (error) {
       console.error('Error getting studies:', error);
@@ -204,15 +297,21 @@ async getReports() {
       if (!user) {
         throw new Error('User not logged in');
       }
-  
+
       if (!study?.id) {
         throw new Error('Study ID is required');
       }
-  
-      const studyDoc = doc(this.fireStore, 'users', user.uid, 'bibleStudies', study.id);
-      
+
+      const studyDoc = doc(
+        this.fireStore,
+        'users',
+        user.uid,
+        'bibleStudies',
+        study.id,
+      );
+
       await deleteDoc(studyDoc); // 🔥 Actually delete the document
-  
+
       console.log('Study deleted successfully');
       await this.getBibleStudies(); // Refresh the list after deletion
     } catch (error) {
@@ -227,44 +326,24 @@ async getReports() {
       if (!user) {
         throw new Error('User not logged in');
       }
-  
+
       if (!study?.id) {
         throw new Error('Study ID is required');
       }
-  
-      const studyDoc = doc(this.fireStore, 'users', user.uid, 'bibleStudies', study.id);
+
+      const studyDoc = doc(
+        this.fireStore,
+        'users',
+        user.uid,
+        'bibleStudies',
+        study.id,
+      );
 
       await updateDoc(studyDoc, { ...study }); // Only update existing fields
 
       this.getBibleStudies();
-
     } catch (error) {
       console.error('Error updating study:', error);
-      throw error;
-    }
-
-  }
-
-  //goals section
-  async getGoals() {
-    try {
-      const user = this.auth.currentUser;
-      if (!user) {
-        throw new Error('User not logged in');
-      }
-  
-      const goalsCollection = collection(this.fireStore, 'users', user.uid, 'goals');
-      const querySnapshot = await getDocs(goalsCollection);
-  
-      // 🔹 Extract goals and include document IDs
-      const goalsData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-  
-      return goalsData;
-    } catch (error) {
-      console.error('Error getting goals:', error);
       throw error;
     }
   }
@@ -275,87 +354,16 @@ async getReports() {
       if (!user) {
         throw new Error('User not logged in');
       }
-  
-      const goalsCollection = collection(this.fireStore, 'users', user.uid, 'goals');
+
+      const goalsCollection = collection(
+        this.fireStore,
+        'users',
+        user.uid,
+        'goals',
+      );
       const docRef = await addDoc(goalsCollection, goal);
-  
     } catch (error) {
       console.error('Error adding goal:', error);
-      throw error;
-    }
-  }
-
-  async moveGoalToCompleted(goal: any) {
-    try {
-      const user = this.auth.currentUser;
-      if (!user) {
-        throw new Error('User not logged in');
-      }
-  
-      if (!goal?.id) {
-        throw new Error('Goal ID is required');
-      }
-  
-      const goalDoc = doc(this.fireStore, 'users', user.uid, 'goals', goal.id);
-  
-      // 🔥 Move goal to completed collection
-      const completedCollection = collection(this.fireStore, 'users', user.uid, 'goals_completed');
-      await addDoc(completedCollection, { ...goal, completed_at: new Date() });
-  
-      // 🔥 Delete the original goal
-      await deleteDoc(goalDoc);
-  
-    } catch (error) {
-      console.error('Error moving goal to completed:', error);
-      throw error;
-    }
-  }
-
-  async getCompletedGoals() {
-    try {
-      const user = this.auth.currentUser;
-      if (!user) {
-        throw new Error('User not logged in');
-      }
-  
-      const completedCollection = collection(this.fireStore, 'users', user.uid, 'goals_completed');
-      const querySnapshot = await getDocs(completedCollection);
-  
-      // 🔹 Extract completed goals and include document IDs
-      const completedGoalsData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-  
-      return completedGoalsData;
-    } catch (error) {
-      console.error('Error getting completed goals:', error);
-      throw error;
-    }
-  }
-
-  async markGoalAsInProgress(goal: any) {
-    try {
-      const user = this.auth.currentUser;
-      if (!user) {
-        throw new Error('User not logged in');
-      }
-  
-      if (!goal?.id) {
-        throw new Error('Goal ID is required');
-      }
-  
-      const completedDoc = doc(this.fireStore, 'users', user.uid, 'goals_completed', goal.id);
-  
-      // 🔥 Move goal back to active goals collection
-      const goalsCollection = collection(this.fireStore, 'users', user.uid, 'goals');
-      await addDoc(goalsCollection, { ...goal, in_progress_at: new Date() });
-  
-      // 🔥 Delete the completed goal
-      await deleteDoc(completedDoc);
-  
-    } catch (error) {
-      console.error('Error marking goal as in progress:', error);
       throw error;
     }
   }
@@ -366,15 +374,15 @@ async getReports() {
       if (!user) {
         throw new Error('User not logged in');
       }
-  
+
       if (!goal?.id) {
         throw new Error('Goal ID is required');
       }
-  
+
       const goalDoc = doc(this.fireStore, 'users', user.uid, 'goals', goal.id);
-      
+
       await deleteDoc(goalDoc); // 🔥 Actually delete the document
-  
+
       console.log('Goal deleted successfully');
     } catch (error) {
       console.error('Error deleting goal:', error);
@@ -388,23 +396,25 @@ async getReports() {
       if (!user) {
         throw new Error('User not logged in');
       }
-  
+
       if (!goal?.id) {
         throw new Error('Goal ID is required');
       }
-  
-      const completedDoc = doc(this.fireStore, 'users', user.uid, 'goals_completed', goal.id);
-      
+
+      const completedDoc = doc(
+        this.fireStore,
+        'users',
+        user.uid,
+        'goals_completed',
+        goal.id,
+      );
+
       await deleteDoc(completedDoc); // 🔥 Actually delete the document
-  
+
       console.log('Completed goal deleted successfully');
     } catch (error) {
       console.error('Error deleting completed goal:', error);
       throw error;
     }
   }
-
-
 }
-
-

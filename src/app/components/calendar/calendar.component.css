@@ -1,26 +1,24 @@
 /* Limit the calendar width */
 
-  .custom-day-cell {
-    text-align: center;
-    padding: 5px;
-    min-height: 50px;
-  }
-  
-  .event-box {
-    background-color: #3f51b5; /* Blue background */
-    color: white;
-    padding: 3px;
-    margin-top: 3px;
-    border-radius: 4px;
-    font-size: 12px;
-  }
-  
+.custom-day-cell {
+  text-align: center;
+  padding: 5px;
+  min-height: 50px;
+}
 
-  /* Make it even smaller on mobile */
-  @media (max-width: 600px) {
-    .cal-day-cell {
-      min-height: 50px;
-      font-size: 10px;
-    }
+.event-box {
+  background-color: #3f51b5; /* Blue background */
+  color: white;
+  padding: 3px;
+  margin-top: 3px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+/* Make it even smaller on mobile */
+@media (max-width: 600px) {
+  .cal-day-cell {
+    min-height: 50px;
+    font-size: 10px;
   }
-  
+}

@@ -1,7 +1,10 @@
-<div *ngIf="bibleStudies.length > 0" class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
+<div
+  *ngIf="bibleStudies.length > 0"
+  class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6"
+>
   <div class="max-w-7xl mx-auto">
     <div class="flex justify-end mb-4">
-      <button 
+      <button
         class="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition-colors font-semibold"
         aria-label="Add Bible Study"
         (click)="showModal = true"
@@ -12,18 +15,20 @@
     </div>
     <div class="mb-5">
       <h1 class="text-2xl font-bold text-gray-800">Bible Studies</h1>
-      <span class="text-gray-600 text-sm">Manage your Bible studies and schedules</span>
+      <span class="text-gray-600 text-sm"
+        >Manage your Bible studies and schedules</span
+      >
     </div>
 
     <!-- Cards Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
-      <div 
+      <div
         *ngFor="let study of bibleStudies; let i = index"
         (click)="editStudy(study)"
         [class]="getCardClasses(i)"
       >
         <div [class]="getGradientOverlayClasses(i)"></div>
-        
+
         <div class="relative p-6">
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center">
@@ -31,17 +36,25 @@
                 {{ getInitials(study.bible_study) }}
               </div>
               <div>
-                <h3 class="text-xl font-bold text-gray-800 group-hover:text-gray-900 transition-colors">
+                <h3
+                  class="text-xl font-bold text-gray-800 group-hover:text-gray-900 transition-colors"
+                >
                   {{ study.bible_study }}
                 </h3>
               </div>
             </div>
-            <i class="bi bi-chevron-right w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-all duration-300 group-hover:translate-x-1"></i>
+            <i
+              class="bi bi-chevron-right w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-all duration-300 group-hover:translate-x-1"
+            ></i>
           </div>
 
           <!-- Schedule Info -->
-          <div class="bg-gray-50 rounded-xl p-4 mb-4 group-hover:bg-blue-50 transition-colors duration-300">
-            <div class="flex items-center text-gray-700 group-hover:text-blue-700 transition-colors">
+          <div
+            class="bg-gray-50 rounded-xl p-4 mb-4 group-hover:bg-blue-50 transition-colors duration-300"
+          >
+            <div
+              class="flex items-center text-gray-700 group-hover:text-blue-700 transition-colors"
+            >
               <i class="bi bi-calendar-event mr-2"></i>
               <span class="font-medium mr-2">Schedule:</span>
               <span>{{ study.schedule }}</span>
@@ -49,7 +62,9 @@
           </div>
 
           <!-- Bottom Action Hint -->
-          <div class="mt-4 pt-4 border-t border-gray-100 text-center text-sm text-gray-400 group-hover:text-blue-500 transition-colors duration-300">
+          <div
+            class="mt-4 pt-4 border-t border-gray-100 text-center text-sm text-gray-400 group-hover:text-blue-500 transition-colors duration-300"
+          >
             <i class="bi bi-book mr-1"></i>
             Click to view or edit study
           </div>
@@ -59,60 +74,128 @@
   </div>
 </div>
 
-
-  <app-modal *ngIf="showModal">
-    <div class="flex justify-between items-center pb-3 mt-3">
-        <button (click)="showModal = false" class="text-gray-500 hover:text-gray-700">
-            <i class="bi bi-x-lg"></i>
-        </button>
-    </div >
-<div class="bg-white mt-3">
+<app-modal *ngIf="showModal">
+  <div class="flex justify-between items-center pb-3 mt-3">
+    <button
+      (click)="showModal = false"
+      class="text-gray-500 hover:text-gray-700"
+    >
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+  <div class="bg-white mt-3">
     <div class="max-w-7xl mx-auto">
-        <h1 class="font-bold text-2xl">Bible Study / Return Visit</h1>
-        <small class="text-gray-500">Add a new Bible Study or Return Visit</small>
-        <Form>
-            <div class="mt-3 mb-4">
-                <label for="bible-study" class="block text-sm font-medium text-gray-700">Name</label>
-                <input type="text" id="bible-study" name="bible-study" [(ngModel)]="bible_study" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Name" />
-            </div>
+      <h1 class="font-bold text-2xl">Bible Study / Return Visit</h1>
+      <small class="text-gray-500">Add a new Bible Study or Return Visit</small>
+      <Form>
+        <div class="mt-3 mb-4">
+          <label
+            for="bible-study"
+            class="block text-sm font-medium text-gray-700"
+            >Name</label
+          >
+          <input
+            type="text"
+            id="bible-study"
+            name="bible-study"
+            [(ngModel)]="bible_study"
+            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            placeholder="Name"
+          />
+        </div>
 
-            <div class="mb-4">
-                <label for="lesson" class="block text-sm font-medium text-gray-700">Address</label>
-                <input type="text" id="address" name="address" [(ngModel)]="address" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Address" />
-            </div>
+        <div class="mb-4">
+          <label for="lesson" class="block text-sm font-medium text-gray-700"
+            >Address</label
+          >
+          <input
+            type="text"
+            id="address"
+            name="address"
+            [(ngModel)]="address"
+            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            placeholder="Address"
+          />
+        </div>
 
-            <div class="mb-4">
-                <label for="type" class="block text-sm font-medium text-gray-700">Type</label>
-                <select id="type" name="type" [(ngModel)]="type" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                    <option value="rv">Return Visit</option>
-                    <option value="bs">Bible Study</option>
-                </select>
-            </div>
+        <div class="mb-4">
+          <label for="type" class="block text-sm font-medium text-gray-700"
+            >Type</label
+          >
+          <select
+            id="type"
+            name="type"
+            [(ngModel)]="type"
+            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          >
+            <option value="rv">Return Visit</option>
+            <option value="bs">Bible Study</option>
+          </select>
+        </div>
 
-            <div class="mb-4">
-                <label for="schedule" class="block text-sm font-medium text-gray-700">Schedule <small>(e.g., Thursday, 10 AM)</small></label>
-                <input type="text" id="schedule" [(ngModel)]="schedule" name="schedule" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Schedule" />
-            </div>
+        <div class="mb-4">
+          <label for="schedule" class="block text-sm font-medium text-gray-700"
+            >Schedule <small>(e.g., Thursday, 10 AM)</small></label
+          >
+          <input
+            type="text"
+            id="schedule"
+            [(ngModel)]="schedule"
+            name="schedule"
+            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            placeholder="Schedule"
+          />
+        </div>
 
-            <div class="mb-4">
-                <label for="lesson" class="block text-sm font-medium text-gray-700">Next Topic / Lesson <small>(e.g., Chapter 1, Title, Point Number)</small></label>
-                <textarea id="lesson" name="next_lesson" [(ngModel)]="next_lesson" rows="5" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Next lesson"></textarea>
-            </div>
+        <div class="mb-4">
+          <label for="lesson" class="block text-sm font-medium text-gray-700"
+            >Next Topic / Lesson
+            <small>(e.g., Chapter 1, Title, Point Number)</small></label
+          >
+          <textarea
+            id="lesson"
+            name="next_lesson"
+            [(ngModel)]="next_lesson"
+            rows="5"
+            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            placeholder="Next lesson"
+          ></textarea>
+        </div>
 
-            <div *ngIf="isSuccess">
-                <app-alerts [isSuccess]="isSuccess" [alertMessage]="alertMessage"></app-alerts>
-            </div>
-            <div *ngIf="!isSuccess">
-                <app-alerts [isSuccess]="isSuccess" [alertMessage]="alertMessage"></app-alerts>
-            </div>
+        <div *ngIf="isSuccess">
+          <app-alerts
+            [isSuccess]="isSuccess"
+            [alertMessage]="alertMessage"
+          ></app-alerts>
+        </div>
+        <div *ngIf="!isSuccess">
+          <app-alerts
+            [isSuccess]="isSuccess"
+            [alertMessage]="alertMessage"
+          ></app-alerts>
+        </div>
 
-            <div class="flex justify-between">
-              <button (click)="onSubmit()" type="button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-8" [disabled]="isLoading || !bible_study || !address || !schedule || !next_lesson" [ngClass]="{'opacity-50 cursor-not-allowed': !bible_study || !address || !schedule || !next_lesson}">
-                <span *ngIf="isLoading" class="animate-spin rounded-full h-4 w-4 border-t-2 border-white inline-block mr-2"></span>
-                Save
-              </button>
-              </div>
-            </Form>
+        <div class="flex justify-between">
+          <button
+            (click)="onSubmit()"
+            type="button"
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-8"
+            [disabled]="
+              isLoading || !bible_study || !address || !schedule || !next_lesson
+            "
+            [ngClass]="{
+              'opacity-50 cursor-not-allowed':
+                !bible_study || !address || !schedule || !next_lesson,
+            }"
+          >
+            <span
+              *ngIf="isLoading"
+              class="animate-spin rounded-full h-4 w-4 border-t-2 border-white inline-block mr-2"
+            ></span>
+            Save
+          </button>
+        </div>
+      </Form>
     </div>
-</div>
+  </div>
 </app-modal>

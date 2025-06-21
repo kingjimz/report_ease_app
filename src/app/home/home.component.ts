@@ -12,16 +12,27 @@ import { DashboardComponent } from '../dashboard/dashboard.component';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CalendarComponent, TabCardComponent, HeaderComponent, CommonModule, ReportsComponent, SettingsComponent, DashboardComponent],
+  imports: [
+    CalendarComponent,
+    TabCardComponent,
+    HeaderComponent,
+    CommonModule,
+    ReportsComponent,
+    SettingsComponent,
+    DashboardComponent,
+  ],
   templateUrl: './home.component.html',
-  styleUrl: './home.component.css'
+  styleUrl: './home.component.css',
 })
 export class HomeComponent {
   activeTab = 'dashboard';
   showTab = true;
   selectedTab: string = 'dashboard';
 
-  constructor(private auth: AuthService, private route: Router) {}
+  constructor(
+    private auth: AuthService,
+    private route: Router,
+  ) {}
 
   private lastScrollTop = 0;
   private scrollThreshold = 40;
@@ -34,15 +45,15 @@ export class HomeComponent {
     if (diff > this.scrollThreshold) {
       if (st > this.lastScrollTop) {
         this.showTab = false;
-        this.selectedTab = this.activeTab; 
+        this.selectedTab = this.activeTab;
       } else {
         this.showTab = true;
-        this.activeTab = this.selectedTab; 
+        this.activeTab = this.selectedTab;
       }
       this.lastScrollTop = st <= 0 ? 0 : st;
     }
   }
-  
+
   logout() {
     this.auth.logout();
     this.route.navigate(['/login']);
@@ -52,8 +63,4 @@ export class HomeComponent {
     this.activeTab = tabId;
     this.selectedTab = tabId;
   }
-
-
 }
-
-

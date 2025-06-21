@@ -8,9 +8,8 @@ describe('BibleStudiesComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [BibleStudiesComponent]
-    })
-    .compileComponents();
+      imports: [BibleStudiesComponent],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(BibleStudiesComponent);
     component = fixture.componentInstance;

@@ -29,18 +29,18 @@ interface CalendarEvent {
   standalone: true,
   imports: [CommonModule, FormsModule, LoaderComponent],
   templateUrl: './calendar.component.html',
-  styleUrls: ['./calendar.component.css']
+  styleUrls: ['./calendar.component.css'],
 })
 export class CalendarComponent implements OnInit {
   isLoading = false;
   viewMode: 'month' | 'week' | 'day' = 'month';
   viewDate = new Date();
-  
+
   calendarDays: CalendarDay[] = [];
   weekDays: Date[] = [];
   daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   events: CalendarEvent[] = [];
-  
+
   selectedDate: Date | null = null;
   hours = 0;
   joined_ministry = '';
@@ -54,8 +54,11 @@ export class CalendarComponent implements OnInit {
   minutes = 0;
   noChangeDetected = false;
   reports: any[] = [];
-  public Math = Math; 
-  constructor(private api: ApiService, private util: UtilService) { }
+  public Math = Math;
+  constructor(
+    private api: ApiService,
+    private util: UtilService,
+  ) {}
 
   ngOnInit() {
     this.generateCalendar();
@@ -66,39 +69,39 @@ export class CalendarComponent implements OnInit {
   generateCalendar() {
     const year = this.viewDate.getFullYear();
     const month = this.viewDate.getMonth();
-    
+
     // Get first day of month and how many days in month
     const firstDayOfMonth = new Date(year, month, 1);
     const lastDayOfMonth = new Date(year, month + 1, 0);
     const daysInMonth = lastDayOfMonth.getDate();
-    
+
     // Get first day of week (0 = Sunday)
     const firstDayOfWeek = firstDayOfMonth.getDay();
-    
+
     // Calculate total cells needed (6 weeks * 7 days)
     const totalCells = 42;
     this.calendarDays = [];
-    
+
     // Add previous month's trailing days
     for (let i = firstDayOfWeek - 1; i >= 0; i--) {
       const date = new Date(year, month, -i);
       this.calendarDays.push({
         date: date,
         isCurrentMonth: false,
-        isToday: this.isToday(date)
+        isToday: this.isToday(date),
       });
     }
-    
+
     // Add current month's days
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
       this.calendarDays.push({
         date: date,
         isCurrentMonth: true,
-        isToday: this.isToday(date)
+        isToday: this.isToday(date),
       });
     }
-    
+
     // Add next month's leading days
     const remainingCells = totalCells - this.calendarDays.length;
     for (let day = 1; day <= remainingCells; day++) {
@@ -106,22 +109,22 @@ export class CalendarComponent implements OnInit {
       this.calendarDays.push({
         date: date,
         isCurrentMonth: false,
-        isToday: this.isToday(date)
+        isToday: this.isToday(date),
       });
     }
   }
-  
+
   generateWeekDays() {
     const startOfWeek = this.getStartOfWeek(this.viewDate);
     this.weekDays = [];
-    
+
     for (let i = 0; i < 7; i++) {
       const date = new Date(startOfWeek);
       date.setDate(startOfWeek.getDate() + i);
       this.weekDays.push(date);
     }
   }
-  
+
   getStartOfWeek(date: Date): Date {
     const d = new Date(date);
     const day = d.getDay();
@@ -131,38 +134,50 @@ export class CalendarComponent implements OnInit {
 
   previousMonth() {
     if (this.viewMode === 'month') {
-      this.viewDate = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() - 1, 1);
+      this.viewDate = new Date(
+        this.viewDate.getFullYear(),
+        this.viewDate.getMonth() - 1,
+        1,
+      );
       this.generateCalendar();
     } else if (this.viewMode === 'week') {
-      this.viewDate = new Date(this.viewDate.getTime() - (7 * 24 * 60 * 60 * 1000));
+      this.viewDate = new Date(
+        this.viewDate.getTime() - 7 * 24 * 60 * 60 * 1000,
+      );
       this.generateWeekDays();
     } else if (this.viewMode === 'day') {
-      this.viewDate = new Date(this.viewDate.getTime() - (24 * 60 * 60 * 1000));
+      this.viewDate = new Date(this.viewDate.getTime() - 24 * 60 * 60 * 1000);
     }
   }
-  
+
   nextMonth() {
     if (this.viewMode === 'month') {
-      this.viewDate = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() + 1, 1);
+      this.viewDate = new Date(
+        this.viewDate.getFullYear(),
+        this.viewDate.getMonth() + 1,
+        1,
+      );
       this.generateCalendar();
     } else if (this.viewMode === 'week') {
-      this.viewDate = new Date(this.viewDate.getTime() + (7 * 24 * 60 * 60 * 1000));
+      this.viewDate = new Date(
+        this.viewDate.getTime() + 7 * 24 * 60 * 60 * 1000,
+      );
       this.generateWeekDays();
     } else if (this.viewMode === 'day') {
-      this.viewDate = new Date(this.viewDate.getTime() + (24 * 60 * 60 * 1000));
+      this.viewDate = new Date(this.viewDate.getTime() + 24 * 60 * 60 * 1000);
     }
   }
 
   // Event-related methods
   hasEvent(date: Date): boolean {
-    return this.events.some(event => 
-      event.start.toDateString() === date.toDateString()
+    return this.events.some(
+      (event) => event.start.toDateString() === date.toDateString(),
     );
   }
 
   getEventHours(date: Date): string {
-    const event = this.events.find(e =>
-      e.start.toDateString() === date.toDateString()
+    const event = this.events.find(
+      (e) => e.start.toDateString() === date.toDateString(),
     );
     if (event) {
       const hours = event.meta.hours || 0;
@@ -176,8 +191,8 @@ export class CalendarComponent implements OnInit {
   }
 
   getEventPreview(date: Date): string {
-    const event = this.events.find(e => 
-      e.start.toDateString() === date.toDateString()
+    const event = this.events.find(
+      (e) => e.start.toDateString() === date.toDateString(),
     );
     return event ? event.title : '';
   }
@@ -188,7 +203,7 @@ export class CalendarComponent implements OnInit {
       const data = await this.api.getReports();
       this.reports = this.util.aggregateReportsByMonth(data);
       this.api.updateAggregatedData(this.reports);
-     
+
       this.events = data.map((report: any) => {
         return {
           title: report.hours + ' Hours',
@@ -199,8 +214,8 @@ export class CalendarComponent implements OnInit {
             minutes: report.minutes || 0,
             report_id: report.id,
             notes: report.notes,
-            joined_ministry: report.is_joined_ministry
-          }
+            joined_ministry: report.is_joined_ministry,
+          },
         };
       });
     } catch (error) {
@@ -223,7 +238,7 @@ export class CalendarComponent implements OnInit {
       created_at: new Date(),
       updated_at: new Date(),
     };
-    
+
     try {
       await this.api.createReport(report);
       this.noChangeDetected = false;
@@ -240,8 +255,8 @@ export class CalendarComponent implements OnInit {
       return;
     }
 
-    const existingEvent = this.events.find(e => 
-      e.start.toDateString() === this.selectedDate?.toDateString()
+    const existingEvent = this.events.find(
+      (e) => e.start.toDateString() === this.selectedDate?.toDateString(),
     );
 
     if (existingEvent) {
@@ -251,13 +266,13 @@ export class CalendarComponent implements OnInit {
       const existingNotes = existingEvent.meta.notes;
 
       if (
-      existingHours === this.hours &&
-      existingMinutes === this.minutes &&
-      existingJoinedMinistry === this.joined_ministry &&
-      existingNotes === this.note
+        existingHours === this.hours &&
+        existingMinutes === this.minutes &&
+        existingJoinedMinistry === this.joined_ministry &&
+        existingNotes === this.note
       ) {
-      this.noChangeDetected = true;
-      return;
+        this.noChangeDetected = true;
+        return;
       }
     }
 
@@ -271,7 +286,7 @@ export class CalendarComponent implements OnInit {
       created_at: new Date(),
       updated_at: new Date(),
     };
-    
+
     try {
       await this.api.updateReport(report);
       this.noChangeDetected = false;
@@ -289,9 +304,9 @@ export class CalendarComponent implements OnInit {
   }
 
   getMonthYearDisplay(): string {
-    return this.viewDate.toLocaleDateString('en-US', { 
-      month: 'long', 
-      year: 'numeric' 
+    return this.viewDate.toLocaleDateString('en-US', {
+      month: 'long',
+      year: 'numeric',
     });
   }
 
@@ -301,23 +316,25 @@ export class CalendarComponent implements OnInit {
 
   onDayClick(day: CalendarDay) {
     this.selectedDate = new Date(day.date);
-    const existingEvent = this.events.find(e => 
-      e.start.toDateString() === this.selectedDate?.toDateString()
+    const existingEvent = this.events.find(
+      (e) => e.start.toDateString() === this.selectedDate?.toDateString(),
     );
     this.hasExistingEvent = existingEvent ? true : false;
-    
+
     if (existingEvent) {
       this.hours = existingEvent.meta.hours || 0;
       this.minutes = existingEvent.meta.minutes || 0;
       this.report_id = existingEvent.meta.report_id;
       this.selectedDate = existingEvent.start;
-      this.joined_ministry = this.util.capitalizeFirstLetter(existingEvent.meta.joined_ministry);
+      this.joined_ministry = this.util.capitalizeFirstLetter(
+        existingEvent.meta.joined_ministry,
+      );
       this.note = existingEvent.meta.notes;
-    } else { 
+    } else {
       this.reInitializeVariables();
     }
   }
-  
+
   closeModal() {
     this.selectedDate = null;
     this.noChangeDetected = false;

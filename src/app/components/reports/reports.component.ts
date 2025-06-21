@@ -10,16 +10,21 @@ import { LoaderComponent } from '../loader/loader.component';
 @Component({
   selector: 'app-reports',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModalComponent, BibleStudiesComponent, LoaderComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ModalComponent,
+    BibleStudiesComponent,
+    LoaderComponent,
+  ],
   templateUrl: './reports.component.html',
-  styleUrl: './reports.component.css'
+  styleUrl: './reports.component.css',
 })
-
 export class ReportsComponent {
   reports: any[] = [];
 
-  bibleStudies: any[] = []; 
-  studySelected: any = null; 
+  bibleStudies: any[] = [];
+  studySelected: any = null;
   isSelected = false;
   studyDelete = false;
   next_lesson = '';
@@ -28,13 +33,16 @@ export class ReportsComponent {
   selectedReport: any = null;
   dropdownOpen = false;
   monthlyReportData: any = null;
-  loading = true; 
+  loading = true;
   isCopied = false;
   numberOfBibleStudies = 0;
   numberOfReturnVisits = 0;
   hoveredReport: number | null = null;
 
-  constructor(public api: ApiService, public util: UtilService) { }
+  constructor(
+    public api: ApiService,
+    public util: UtilService,
+  ) {}
 
   ngOnInit() {
     this.loadReports();
@@ -48,19 +56,23 @@ export class ReportsComponent {
     this.api.bibleStudies$.subscribe((data) => {
       if (data && data.length > 0) {
         this.bibleStudies = data;
-        this.numberOfBibleStudies = this.bibleStudies.filter(study => study.type === 'bs').length;
-        this.numberOfReturnVisits = this.bibleStudies.filter(study => study.type === 'rv').length;
+        this.numberOfBibleStudies = this.bibleStudies.filter(
+          (study) => study.type === 'bs',
+        ).length;
+        this.numberOfReturnVisits = this.bibleStudies.filter(
+          (study) => study.type === 'rv',
+        ).length;
       }
     });
   }
 
   loadReports() {
-   this.api.aggregatedData$.subscribe((data) => {
-    if (data && data.length > 0) {
-      this.reports = data;
-    }
-  });
-}
+    this.api.aggregatedData$.subscribe((data) => {
+      if (data && data.length > 0) {
+        this.reports = data;
+      }
+    });
+  }
 
   editStudy(study: any) {
     this.isSelected = true;
@@ -86,22 +98,28 @@ export class ReportsComponent {
     if (!this.studySelected?.id) return;
 
     const study = this.studySelected;
-  
-    await this.api.deleteStudy(study).then(() => {
-      this.closeStudyDetails();
-      this.refreshBibleStudies();
-    }).catch(error => {
-      console.error('Error deleting study:', error);
-    });
+
+    await this.api
+      .deleteStudy(study)
+      .then(() => {
+        this.closeStudyDetails();
+        this.refreshBibleStudies();
+      })
+      .catch((error) => {
+        console.error('Error deleting study:', error);
+      });
   }
 
   refreshBibleStudies() {
-    this.api.getBibleStudies().then((data) => {
-      this.bibleStudies = data;
-      this.api.updateBibleStudies(data);
-    }).catch(error => {
-      console.error('Error refreshing Bible studies:', error);
-    });
+    this.api
+      .getBibleStudies()
+      .then((data) => {
+        this.bibleStudies = data;
+        this.api.updateBibleStudies(data);
+      })
+      .catch((error) => {
+        console.error('Error refreshing Bible studies:', error);
+      });
   }
 
   closeDeleteModal() {
@@ -125,63 +143,70 @@ export class ReportsComponent {
       type: study.type,
       lesson: this.next_lesson,
       updated_at: new Date(),
-      id: study.id
-    }
+      id: study.id,
+    };
 
-    this.api.updateStudy(studyData).then(() => {
-      this.loadBibLeStudies();
-    }).catch(error => {
-      console.error('Error updating study:', error);
-    });
-
+    this.api
+      .updateStudy(studyData)
+      .then(() => {
+        this.loadBibLeStudies();
+      })
+      .catch((error) => {
+        console.error('Error updating study:', error);
+      });
   }
 
-downloadReport(report: any, isPioneer: boolean) {
-  this.selectedReport = report;
-  this.monthlyReportData = {
-    month: `${report.month_name} ${report.year}`, 
-    bibleStudies: this.filterBibleStudies(this.bibleStudies).length,
-    is_joined_ministry: report.is_joined_ministry,
-    hours: isPioneer ? report.total_hours : undefined, 
-    report_count: report.report_count
-  };
+  downloadReport(report: any, isPioneer: boolean) {
+    this.selectedReport = report;
+    this.monthlyReportData = {
+      month: `${report.month_name} ${report.year}`,
+      bibleStudies: this.filterBibleStudies(this.bibleStudies).length,
+      is_joined_ministry: report.is_joined_ministry,
+      hours: isPioneer ? report.total_hours : undefined,
+      report_count: report.report_count,
+    };
 
-  this.dropdownOpen = false;
-  this.util.generatePNG(this.monthlyReportData, isPioneer);
-}
+    this.dropdownOpen = false;
+    this.util.generatePNG(this.monthlyReportData, isPioneer);
+  }
 
-filterBibleStudies(studies: any[]): any[] {
-  return studies.filter(study => study.type !== 'rv');
-}
+  filterBibleStudies(studies: any[]): any[] {
+    return studies.filter((study) => study.type !== 'rv');
+  }
 
   closeDlModal() {
     this.openDownloadModal = false;
     this.isCopied = false;
   }
-  
+
   toggleDropdown() {
     this.dropdownOpen = !this.dropdownOpen;
   }
 
   copyToClipboard(): void {
     if (!this.next_lesson) return;
-    
-    navigator.clipboard.writeText(this.next_lesson)
+
+    navigator.clipboard
+      .writeText(this.next_lesson)
       .then(() => {
         this.isCopied = true;
         console.log('Text copied to clipboard');
       })
-      .catch(err => {
+      .catch((err) => {
         this.isCopied = false;
         console.error('Failed to copy text: ', err);
       });
   }
 
-    getReportCardClasses(index: number): string {
-    const baseClasses = 'group relative bg-white shadow-xl rounded-2xl border border-gray-200 transition-all duration-500 ease-out hover:shadow-2xl hover:-translate-y-2 hover:scale-[1.01] overflow-hidden';
+  getReportCardClasses(index: number): string {
+    const baseClasses =
+      'group relative bg-white shadow-xl rounded-2xl border border-gray-200 transition-all duration-500 ease-out hover:shadow-2xl hover:-translate-y-2 hover:scale-[1.01] overflow-hidden';
     const borderColor = this.getReportBorderColor(index);
-    const ringClass = this.hoveredReport === index ? 'ring-2 ring-purple-200 ring-opacity-60' : '';
-    
+    const ringClass =
+      this.hoveredReport === index
+        ? 'ring-2 ring-purple-200 ring-opacity-60'
+        : '';
+
     return `${baseClasses} ${borderColor} ${ringClass}`;
   }
 
@@ -218,7 +243,7 @@ filterBibleStudies(studies: any[]): any[] {
       'from-purple-500 to-pink-600',
       'from-blue-500 to-indigo-600',
       'from-emerald-500 to-cyan-600',
-      'from-orange-500 to-red-600'
+      'from-orange-500 to-red-600',
     ];
     return gradients[index % gradients.length];
   }
@@ -228,7 +253,7 @@ filterBibleStudies(studies: any[]): any[] {
       'border-l-4 border-purple-500',
       'border-l-4 border-blue-500',
       'border-l-4 border-emerald-500',
-      'border-l-4 border-orange-500'
+      'border-l-4 border-orange-500',
     ];
     return colors[index % colors.length];
   }

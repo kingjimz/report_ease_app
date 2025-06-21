@@ -1,14 +1,19 @@
 // chart.component.ts
-import { Component, Input, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef, SimpleChanges, OnChanges } from '@angular/core';
+import {
+  Component,
+  Input,
+  OnInit,
+  AfterViewInit,
+  OnDestroy,
+  ViewChild,
+  ElementRef,
+  SimpleChanges,
+  OnChanges,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 // Import Chart.js
-import {
-  Chart,
-  ChartConfiguration,
-  ChartType,
-  registerables
-} from 'chart.js';
+import { Chart, ChartConfiguration, ChartType, registerables } from 'chart.js';
 
 // Register Chart.js components
 Chart.register(...registerables);
@@ -18,11 +23,12 @@ Chart.register(...registerables);
   standalone: true,
   imports: [CommonModule],
   templateUrl: './chart.component.html',
-  styleUrl: './chart.component.css'
+  styleUrl: './chart.component.css',
 })
 export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
-  @ViewChild('chartCanvas', { static: false }) chartCanvas!: ElementRef<HTMLCanvasElement>;
-  
+  @ViewChild('chartCanvas', { static: false })
+  chartCanvas!: ElementRef<HTMLCanvasElement>;
+
   private chart: Chart | null = null;
   @Input() reportData: any[] = [];
   @Input() chartType: ChartType = 'line';
@@ -33,39 +39,39 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
     plugins: {
       legend: {
         display: true,
-        position: 'top' as const
+        position: 'top' as const,
       },
       title: {
         display: false,
-        text:  'Monthly Report',
-      }
+        text: 'Monthly Report',
+      },
     },
     scales: {
       y: {
-        beginAtZero: true
-      }
+        beginAtZero: true,
+      },
     },
     layout: {
       padding: {
         top: 10,
         bottom: 10,
         left: 10,
-        right: 10
-      }
+        right: 10,
+      },
     },
     interaction: {
       intersect: false,
-      mode: 'index'
+      mode: 'index',
     },
     elements: {
       point: {
         radius: 0,
-        hoverRadius: 0
+        hoverRadius: 0,
       },
       line: {
-        tension: 0.4 
-      }
-    }
+        tension: 0.4,
+      },
+    },
   };
 
   chartData: ChartConfiguration['data'] = {
@@ -75,10 +81,10 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
         label: 'Hours',
         data: [], // Default data for testing
         fill: true,
-        pointRadius: 0, 
-        pointHoverRadius: 0
-      }
-    ]
+        pointRadius: 0,
+        pointHoverRadius: 0,
+      },
+    ],
   };
   ngOnChanges(changes: SimpleChanges) {
     if (changes['reportData'] && this.reportData && this.reportData.length) {
@@ -95,7 +101,9 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
         return date.toLocaleDateString('en-CA');
       });
 
-      this.chartData.datasets[0].data = latestData.map((item: any) => Number(item.hours));
+      this.chartData.datasets[0].data = latestData.map((item: any) =>
+        Number(item.hours),
+      );
 
       if (this.chart) {
         this.chart.data.labels = this.chartData.labels;
@@ -115,18 +123,22 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
       }
       this.chartOptions.scales.y.ticks = {
         ...this.chartOptions.scales.y.ticks,
-        callback: function(value: any) {
+        callback: function (value: any) {
           // Only show whole numbers
           if (Number.isInteger(value)) {
             return value;
           }
           return '';
         },
-        stepSize: 1
+        stepSize: 1,
       };
     }
 
-    if (this.chartOptions && this.chartOptions.plugins && this.chartOptions.plugins.legend) {
+    if (
+      this.chartOptions &&
+      this.chartOptions.plugins &&
+      this.chartOptions.plugins.legend
+    ) {
       this.chartOptions.plugins.legend.display = false;
     }
   }
@@ -145,13 +157,12 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
 
     const canvas = this.chartCanvas.nativeElement;
     const ctx = canvas.getContext('2d');
-    
+
     if (!ctx) {
       console.error('Could not get canvas context');
       return;
     }
 
-  
     if (this.chart) {
       this.chart.destroy();
     }
@@ -159,7 +170,7 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
     const config: ChartConfiguration = {
       type: this.chartType,
       data: this.chartData,
-      options: this.chartOptions
+      options: this.chartOptions,
     };
 
     try {

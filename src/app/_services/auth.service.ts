@@ -1,7 +1,11 @@
 import { Injectable } from '@angular/core';
-import { 
-  Auth, User, signInWithPopup, signOut, 
-  signInWithEmailAndPassword, createUserWithEmailAndPassword, 
+import {
+  Auth,
+  User,
+  signInWithPopup,
+  signOut,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   onAuthStateChanged,
 } from '@angular/fire/auth';
 import { GoogleAuthProvider } from 'firebase/auth';
@@ -9,16 +13,17 @@ import { BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
-
 export class AuthService {
   private userSubject = new BehaviorSubject<User | null>(null);
   user$ = this.userSubject.asObservable();
-  isLoading = new BehaviorSubject<boolean>(true);  
+  isLoading = new BehaviorSubject<boolean>(true);
 
-  constructor(private auth: Auth, private router: Router) {
-  
+  constructor(
+    private auth: Auth,
+    private router: Router,
+  ) {
     onAuthStateChanged(this.auth, (user) => {
       this.userSubject.next(user);
       if (user) {
@@ -28,14 +33,17 @@ export class AuthService {
       }
     });
   }
-  
 
   async signUp(email: string, password: string) {
     try {
-      const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        this.auth,
+        email,
+        password,
+      );
       console.log('User signed up:', userCredential.user);
       this.userSubject.next(userCredential.user);
-      this.router.navigate(['/']); 
+      this.router.navigate(['/']);
       return userCredential.user;
     } catch (error) {
       console.error('Error signing up:', error);
@@ -45,9 +53,13 @@ export class AuthService {
 
   async login(email: string, password: string) {
     try {
-      const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(
+        this.auth,
+        email,
+        password,
+      );
       this.userSubject.next(userCredential.user);
-      this.router.navigate(['/']); 
+      this.router.navigate(['/']);
       return userCredential.user;
     } catch (error) {
       console.error('Error logging in:', error);
@@ -59,7 +71,7 @@ export class AuthService {
     try {
       await signOut(this.auth);
       this.userSubject.next(null);
-      this.router.navigate(['/login']); 
+      this.router.navigate(['/login']);
     } catch (error) {
       console.error('Error logging out:', error);
       throw error;
@@ -70,7 +82,7 @@ export class AuthService {
     try {
       const result = await signInWithPopup(this.auth, new GoogleAuthProvider());
       this.userSubject.next(result.user);
-      this.router.navigate(['/']); 
+      this.router.navigate(['/']);
       return result.user;
     } catch (error) {
       console.error('Error signing in with Google:', error);

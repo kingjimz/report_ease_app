@@ -1,6 +1,12 @@
-<div *ngIf="isSuccess" class="mb-4 p-2 bg-green-100 border-l-4 border-green-500 text-green-700">
-    <p class="text-sm">{{ alertMessage }}</p>
+<div
+  *ngIf="isSuccess"
+  class="mb-4 p-2 bg-green-100 border-l-4 border-green-500 text-green-700"
+>
+  <p class="text-sm">{{ alertMessage }}</p>
 </div>
-<div *ngIf="!isSuccess" class="mb-4 p-2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700">
-    <p class="text-sm">{{ alertMessage }} </p>
+<div
+  *ngIf="!isSuccess"
+  class="mb-4 p-2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700"
+>
+  <p class="text-sm">{{ alertMessage }}</p>
 </div>

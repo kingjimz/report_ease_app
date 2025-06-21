@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './alerts.component.html',
-  styleUrl: './alerts.component.css'
+  styleUrl: './alerts.component.css',
 })
 export class AlertsComponent {
   @Input() isSuccess = false;

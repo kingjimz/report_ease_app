@@ -6,9 +6,8 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './loader.component.html',
-  styleUrl: './loader.component.css'
+  styleUrl: './loader.component.css',
 })
 export class LoaderComponent {
-  @Input() loadingMessage: string = 'Loading...'; 
-
+  @Input() loadingMessage: string = 'Loading...';
 }

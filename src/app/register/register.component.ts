@@ -4,13 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../_services/auth.service';
 import { RouterLink } from '@angular/router';
 
-
 @Component({
   selector: 'app-register',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './register.component.html',
-  styleUrl: './register.component.css'
+  styleUrl: './register.component.css',
 })
 export class RegisterComponent {
   email = '';
@@ -18,7 +17,7 @@ export class RegisterComponent {
   confirmPassword = '';
   errorMessage = '';
 
-  constructor(private authService: AuthService) { }
+  constructor(private authService: AuthService) {}
 
   signUp() {
     if (this.password !== this.confirmPassword) {
@@ -26,7 +25,8 @@ export class RegisterComponent {
       return;
     }
 
-    this.authService.signUp(this.email, this.password)
+    this.authService
+      .signUp(this.email, this.password)
       .then(() => {
         console.log('User signed up');
       })
@@ -36,5 +36,3 @@ export class RegisterComponent {
       });
   }
 }
-
-

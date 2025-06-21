@@ -4,7 +4,7 @@ import { Auth, onAuthStateChanged } from '@angular/fire/auth';
 import { signal } from '@angular/core';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthGuard implements CanActivate {
   private auth = inject(Auth);
@@ -21,7 +21,7 @@ export class AuthGuard implements CanActivate {
     if (this.isAuthenticated()) {
       return true;
     } else {
-      this.router.navigateByUrl('/login', { replaceUrl: true }); 
+      this.router.navigateByUrl('/login', { replaceUrl: true });
       return false;
     }
   }
