@@ -144,6 +144,7 @@ export class ApiService {
       throw error;
     }
   }
+
   async getGoals() {
     try {
       const user = this.auth.currentUser;
@@ -163,7 +164,6 @@ export class ApiService {
         querySnapshot = await getDocs(goalsCollection);
         // If cache is empty, force fetch from server
         if (querySnapshot.empty) {
-          console.log('Cache is empty, fetching from Firestore...');
           querySnapshot = await getDocs(goalsCollection);
         } else if (!querySnapshot.metadata.fromCache) {
           console.log('Fresh data fetched and cached');
@@ -397,7 +397,7 @@ export class ApiService {
     }
   }
 
-  async deleteCompletedGoal(goal: any) {
+  async updateGoal(goal: any) {
     try {
       const user = this.auth.currentUser;
       if (!user) {
@@ -408,19 +408,13 @@ export class ApiService {
         throw new Error('Goal ID is required');
       }
 
-      const completedDoc = doc(
-        this.fireStore,
-        'users',
-        user.uid,
-        'goals_completed',
-        goal.id,
-      );
+      const goalDoc = doc(this.fireStore, 'users', user.uid, 'goals', goal.id);
 
-      await deleteDoc(completedDoc); // 🔥 Actually delete the document
+      await updateDoc(goalDoc, { ...goal }); // Only update existing fields
 
-      console.log('Completed goal deleted successfully');
+      this.getGoals(); // Refresh the goals list after updating
     } catch (error) {
-      console.error('Error deleting completed goal:', error);
+      console.error('Error updating goal:', error);
       throw error;
     }
   }

@@ -42,18 +42,7 @@ export class DashboardComponent implements OnInit {
   ngOnInit() {
     this.loadReports();
     this.loadBibLeStudies();
-    this.api.goals$.subscribe((goals) => {
-      if (goals.length > 0) {
-        this.goals = goals;
-      } else {
-        this.loadGoals();
-      }
-      this.randomizeGoals(this.goals);
-    });
-
-    setTimeout(() => {
-      this.loading = false;
-    }, 1000);
+    this.loadGoals();
   }
 
   async loadBibLeStudies() {
