@@ -1,18 +1,7 @@
 <div
-  *ngIf="bibleStudies.length > 0"
   class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6"
 >
   <div class="max-w-7xl mx-auto">
-    <div class="flex justify-end mb-4">
-      <button
-        class="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition-colors font-semibold"
-        aria-label="Add Bible Study"
-        (click)="showModal = true"
-      >
-        <i class="bi bi-plus-lg mr-2"></i>
-        Add Study
-      </button>
-    </div>
     <div class="mb-5">
       <h1 class="text-2xl font-bold text-gray-800">Bible Studies</h1>
       <span class="text-gray-600 text-sm"
@@ -22,56 +11,75 @@
 
     <!-- Cards Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
-      <div
-        *ngFor="let study of bibleStudies; let i = index"
-        (click)="editStudy(study)"
-        [class]="getCardClasses(i)"
-      >
-        <div [class]="getGradientOverlayClasses(i)"></div>
+  <ng-container *ngIf="bibleStudies.length > 0; else noStudies">
+    <div
+      *ngFor="let study of bibleStudies; let i = index"
+      (click)="editStudy(study)"
+      [class]="getCardClasses(i)"
+    >
+      <div [class]="getGradientOverlayClasses(i)"></div>
 
-        <div class="relative p-6">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center">
-              <div [class]="getAvatarClasses(i)">
-                {{ getInitials(study.bible_study) }}
-              </div>
-              <div>
-                <h3
-                  class="text-xl font-bold text-gray-800 group-hover:text-gray-900 transition-colors"
-                >
-                  {{ study.bible_study }}
-                </h3>
-              </div>
+      <div class="relative p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center">
+            <div [class]="getAvatarClasses(i)">
+              {{ getInitials(study.bible_study) }}
             </div>
-            <i
-              class="bi bi-chevron-right w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-all duration-300 group-hover:translate-x-1"
-            ></i>
-          </div>
-
-          <!-- Schedule Info -->
-          <div
-            class="bg-gray-50 rounded-xl p-4 mb-4 group-hover:bg-blue-50 transition-colors duration-300"
-          >
-            <div
-              class="flex items-center text-gray-700 group-hover:text-blue-700 transition-colors"
-            >
-              <i class="bi bi-calendar-event mr-2"></i>
-              <span class="font-medium mr-2">Schedule:</span>
-              <span>{{ study.schedule }}</span>
+            <div>
+              <h3
+                class="text-xl font-bold text-gray-800 group-hover:text-gray-900 transition-colors"
+              >
+                {{ study.bible_study }}
+              </h3>
             </div>
           </div>
+          <i
+            class="bi bi-chevron-right w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-all duration-300 group-hover:translate-x-1"
+          ></i>
+        </div>
 
-          <!-- Bottom Action Hint -->
+        <div
+          class="bg-gray-50 rounded-xl p-4 mb-4 group-hover:bg-blue-50 transition-colors duration-300"
+        >
           <div
-            class="mt-4 pt-4 border-t border-gray-100 text-center text-sm text-gray-400 group-hover:text-blue-500 transition-colors duration-300"
+            class="flex items-center text-gray-700 group-hover:text-blue-700 transition-colors"
           >
-            <i class="bi bi-book mr-1"></i>
-            Click to view or edit study
+            <i class="bi bi-calendar-event mr-2"></i>
+            <span class="font-medium mr-2">Schedule:</span>
+            <span>{{ study.schedule }}</span>
           </div>
+        </div>
+
+        <div
+          class="mt-4 pt-4 border-t border-gray-100 text-center text-sm text-gray-400 group-hover:text-blue-500 transition-colors duration-300"
+        >
+          <i class="bi bi-book mr-1"></i>
+          Click to view or edit study
         </div>
       </div>
     </div>
-  </div>
+  </ng-container>
+
+  <ng-template #noStudies>
+    <div
+      class="col-span-full text-center bg-white rounded-xl shadow p-10 border border-dashed border-gray-300"
+    >
+      <i class="bi bi-journal-x text-5xl text-blue-300 mb-4"></i>
+      <h2 class="text-xl font-semibold text-gray-700">No Bible Studies Found</h2>
+      <p class="text-gray-500 mt-2">
+        You haven’t added any Bible studies yet. Start one now by clicking the “Add Study” button.
+      </p>
+      <button
+        (click)="showModal = true"
+        class="mt-6 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
+      >
+        <i class="bi bi-plus-lg mr-2"></i>
+        Add Your First Study
+      </button>
+    </div>
+  </ng-template>
+</div>
+
 </div>
 
 <app-modal *ngIf="showModal">

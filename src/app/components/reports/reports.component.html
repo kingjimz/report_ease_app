@@ -164,7 +164,6 @@
     </div>
 
     <app-bible-studies
-      *ngIf="bibleStudies && bibleStudies.length > 0"
       [bibleStudies]="bibleStudies"
       (edit)="editStudy($event)"
     ></app-bible-studies>
