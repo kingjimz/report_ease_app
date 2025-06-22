@@ -2,7 +2,7 @@
   class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6"
 >
   <div class="max-w-7xl mx-auto">
-    <div class="mb-5">
+    <div class="mb-3">
       <h1 class="text-2xl font-bold text-gray-800">Bible Studies</h1>
       <span class="text-gray-600 text-sm"
         >Manage your Bible studies and schedules</span
@@ -12,6 +12,15 @@
     <!-- Cards Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
   <ng-container *ngIf="bibleStudies.length > 0; else noStudies">
+    <div class="col-span-full flex justify-end">
+      <button
+        (click)="showModal = true"
+        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
+      >
+        <i class="bi bi-plus-lg mr-2"></i>
+        Add Study
+      </button>
+    </div>
     <div
       *ngFor="let study of bibleStudies; let i = index"
       (click)="editStudy(study)"
