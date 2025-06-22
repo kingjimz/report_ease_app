@@ -12,6 +12,8 @@ import {
   query,
   updateDoc,
   deleteDoc,
+  getDocsFromCache,
+  getDocsFromServer,
 } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import { Observable, BehaviorSubject } from 'rxjs';
@@ -116,11 +118,16 @@ export class ApiService {
         'reports',
       );
 
-      let querySnapshot = await getDocs(reportsCollection);
-
-      // Only log when fresh data is fetched and cached
-      if (!querySnapshot.metadata.fromCache) {
-        console.log('Fresh data fetched and cached');
+      let querySnapshot;
+      
+      // 🔹 Try cache first, then server if cache fails
+      try {
+        querySnapshot = await getDocsFromCache(reportsCollection);
+        console.log('Reports loaded from cache');
+      } catch (cacheError) {
+        console.log('Cache unavailable, fetching from server...');
+        querySnapshot = await getDocsFromServer(reportsCollection);
+        console.log('Fresh reports data fetched and cached');
       }
 
       // 🔹 Extract reports and include document IDs
@@ -160,22 +167,15 @@ export class ApiService {
       );
 
       let querySnapshot;
+      
+      // 🔹 Try cache first, then server if cache fails
       try {
-        querySnapshot = await getDocs(goalsCollection);
-        // If cache is empty, force fetch from server
-        if (querySnapshot.empty) {
-          querySnapshot = await getDocs(goalsCollection);
-        } else if (!querySnapshot.metadata.fromCache) {
-          console.log('Fresh data fetched and cached');
-        } else {
-          console.log('Loaded from cache');
-        }
+        querySnapshot = await getDocsFromCache(goalsCollection);
+        console.log('Goals loaded from cache');
       } catch (cacheError) {
-        console.warn(
-          'Cache unavailable, fetching from Firestore...',
-          cacheError,
-        );
-        querySnapshot = await getDocs(goalsCollection);
+        console.log('Cache unavailable, fetching from server...');
+        querySnapshot = await getDocsFromServer(goalsCollection);
+        console.log('Fresh goals data fetched and cached');
       }
 
       const goalsData = querySnapshot.docs.map((doc) => ({
@@ -258,29 +258,16 @@ export class ApiService {
         'bibleStudies',
       );
 
-      // 🔹 Try fetching from cache first
       let querySnapshot;
+      
+      // 🔹 Try cache first, then server if cache fails
       try {
-        querySnapshot = await getDocs(bibleStudiesCollection);
-        // If cache is empty, force fetch from server
-        if (querySnapshot.empty) {
-          console.log('Cache is empty, fetching from Firestore...');
-          querySnapshot = await getDocs(bibleStudiesCollection);
-        } else {
-          console.log('Loaded from cache');
-        }
-        this.updateBibleStudies(
-          querySnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          })),
-        );
+        querySnapshot = await getDocsFromCache(bibleStudiesCollection);
+        console.log('Bible studies loaded from cache');
       } catch (cacheError) {
-        console.warn(
-          'Cache unavailable, fetching from Firestore...',
-          cacheError,
-        );
-        querySnapshot = await getDocs(bibleStudiesCollection);
+        console.log('Cache unavailable, fetching from server...');
+        querySnapshot = await getDocsFromServer(bibleStudiesCollection);
+        console.log('Fresh bible studies data fetched and cached');
       }
 
       // 🔹 Extract studies and include document IDs
