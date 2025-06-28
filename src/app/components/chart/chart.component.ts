@@ -101,9 +101,7 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
         return date.toLocaleDateString('en-CA');
       });
 
-      this.chartData.datasets[0].data = latestData.map((item: any) =>
-        Number(item.hours),
-      );
+      this.chartData.datasets[0].data = latestData.map((item: any) => Number(item.hours));
 
       if (this.chart) {
         this.chart.data.labels = this.chartData.labels;
@@ -134,11 +132,7 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
       };
     }
 
-    if (
-      this.chartOptions &&
-      this.chartOptions.plugins &&
-      this.chartOptions.plugins.legend
-    ) {
+    if (this.chartOptions && this.chartOptions.plugins && this.chartOptions.plugins.legend) {
       this.chartOptions.plugins.legend.display = false;
     }
   }

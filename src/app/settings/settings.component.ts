@@ -2,12 +2,13 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../_services/api.service';
-import { AlertsComponent } from '../components/alerts/alerts.component';
+import { GoalCardComponent } from './goal-card/goal-card.component';
+import { Goal } from '../_constants/interface';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, GoalCardComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css',
 })
@@ -16,7 +17,7 @@ export class SettingsComponent {
   category = '';
   goal_title = '';
   goal_description = '';
-  goals: any[] = [];
+  goals: Goal[] = [];
   goalFilter = '';
   showGoalModal = false;
   goalSelected: any = null;
@@ -52,7 +53,14 @@ export class SettingsComponent {
 
   async loadGoals() {
     try {
-      this.goals = await this.api.getGoals();
+      const rawGoals = await this.api.getGoals();
+      this.goals = rawGoals.map((g: any) => ({
+        id: String(g.id),
+        goal_title: g.goal_title || '',
+        goal_description: g.goal_description || '',
+        target_date: g.target_date || '',
+        category: g.category || '',
+      }));
       this.api.notifyGoalChange(this.goals);
     } catch (error) {
       console.error('Error loading goals:', error);
@@ -77,9 +85,7 @@ export class SettingsComponent {
       return this.goals;
     }
     return this.goals.filter(
-      (goal) =>
-        goal.category &&
-        goal.category.toLowerCase().includes(this.goalFilter.toLowerCase()),
+      (goal) => goal.category && goal.category.toLowerCase().includes(this.goalFilter.toLowerCase())
     );
   }
 

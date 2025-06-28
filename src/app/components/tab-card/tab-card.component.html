@@ -5,8 +5,7 @@
       (click)="selectTab(tab.id)"
       class="flex flex-col items-center cursor-pointer"
       [ngClass]="{
-        'text-blue-500 border-b-2 border-blue-500 scale-105':
-          activeTab === tab.id,
+        'text-blue-500 border-b-2 border-blue-500 scale-105': activeTab === tab.id,
         'text-gray-500': activeTab !== tab.id,
       }"
     >

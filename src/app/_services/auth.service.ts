@@ -22,7 +22,7 @@ export class AuthService {
 
   constructor(
     private auth: Auth,
-    private router: Router,
+    private router: Router
   ) {
     onAuthStateChanged(this.auth, (user) => {
       this.userSubject.next(user);
@@ -36,11 +36,7 @@ export class AuthService {
 
   async signUp(email: string, password: string) {
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        this.auth,
-        email,
-        password,
-      );
+      const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
       console.log('User signed up:', userCredential.user);
       this.userSubject.next(userCredential.user);
       this.router.navigate(['/']);
@@ -53,11 +49,7 @@ export class AuthService {
 
   async login(email: string, password: string) {
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        this.auth,
-        email,
-        password,
-      );
+      const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
       this.userSubject.next(userCredential.user);
       this.router.navigate(['/']);
       return userCredential.user;

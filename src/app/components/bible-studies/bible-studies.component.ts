@@ -47,8 +47,7 @@ export class BibleStudiesComponent {
     const baseClasses =
       'group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl cursor-pointer transition-all duration-500 ease-out hover:-translate-y-2 hover:scale-[1.02] overflow-hidden';
     const borderColor = this.getBorderColor(index);
-    const ringClass =
-      this.hoveredCard === index ? 'ring-2 ring-blue-200 ring-opacity-60' : '';
+    const ringClass = this.hoveredCard === index ? 'ring-2 ring-blue-200 ring-opacity-60' : '';
 
     return `${baseClasses} ${borderColor} ${ringClass}`;
   }

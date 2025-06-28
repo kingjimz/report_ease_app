@@ -1,13 +1,8 @@
-<!-- Button to open modal -->
-
-<!-- Modal -->
 <div
   *ngIf="showGoalModal"
   class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
 >
-  <div
-    class="bg-white rounded-xl p-4 sm:p-8 w-full max-w-lg relative shadow-lg"
-  >
+  <div class="bg-white rounded-xl p-4 sm:p-8 w-full max-w-lg relative shadow-lg">
     <button
       (click)="showGoalModal = false"
       class="absolute top-3 right-3 text-gray-400 hover:text-red-600 text-xl"
@@ -18,9 +13,7 @@
 
     <form class="space-y-4 sm:space-y-5 mt-3" (ngSubmit)="onSubmit()">
       <div>
-        <label
-          for="goalTitle"
-          class="block text-xs sm:text-sm font-medium text-gray-700 mb-1"
+        <label for="goalTitle" class="block text-xs sm:text-sm font-medium text-gray-700 mb-1"
           >Goal Title</label
         >
         <input
@@ -33,9 +26,7 @@
         />
       </div>
       <div>
-        <label
-          for="goalDescription"
-          class="block text-xs sm:text-sm font-medium text-gray-700 mb-1"
+        <label for="goalDescription" class="block text-xs sm:text-sm font-medium text-gray-700 mb-1"
           >Description</label
         >
         <textarea
@@ -48,9 +39,7 @@
         ></textarea>
       </div>
       <div>
-        <label
-          for="category"
-          class="block text-xs sm:text-sm font-medium text-gray-700 mb-1"
+        <label for="category" class="block text-xs sm:text-sm font-medium text-gray-700 mb-1"
           >Category</label
         >
         <select
@@ -66,9 +55,7 @@
         </select>
       </div>
       <div>
-        <label
-          for="targetDate"
-          class="block text-xs sm:text-sm font-medium text-gray-700 mb-1"
+        <label for="targetDate" class="block text-xs sm:text-sm font-medium text-gray-700 mb-1"
           >Target Date (Optional)</label
         >
         <input
@@ -83,7 +70,7 @@
         type="submit"
         class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-lg transition text-base"
       >
-        {{ goalSelected ? "Update" : "Add Goal" }}
+        {{ goalSelected ? 'Update' : 'Add Goal' }}
       </button>
     </form>
   </div>
@@ -97,9 +84,7 @@
     <i class="bi bi-bullseye text-indigo-500 text-xl sm:text-2xl"></i>
     Spiritual Goals
   </h2>
-  <span class="text-gray-600 text-sm max-w-2xl">
-    Set and track your spiritual goals.
-  </span>
+  <span class="text-gray-600 text-sm max-w-2xl"> Set and track your spiritual goals. </span>
 
   <button
     (click)="showGoalModal = true"
@@ -134,51 +119,12 @@
   >
     No goals yet. Add your first spiritual goal!
   </div>
-  <div
+  <app-goal-card
     *ngFor="let goal of filteredGoals()"
-    class="bg-indigo-50 border border-indigo-200 rounded-lg p-3 sm:p-4 mb-3 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 shadow-sm relative"
-  >
-    <button
-      type="button"
-      (click)="deleteGoal(goal)"
-      class="absolute top-2 right-2 text-gray-400 hover:text-red-600 transition"
-      aria-label="Delete goal"
-    >
-      <i class="bi bi-trash-fill text-lg"></i>
-    </button>
-    <div class="flex-1 w-full">
-      <h4
-        class="text-sm sm:text-md font-bold text-indigo-700 sm:mt-0 mb-1 sm:mb-2 order-1 sm:order-none"
-      >
-        {{ goal.goal_title }}
-      </h4>
-      <p class="text-gray-700 text-xs sm:text-sm mt-1 sm:mt-0">
-        {{ goal.goal_description }}
-      </p>
-      <small class="text-gray-500 block mt-2 text-xs sm:text-sm"
-        >Category:
-        <span class="font-medium text-indigo-600">{{
-          goal.category
-        }}</span></small
-      >
-      <small
-        class="text-gray-500 block mt-1 text-xs sm:text-sm"
-        *ngIf="goal.target_date"
-        >Target Date:
-        <span *ngIf="goal.target_date" class="font-medium text-indigo-600"
-          >{{ goal.target_date }}
-        </span>
-      </small>
-      <div class="flex justify-center mt-3">
-        <span
-          class="inline-block bg-indigo-100 text-indigo-700 text-xs px-3 py-1 rounded-full cursor-pointer hover:bg-indigo-200 transition"
-          (click)="editGoal(goal); $event.stopPropagation()"
-        >
-          Click to edit
-        </span>
-      </div>
-    </div>
-  </div>
+    [goal]="goal"
+    (deleteGoal)="deleteGoal(goal)"
+    (editGoal)="editGoal(goal)"
+  ></app-goal-card>
   <br />
   <br />
 </div>

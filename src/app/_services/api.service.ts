@@ -17,6 +17,7 @@ import {
 } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import { Observable, BehaviorSubject } from 'rxjs';
+import { Goal } from '../_constants/interface';
 
 @Injectable({
   providedIn: 'root',
@@ -31,12 +32,12 @@ export class ApiService {
   private reportsSubject = new BehaviorSubject<any[]>([]);
   reports$ = this.reportsSubject.asObservable();
 
-  private goalsSubject = new BehaviorSubject<any[]>([]);
+  private goalsSubject = new BehaviorSubject<Goal[]>([]);
   goals$ = this.goalsSubject.asObservable();
 
   reportSignal = signal<any[]>([]);
   bibleStudySignal = signal<any[]>([]);
-  goalsSignal = signal<any[]>([]);
+  goalsSignal = signal<Goal[]>([]);
 
   private unsubscribeReports?: () => void;
   private unsubscribeBibleStudies?: () => void;
@@ -44,7 +45,7 @@ export class ApiService {
 
   constructor(
     private auth: Auth,
-    private fireStore: Firestore,
+    private fireStore: Firestore
   ) {
     this.setupRealtimeListeners();
   }
@@ -62,12 +63,7 @@ export class ApiService {
     const user = this.auth.currentUser;
     if (!user) return;
 
-    const reportsCollection = collection(
-      this.fireStore,
-      'users',
-      user.uid,
-      'reports',
-    );
+    const reportsCollection = collection(this.fireStore, 'users', user.uid, 'reports');
     const reportsQuery = query(reportsCollection);
 
     // Clean up existing listener
@@ -86,7 +82,7 @@ export class ApiService {
           report_date: data['report_date'] || null,
         };
       });
-      
+
       this.reportSignal.set(reports);
       this.reportsSubject.next(reports);
       console.log(`Reports updated: ${reports.length} items`);
@@ -97,12 +93,7 @@ export class ApiService {
     const user = this.auth.currentUser;
     if (!user) return;
 
-    const bibleStudiesCollection = collection(
-      this.fireStore,
-      'users',
-      user.uid,
-      'bibleStudies',
-    );
+    const bibleStudiesCollection = collection(this.fireStore, 'users', user.uid, 'bibleStudies');
     const studiesQuery = query(bibleStudiesCollection);
 
     // Clean up existing listener
@@ -116,7 +107,7 @@ export class ApiService {
         id: doc.id,
         ...doc.data(),
       }));
-      
+
       this.bibleStudySignal.set(studies);
       this.bibleStudiesSubject.next(studies);
       console.log(`Bible studies updated: ${studies.length} items`);
@@ -127,12 +118,7 @@ export class ApiService {
     const user = this.auth.currentUser;
     if (!user) return;
 
-    const goalsCollection = collection(
-      this.fireStore,
-      'users',
-      user.uid,
-      'goals',
-    );
+    const goalsCollection = collection(this.fireStore, 'users', user.uid, 'goals');
     const goalsQuery = query(goalsCollection);
 
     // Clean up existing listener
@@ -142,11 +128,18 @@ export class ApiService {
 
     // 🔥 Real-time listener for goals
     this.unsubscribeGoals = onSnapshot(goalsQuery, (snapshot) => {
-      const goals = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      
+      const goals = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: String(doc.id),
+          goal_title: data['goal_title'] ?? '',
+          goal_description: data['goal_description'] ?? '',
+          target_date: data['target_date'] ?? null,
+          category: data['category'] ?? '',
+          ...data,
+        } as Goal;
+      });
+
       this.goalsSignal.set(goals);
       this.goalsSubject.next(goals);
       console.log(`Goals updated: ${goals.length} items`);
@@ -182,12 +175,7 @@ export class ApiService {
       const user = this.auth.currentUser;
       if (!user) throw new Error('User not logged in');
 
-      const reportsCollection = collection(
-        this.fireStore,
-        'users',
-        user.uid,
-        'reports',
-      );
+      const reportsCollection = collection(this.fireStore, 'users', user.uid, 'reports');
       await addDoc(reportsCollection, report);
       // No need to call getReports() - real-time listener will update automatically
     } catch (error) {
@@ -202,13 +190,7 @@ export class ApiService {
       if (!user) throw new Error('User not logged in');
       if (!report?.id) throw new Error('Report ID is required');
 
-      const reportDoc = doc(
-        this.fireStore,
-        'users',
-        user.uid,
-        'reports',
-        report.id,
-      );
+      const reportDoc = doc(this.fireStore, 'users', user.uid, 'reports', report.id);
 
       await updateDoc(reportDoc, { ...report });
       // Real-time listener will update automatically
@@ -223,12 +205,7 @@ export class ApiService {
       const user = this.auth.currentUser;
       if (!user) throw new Error('User not logged in');
 
-      const bibleStudiesCollection = collection(
-        this.fireStore,
-        'users',
-        user.uid,
-        'bibleStudies',
-      );
+      const bibleStudiesCollection = collection(this.fireStore, 'users', user.uid, 'bibleStudies');
       await addDoc(bibleStudiesCollection, study);
       // Real-time listener will update automatically
     } catch (error) {
@@ -243,13 +220,7 @@ export class ApiService {
       if (!user) throw new Error('User not logged in');
       if (!study?.id) throw new Error('Study ID is required');
 
-      const studyDoc = doc(
-        this.fireStore,
-        'users',
-        user.uid,
-        'bibleStudies',
-        study.id,
-      );
+      const studyDoc = doc(this.fireStore, 'users', user.uid, 'bibleStudies', study.id);
 
       await updateDoc(studyDoc, { ...study });
       // Real-time listener will update automatically
@@ -265,13 +236,7 @@ export class ApiService {
       if (!user) throw new Error('User not logged in');
       if (!study?.id) throw new Error('Study ID is required');
 
-      const studyDoc = doc(
-        this.fireStore,
-        'users',
-        user.uid,
-        'bibleStudies',
-        study.id,
-      );
+      const studyDoc = doc(this.fireStore, 'users', user.uid, 'bibleStudies', study.id);
 
       await deleteDoc(studyDoc);
       // Real-time listener will update automatically
@@ -286,12 +251,7 @@ export class ApiService {
       const user = this.auth.currentUser;
       if (!user) throw new Error('User not logged in');
 
-      const goalsCollection = collection(
-        this.fireStore,
-        'users',
-        user.uid,
-        'goals',
-      );
+      const goalsCollection = collection(this.fireStore, 'users', user.uid, 'goals');
       await addDoc(goalsCollection, goal);
       // Real-time listener will update automatically
     } catch (error) {
@@ -336,16 +296,11 @@ export class ApiService {
       const user = this.auth.currentUser;
       if (!user) throw new Error('User not logged in');
 
-      const reportsCollection = collection(
-        this.fireStore,
-        'users',
-        user.uid,
-        'reports',
-      );
+      const reportsCollection = collection(this.fireStore, 'users', user.uid, 'reports');
 
       // 🔹 Always get fresh data from server for manual calls
       const querySnapshot = await getDocs(reportsCollection);
-      
+
       const reportsData = querySnapshot.docs.map((doc) => {
         const data = doc.data();
         return {
@@ -368,15 +323,10 @@ export class ApiService {
       const user = this.auth.currentUser;
       if (!user) throw new Error('User not logged in');
 
-      const bibleStudiesCollection = collection(
-        this.fireStore,
-        'users',
-        user.uid,
-        'bibleStudies',
-      );
+      const bibleStudiesCollection = collection(this.fireStore, 'users', user.uid, 'bibleStudies');
 
       const querySnapshot = await getDocs(bibleStudiesCollection);
-      
+
       const studiesData = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -394,19 +344,16 @@ export class ApiService {
       const user = this.auth.currentUser;
       if (!user) throw new Error('User not logged in');
 
-      const goalsCollection = collection(
-        this.fireStore,
-        'users',
-        user.uid,
-        'goals',
-      );
+      const goalsCollection = collection(this.fireStore, 'users', user.uid, 'goals');
 
       const querySnapshot = await getDocs(goalsCollection);
-      
+
       const goalsData = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
+
+      console.log('Goals fetched:', goalsData);
 
       return goalsData;
     } catch (error) {

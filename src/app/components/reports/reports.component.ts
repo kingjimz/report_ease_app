@@ -10,13 +10,7 @@ import { LoaderComponent } from '../loader/loader.component';
 @Component({
   selector: 'app-reports',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ModalComponent,
-    BibleStudiesComponent,
-    LoaderComponent,
-  ],
+  imports: [CommonModule, FormsModule, ModalComponent, BibleStudiesComponent, LoaderComponent],
   templateUrl: './reports.component.html',
   styleUrl: './reports.component.css',
 })
@@ -41,7 +35,7 @@ export class ReportsComponent {
 
   constructor(
     public api: ApiService,
-    public util: UtilService,
+    public util: UtilService
   ) {}
 
   ngOnInit() {
@@ -56,12 +50,8 @@ export class ReportsComponent {
     this.api.bibleStudies$.subscribe((data) => {
       if (data && data.length > 0) {
         this.bibleStudies = data;
-        this.numberOfBibleStudies = this.bibleStudies.filter(
-          (study) => study.type === 'bs',
-        ).length;
-        this.numberOfReturnVisits = this.bibleStudies.filter(
-          (study) => study.type === 'rv',
-        ).length;
+        this.numberOfBibleStudies = this.bibleStudies.filter((study) => study.type === 'bs').length;
+        this.numberOfReturnVisits = this.bibleStudies.filter((study) => study.type === 'rv').length;
       }
     });
   }
@@ -202,10 +192,7 @@ export class ReportsComponent {
     const baseClasses =
       'group relative bg-white shadow-xl rounded-2xl border border-gray-200 transition-all duration-500 ease-out hover:shadow-2xl hover:-translate-y-2 hover:scale-[1.01] overflow-hidden';
     const borderColor = this.getReportBorderColor(index);
-    const ringClass =
-      this.hoveredReport === index
-        ? 'ring-2 ring-purple-200 ring-opacity-60'
-        : '';
+    const ringClass = this.hoveredReport === index ? 'ring-2 ring-purple-200 ring-opacity-60' : '';
 
     return `${baseClasses} ${borderColor} ${ringClass}`;
   }

@@ -20,10 +20,7 @@ export class UtilService {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' }); // e.g., "March 2025"
   }
 
-  formatDateToHumanReadable(timestamp: {
-    seconds: number;
-    nanoseconds: number;
-  }): string {
+  formatDateToHumanReadable(timestamp: { seconds: number; nanoseconds: number }): string {
     if (!timestamp || !timestamp.seconds) return 'Invalid Date';
     const date = new Date(timestamp.seconds * 1000);
     return date.toLocaleDateString('en-US', {
@@ -101,13 +98,10 @@ export class UtilService {
 
       // For display purposes, you might want total time as decimal
       month.total_time_decimal = month.total_hours + month.total_minutes / 60;
-      month.total_time_decimal =
-        Math.round(month.total_time_decimal * 100) / 100;
+      month.total_time_decimal = Math.round(month.total_time_decimal * 100) / 100;
     });
 
-    return Object.values(aggregated).sort(
-      (a, b) => b.year - a.year || b.month - a.month,
-    );
+    return Object.values(aggregated).sort((a, b) => b.year - a.year || b.month - a.month);
   }
 
   generatePNG(report: any, isPioneer: boolean) {
@@ -115,21 +109,13 @@ export class UtilService {
     const loadFont = () => {
       return new Promise((resolve) => {
         // Check if font is already loaded
-        if (
-          document.fonts &&
-          document.fonts.check &&
-          document.fonts.check('16px Poppins')
-        ) {
+        if (document.fonts && document.fonts.check && document.fonts.check('16px Poppins')) {
           resolve(true);
           return;
         }
 
         // Create font link if it doesn't exist
-        if (
-          !document.querySelector(
-            'link[href*="fonts.googleapis.com"][href*="Poppins"]',
-          )
-        ) {
+        if (!document.querySelector('link[href*="fonts.googleapis.com"][href*="Poppins"]')) {
           const link = document.createElement('link');
           link.href =
             'https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap';
@@ -211,12 +197,7 @@ export class UtilService {
 
     // Header section with accent color
     const headerHeight = 60;
-    const headerGradient = ctx.createLinearGradient(
-      0,
-      cardY,
-      0,
-      cardY + headerHeight,
-    );
+    const headerGradient = ctx.createLinearGradient(0, cardY, 0, cardY + headerHeight);
     headerGradient.addColorStop(0, '#4f46e5');
     headerGradient.addColorStop(1, '#7c3aed');
     ctx.fillStyle = headerGradient;
@@ -247,9 +228,7 @@ export class UtilService {
     ctx.fillText(report.month, centerX, badgeY + 17);
 
     // Pioneer/Publisher text (no badge background)
-    const typeText = isPioneer
-      ? 'Pioneer Report Card'
-      : 'Publisher Report Card';
+    const typeText = isPioneer ? 'Pioneer Report Card' : 'Publisher Report Card';
     const typeBadgeY = badgeY + 35;
     ctx.fillStyle = '#1e293b'; // Dark color for better visibility
     ctx.font =
@@ -353,11 +332,7 @@ export class UtilService {
         '600 20px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
-      ctx.fillText(
-        this.capitalizeFirstLetter(report.is_joined_ministry),
-        rightMargin,
-        currentY,
-      );
+      ctx.fillText(this.capitalizeFirstLetter(report.is_joined_ministry), rightMargin, currentY);
     }
 
     // Footer section

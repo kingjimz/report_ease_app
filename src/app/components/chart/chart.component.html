@@ -1,10 +1,7 @@
 <!-- chart.component.html -->
 
 <div *ngIf="reportData; else noChart" style="width: 100%; height: 300px">
-  <canvas
-    #chartCanvas
-    style="width: 100% !important; height: 100% !important"
-  ></canvas>
+  <canvas #chartCanvas style="width: 100% !important; height: 100% !important"></canvas>
 </div>
 <ng-template #noChart>
   <div class="text-center text-gray-500">

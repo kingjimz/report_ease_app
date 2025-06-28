@@ -36,7 +36,7 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     public api: ApiService,
-    public util: UtilService,
+    public util: UtilService
   ) {}
 
   ngOnInit() {
@@ -51,12 +51,8 @@ export class DashboardComponent implements OnInit {
       .then((data) => {
         this.bibleStudies = data;
         this.api.updateBibleStudies(data);
-        this.numberOfBibleStudies = this.bibleStudies.filter(
-          (study) => study.type === 'bs',
-        ).length;
-        this.numberOfReturnVisits = this.bibleStudies.filter(
-          (study) => study.type === 'rv',
-        ).length;
+        this.numberOfBibleStudies = this.bibleStudies.filter((study) => study.type === 'bs').length;
+        this.numberOfReturnVisits = this.bibleStudies.filter((study) => study.type === 'rv').length;
       })
       .catch((error) => {
         console.error('Error fetching Bible studies:', error);
@@ -71,10 +67,8 @@ export class DashboardComponent implements OnInit {
         this.reports = data;
         this.reports = this.util.aggregateReportsByMonth(data);
         this.api.updateAggregatedData(this.reports);
-        this.monthlyHours =
-          this.reports.length > 0 ? this.reports[0].total_hours || 0 : 0;
-        this.prevMonthHours =
-          this.reports.length > 1 ? this.reports[1].total_hours || 0 : 0;
+        this.monthlyHours = this.reports.length > 0 ? this.reports[0].total_hours || 0 : 0;
+        this.prevMonthHours = this.reports.length > 1 ? this.reports[1].total_hours || 0 : 0;
       })
       .catch((error) => {
         console.error('Error fetching reports:', error);

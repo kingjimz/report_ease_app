@@ -22,8 +22,5 @@
   class="fixed bottom-0 left-0 w-full z-50 bg-white border-t border-gray-200 shadow-md"
   *ngIf="showTab"
 >
-  <app-tab-card
-    (tabChange)="onTabChange($event)"
-    [selectedTab]="selectedTab"
-  ></app-tab-card>
+  <app-tab-card (tabChange)="onTabChange($event)" [selectedTab]="selectedTab"></app-tab-card>
 </div>

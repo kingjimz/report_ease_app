@@ -76,10 +76,7 @@
             </span>
 
             <!-- Event indicator dot -->
-            <div
-              *ngIf="hasEvent(day.date)"
-              class="w-2 h-2 bg-green-500 rounded-full"
-            ></div>
+            <div *ngIf="hasEvent(day.date)" class="w-2 h-2 bg-green-500 rounded-full"></div>
           </div>
 
           <!-- Hours display -->
@@ -103,9 +100,9 @@
           *ngFor="let day of weekDays"
           class="p-3 text-center font-medium text-gray-700 border-r border-gray-200 last:border-r-0"
         >
-          <div>{{ day | date: "EEE" }}</div>
+          <div>{{ day | date: 'EEE' }}</div>
           <div class="text-lg" [class.text-blue-600]="isToday(day)">
-            {{ day | date: "d" }}
+            {{ day | date: 'd' }}
           </div>
         </div>
       </div>
@@ -143,9 +140,7 @@
   <div
     class="bg-white p-4 rounded shadow-lg sm:w-full md:w-1/2 lg:w-1/3 xl:w-1/3 max-h-full overflow-auto"
   >
-    <h3 class="text-lg font-medium mb-2">
-      Report for {{ selectedDate | date: "fullDate" }}
-    </h3>
+    <h3 class="text-lg font-medium mb-2">Report for {{ selectedDate | date: 'fullDate' }}</h3>
     <form>
       <div class="mb-4">
         <label class="block text-sm font-medium text-gray-700">Hours</label>
@@ -205,9 +200,7 @@
         </div>
       </div>
       <div class="mb-4" *ngIf="hasExistingEvent; else noEvent">
-        <label
-          for="is_joined_ministry"
-          class="block text-sm font-medium text-gray-700"
+        <label for="is_joined_ministry" class="block text-sm font-medium text-gray-700"
           >Did you participate in the ministry today?</label
         >
         <input
@@ -221,9 +214,7 @@
       </div>
       <ng-template #noEvent>
         <div class="mb-4">
-          <label
-            for="is_joined_ministry"
-            class="block text-sm font-medium text-gray-700"
+          <label for="is_joined_ministry" class="block text-sm font-medium text-gray-700"
             >Did you participate in the ministry today?</label
           >
           <select
@@ -256,9 +247,7 @@
         *ngIf="noChangeDetected"
         class="mb-4 p-2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700"
       >
-        <p class="text-sm">
-          No modifications detected. The system will not commit any updates.
-        </p>
+        <p class="text-sm">No modifications detected. The system will not commit any updates.</p>
       </div>
       <div
         *ngIf="!noChangeDetected"
@@ -286,18 +275,14 @@
         (click)="saveReport()"
         [disabled]="(!hours && !minutes) || !joined_ministry"
         [ngClass]="{
-          'opacity-50 cursor-not-allowed':
-            (!hours && !minutes) || !joined_ministry,
+          'opacity-50 cursor-not-allowed': (!hours && !minutes) || !joined_ministry,
         }"
       >
         Save
       </button>
     </ng-template>
 
-    <button
-      (click)="closeModal()"
-      class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-700"
-    >
+    <button (click)="closeModal()" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-700">
       Close
     </button>
   </div>

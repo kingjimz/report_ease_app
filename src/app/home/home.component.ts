@@ -31,7 +31,7 @@ export class HomeComponent {
 
   constructor(
     private auth: AuthService,
-    private route: Router,
+    private route: Router
   ) {}
 
   private lastScrollTop = 0;

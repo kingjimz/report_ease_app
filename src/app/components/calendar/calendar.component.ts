@@ -57,7 +57,7 @@ export class CalendarComponent implements OnInit {
   public Math = Math;
   constructor(
     private api: ApiService,
-    private util: UtilService,
+    private util: UtilService
   ) {}
 
   ngOnInit() {
@@ -134,16 +134,10 @@ export class CalendarComponent implements OnInit {
 
   previousMonth() {
     if (this.viewMode === 'month') {
-      this.viewDate = new Date(
-        this.viewDate.getFullYear(),
-        this.viewDate.getMonth() - 1,
-        1,
-      );
+      this.viewDate = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() - 1, 1);
       this.generateCalendar();
     } else if (this.viewMode === 'week') {
-      this.viewDate = new Date(
-        this.viewDate.getTime() - 7 * 24 * 60 * 60 * 1000,
-      );
+      this.viewDate = new Date(this.viewDate.getTime() - 7 * 24 * 60 * 60 * 1000);
       this.generateWeekDays();
     } else if (this.viewMode === 'day') {
       this.viewDate = new Date(this.viewDate.getTime() - 24 * 60 * 60 * 1000);
@@ -152,16 +146,10 @@ export class CalendarComponent implements OnInit {
 
   nextMonth() {
     if (this.viewMode === 'month') {
-      this.viewDate = new Date(
-        this.viewDate.getFullYear(),
-        this.viewDate.getMonth() + 1,
-        1,
-      );
+      this.viewDate = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() + 1, 1);
       this.generateCalendar();
     } else if (this.viewMode === 'week') {
-      this.viewDate = new Date(
-        this.viewDate.getTime() + 7 * 24 * 60 * 60 * 1000,
-      );
+      this.viewDate = new Date(this.viewDate.getTime() + 7 * 24 * 60 * 60 * 1000);
       this.generateWeekDays();
     } else if (this.viewMode === 'day') {
       this.viewDate = new Date(this.viewDate.getTime() + 24 * 60 * 60 * 1000);
@@ -170,15 +158,11 @@ export class CalendarComponent implements OnInit {
 
   // Event-related methods
   hasEvent(date: Date): boolean {
-    return this.events.some(
-      (event) => event.start.toDateString() === date.toDateString(),
-    );
+    return this.events.some((event) => event.start.toDateString() === date.toDateString());
   }
 
   getEventHours(date: Date): string {
-    const event = this.events.find(
-      (e) => e.start.toDateString() === date.toDateString(),
-    );
+    const event = this.events.find((e) => e.start.toDateString() === date.toDateString());
     if (event) {
       const hours = event.meta.hours || 0;
       const minutes = event.meta.minutes || 0;
@@ -191,9 +175,7 @@ export class CalendarComponent implements OnInit {
   }
 
   getEventPreview(date: Date): string {
-    const event = this.events.find(
-      (e) => e.start.toDateString() === date.toDateString(),
-    );
+    const event = this.events.find((e) => e.start.toDateString() === date.toDateString());
     return event ? event.title : '';
   }
 
@@ -256,7 +238,7 @@ export class CalendarComponent implements OnInit {
     }
 
     const existingEvent = this.events.find(
-      (e) => e.start.toDateString() === this.selectedDate?.toDateString(),
+      (e) => e.start.toDateString() === this.selectedDate?.toDateString()
     );
 
     if (existingEvent) {
@@ -317,7 +299,7 @@ export class CalendarComponent implements OnInit {
   onDayClick(day: CalendarDay) {
     this.selectedDate = new Date(day.date);
     const existingEvent = this.events.find(
-      (e) => e.start.toDateString() === this.selectedDate?.toDateString(),
+      (e) => e.start.toDateString() === this.selectedDate?.toDateString()
     );
     this.hasExistingEvent = existingEvent ? true : false;
 
@@ -326,9 +308,7 @@ export class CalendarComponent implements OnInit {
       this.minutes = existingEvent.meta.minutes || 0;
       this.report_id = existingEvent.meta.report_id;
       this.selectedDate = existingEvent.start;
-      this.joined_ministry = this.util.capitalizeFirstLetter(
-        existingEvent.meta.joined_ministry,
-      );
+      this.joined_ministry = this.util.capitalizeFirstLetter(existingEvent.meta.joined_ministry);
       this.note = existingEvent.meta.notes;
     } else {
       this.reInitializeVariables();
