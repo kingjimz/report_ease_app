@@ -46,16 +46,41 @@ export class ApiService {
     private auth: Auth,
     private fireStore: Firestore,
   ) {
-    this.setupRealtimeListeners();
+    // Listen for auth state changes and setup listeners when user logs in
+    this.auth.onAuthStateChanged((user) => {
+      if (user) {
+        this.setupRealtimeListeners();
+      } else {
+        this.cleanupListeners();
+      }
+    });
   }
 
   private setupRealtimeListeners() {
+    // Clean up existing listeners first
+    this.cleanupListeners();
+    
     const user = this.auth.currentUser;
     if (!user) return;
 
     this.listenToReports();
     this.listenToBibleStudies();
     this.listenToGoals();
+  }
+
+  private cleanupListeners() {
+    if (this.unsubscribeReports) {
+      this.unsubscribeReports();
+      this.unsubscribeReports = undefined;
+    }
+    if (this.unsubscribeBibleStudies) {
+      this.unsubscribeBibleStudies();
+      this.unsubscribeBibleStudies = undefined;
+    }
+    if (this.unsubscribeGoals) {
+      this.unsubscribeGoals();
+      this.unsubscribeGoals = undefined;
+    }
   }
 
   private listenToReports() {
@@ -69,11 +94,6 @@ export class ApiService {
       'reports',
     );
     const reportsQuery = query(reportsCollection);
-
-    // Clean up existing listener
-    if (this.unsubscribeReports) {
-      this.unsubscribeReports();
-    }
 
     // 🔥 Real-time listener for reports
     this.unsubscribeReports = onSnapshot(reportsQuery, (snapshot) => {
@@ -105,11 +125,6 @@ export class ApiService {
     );
     const studiesQuery = query(bibleStudiesCollection);
 
-    // Clean up existing listener
-    if (this.unsubscribeBibleStudies) {
-      this.unsubscribeBibleStudies();
-    }
-
     // 🔥 Real-time listener for bible studies
     this.unsubscribeBibleStudies = onSnapshot(studiesQuery, (snapshot) => {
       const studies = snapshot.docs.map((doc) => ({
@@ -135,11 +150,6 @@ export class ApiService {
     );
     const goalsQuery = query(goalsCollection);
 
-    // Clean up existing listener
-    if (this.unsubscribeGoals) {
-      this.unsubscribeGoals();
-    }
-
     // 🔥 Real-time listener for goals
     this.unsubscribeGoals = onSnapshot(goalsQuery, (snapshot) => {
       const goals = snapshot.docs.map((doc) => ({
@@ -155,9 +165,7 @@ export class ApiService {
 
   // Clean up listeners when service is destroyed
   ngOnDestroy() {
-    if (this.unsubscribeReports) this.unsubscribeReports();
-    if (this.unsubscribeBibleStudies) this.unsubscribeBibleStudies();
-    if (this.unsubscribeGoals) this.unsubscribeGoals();
+    this.cleanupListeners();
   }
 
   updateAggregatedData(data: any) {
@@ -251,10 +259,16 @@ export class ApiService {
         study.id,
       );
 
-      await updateDoc(studyDoc, { ...study });
+      // Use the same pattern as updateGoal for consistency
+      const { id, ...updateData } = study;
+      await updateDoc(studyDoc, updateData);
+      console.log('Study updated successfully:', study.id);
+      console.log('Updated data:', updateData);
       // Real-time listener will update automatically
     } catch (error) {
       console.error('Error updating study:', error);
+      console.error('Study data:', study);
+      console.error('Full error:', error);
       throw error;
     }
   }
