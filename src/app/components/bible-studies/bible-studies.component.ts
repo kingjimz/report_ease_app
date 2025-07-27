@@ -43,6 +43,28 @@ export class BibleStudiesComponent {
     return parts[0].charAt(0).toUpperCase() + parts[1].charAt(0).toUpperCase();
   }
 
+  getBibleStudiesCount(): number {
+    return this.bibleStudies.filter(study => study.type === 'bs').length;
+  }
+
+  getReturnVisitsCount(): number {
+    return this.bibleStudies.filter(study => study.type === 'rv').length;
+  }
+
+  getTimeAgo(date: any): string {
+    if (!date) return 'Never';
+    const now = new Date();
+    const studyDate = new Date(date);
+    const diffInMs = now.getTime() - studyDate.getTime();
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+    
+    if (diffInDays === 0) return 'Today';
+    if (diffInDays === 1) return 'Yesterday';
+    if (diffInDays < 7) return `${diffInDays} days ago`;
+    if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} weeks ago`;
+    return `${Math.floor(diffInDays / 30)} months ago`;
+  }
+
   getCardClasses(index: number): string {
     const baseClasses =
       'group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl cursor-pointer transition-all duration-500 ease-out hover:-translate-y-2 hover:scale-[1.02] overflow-hidden';

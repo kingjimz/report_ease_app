@@ -4,7 +4,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UtilService } from '../../_services/util.service';
 import { ModalComponent } from '../modal/modal.component';
-import { BibleStudiesComponent } from '../bible-studies/bible-studies.component';
 import { LoaderComponent } from '../loader/loader.component';
 
 @Component({
@@ -14,7 +13,6 @@ import { LoaderComponent } from '../loader/loader.component';
     CommonModule,
     FormsModule,
     ModalComponent,
-    BibleStudiesComponent,
     LoaderComponent,
   ],
   templateUrl: './reports.component.html',
@@ -22,6 +20,7 @@ import { LoaderComponent } from '../loader/loader.component';
 })
 export class ReportsComponent {
   reports: any[] = [];
+  paginatedReports: any[] = [];
 
   bibleStudies: any[] = [];
   studySelected: any = null;
@@ -31,13 +30,18 @@ export class ReportsComponent {
   openDownloadModal = false;
   isPioneer = false;
   selectedReport: any = null;
-  dropdownOpen = false;
+  dropdownOpen: { [key: number]: boolean } = {};
   monthlyReportData: any = null;
   loading = true;
   isCopied = false;
   numberOfBibleStudies = 0;
   numberOfReturnVisits = 0;
   hoveredReport: number | null = null;
+
+  // Pagination properties
+  currentPage = 1;
+  itemsPerPage = 5;
+  totalPages = 0;
 
   constructor(
     public api: ApiService,
@@ -70,8 +74,60 @@ export class ReportsComponent {
     this.api.aggregatedData$.subscribe((data) => {
       if (data && data.length > 0) {
         this.reports = data;
+        this.calculatePagination();
+        this.updatePaginatedReports();
       }
     });
+  }
+
+  calculatePagination() {
+    this.totalPages = Math.ceil(this.reports.length / this.itemsPerPage);
+    if (this.currentPage > this.totalPages) {
+      this.currentPage = 1;
+    }
+  }
+
+  updatePaginatedReports() {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    this.paginatedReports = this.reports.slice(startIndex, endIndex);
+  }
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.updatePaginatedReports();
+    }
+  }
+
+  previousPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.updatePaginatedReports();
+    }
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.updatePaginatedReports();
+    }
+  }
+
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
   }
 
   editStudy(study: any) {
@@ -156,7 +212,7 @@ export class ReportsComponent {
       });
   }
 
-  downloadReport(report: any, isPioneer: boolean) {
+  downloadReport(report: any, isPioneer: boolean, index: number) {
     this.selectedReport = report;
     this.monthlyReportData = {
       month: `${report.month_name} ${report.year}`,
@@ -166,7 +222,7 @@ export class ReportsComponent {
       report_count: report.report_count,
     };
 
-    this.dropdownOpen = false;
+    this.dropdownOpen[index] = false;
     this.util.generatePNG(this.monthlyReportData, isPioneer);
   }
 
@@ -179,8 +235,14 @@ export class ReportsComponent {
     this.isCopied = false;
   }
 
-  toggleDropdown() {
-    this.dropdownOpen = !this.dropdownOpen;
+  toggleDropdown(index: number) {
+    this.dropdownOpen[index] = !this.dropdownOpen[index];
+    // Close other dropdowns
+    Object.keys(this.dropdownOpen).forEach(key => {
+      if (parseInt(key) !== index) {
+        this.dropdownOpen[parseInt(key)] = false;
+      }
+    });
   }
 
   copyToClipboard(): void {
@@ -234,8 +296,18 @@ export class ReportsComponent {
   }
 
   getProgressWidth(hours: number): number {
-    const maxHours = 70;
+    const maxHours = 50;
     return Math.min((hours / maxHours) * 100, 100);
+  }
+
+  getTotalHours(): number {
+    return this.reports.reduce((sum, report) => sum + (report.total_hours || 0), 0);
+  }
+
+  getDisplayRange(): string {
+    const start = (this.currentPage - 1) * this.itemsPerPage + 1;
+    const end = Math.min(this.currentPage * this.itemsPerPage, this.reports.length);
+    return `${start}-${end} of ${this.reports.length}`;
   }
 
   private getReportGradientColor(index: number): string {

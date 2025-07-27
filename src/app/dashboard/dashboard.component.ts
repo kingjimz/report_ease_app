@@ -106,4 +106,8 @@ export class DashboardComponent implements OnInit {
   randomizeGoals(goals: any[]) {
     this.randomizedGoals = this.shuffle(goals);
   }
+
+  getCurrentDate(): string {
+    return new Date().toLocaleDateString();
+  }
 }
