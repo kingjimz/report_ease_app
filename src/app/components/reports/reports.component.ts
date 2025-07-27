@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { UtilService } from '../../_services/util.service';
 import { ModalComponent } from '../modal/modal.component';
 import { LoaderComponent } from '../loader/loader.component';
+import { AlertsComponent } from '../alerts/alerts.component';
 
 @Component({
   selector: 'app-reports',
@@ -14,6 +15,7 @@ import { LoaderComponent } from '../loader/loader.component';
     FormsModule,
     ModalComponent,
     LoaderComponent,
+    AlertsComponent,
   ],
   templateUrl: './reports.component.html',
   styleUrl: './reports.component.css',
@@ -27,6 +29,7 @@ export class ReportsComponent {
   isSelected = false;
   studyDelete = false;
   next_lesson = '';
+  editSchedule = ''; // Add property for editing schedule
   openDownloadModal = false;
   isPioneer = false;
   selectedReport: any = null;
@@ -37,6 +40,15 @@ export class ReportsComponent {
   numberOfBibleStudies = 0;
   numberOfReturnVisits = 0;
   hoveredReport: number | null = null;
+
+  // Add Study properties
+  showStudyModal = false;
+  bible_study = '';
+  address = '';
+  schedule = '';
+  type = 'rv';
+  isSuccess = false;
+  alertMessage = 'Warning: Please verify your input carefully.';
 
   // Pagination properties
   currentPage = 1;
@@ -134,12 +146,14 @@ export class ReportsComponent {
     this.isSelected = true;
     this.studySelected = study;
     this.next_lesson = study.lesson;
+    this.editSchedule = study.schedule; // Initialize with current schedule
   }
 
   closeStudyDetails() {
     this.isSelected = false;
     this.studySelected = null;
     this.isCopied = false;
+    this.editSchedule = ''; // Reset schedule
   }
 
   deleteStudy(study: any) {
@@ -210,6 +224,46 @@ export class ReportsComponent {
       .catch((error) => {
         console.error('Error updating study:', error);
       });
+  }
+
+  async addStudy() {
+    this.loading = true;
+    const data = {
+      bible_study: this.bible_study,
+      address: this.address,
+      schedule: this.schedule,
+      type: this.type,
+      lesson: this.next_lesson,
+      updated_at: new Date(),
+    };
+
+    try {
+      await this.api.addStudy(data);
+      this.bible_study = '';
+      this.address = '';
+      this.schedule = '';
+      this.type = 'rv';
+      this.next_lesson = '';
+      this.isSuccess = true;
+      this.alertMessage = 'Study added successfully!';
+      this.showStudyModal = false;
+      this.loadBibLeStudies();
+    } catch (error) {
+      console.error('Error adding study:', error);
+      this.isSuccess = false;
+      this.alertMessage = 'Error adding study. Please try again.';
+    }
+    this.loading = false;
+  }
+
+  closeStudyModal() {
+    this.showStudyModal = false;
+    this.bible_study = '';
+    this.address = '';
+    this.schedule = '';
+    this.type = 'rv';
+    this.next_lesson = '';
+    this.isSuccess = false;
   }
 
   downloadReport(report: any, isPioneer: boolean, index: number) {
