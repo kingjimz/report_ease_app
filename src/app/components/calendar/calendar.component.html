@@ -3,31 +3,31 @@
   <app-loader [loadingMessage]="'Loading your reports...'"></app-loader>
 </div>
 <div *ngIf="!isLoading" class="container mx-auto px-2 py-2 mt-2 sm:mt-2">
-  <h1 class="text-2xl font-bold">Calendar</h1>
-  <p class="text-gray-700 mb-3">View and manage your reports and activities.</p>
-  <div class="shadow-md bg-white rounded-lg p-2">
+  <h1 class="text-2xl font-bold" style="color: var(--text-primary);">Calendar</h1>
+  <p class="mb-3" style="color: var(--text-secondary);">View and manage your reports and activities.</p>
+  <div class="calendar-card shadow-md rounded-lg p-2">
     <div class="flex justify-between items-center mb-4">
       <button
         (click)="previousMonth()"
-        class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+        class="nav-button px-4 py-2 rounded"
       >
         ◀
       </button>
-      <h2 class="text-xl font-semibold">{{ getMonthYearDisplay() }}</h2>
+      <h2 class="text-xl font-semibold" style="color: var(--text-primary);">{{ getMonthYearDisplay() }}</h2>
       <button
         (click)="nextMonth()"
-        class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+        class="nav-button px-4 py-2 rounded"
       >
         ▶
       </button>
     </div>
 
-    <div class="flex space-x-2 bg-gray-100 p-1 rounded-lg">
+    <div class="flex space-x-2 view-toggle-container p-1 rounded-lg">
       <button
         (click)="viewMode = 'month'"
         [class.bg-green-600]="viewMode === 'month'"
         [class.text-white]="viewMode === 'month'"
-        class="px-4 py-2 rounded-lg transition-colors duration-200 text-gray-800 hover:bg-green-500 hover:text-white"
+        class="view-toggle-button px-4 py-2 rounded-lg transition-colors duration-200"
       >
         <i class="bi bi-calendar me-1"></i> Month
       </button>
@@ -35,7 +35,7 @@
         (click)="viewMode = 'week'"
         [class.bg-green-600]="viewMode === 'week'"
         [class.text-white]="viewMode === 'week'"
-        class="px-4 py-2 rounded-lg transition-colors duration-200 text-gray-800 hover:bg-green-500 hover:text-white"
+        class="view-toggle-button px-4 py-2 rounded-lg transition-colors duration-200"
       >
         <i class="bi bi-calendar-week me-1"></i> Week
       </button>
@@ -44,13 +44,13 @@
     <!-- Month View -->
     <div
       *ngIf="viewMode === 'month'"
-      class="calendar-container bg-white rounded-lg shadow-md overflow-hidden mt-4"
+      class="calendar-container rounded-lg shadow-md overflow-hidden mt-4"
     >
       <!-- Days of week header -->
-      <div class="grid grid-cols-7 bg-gray-50">
+      <div class="grid grid-cols-7 calendar-header">
         <div
           *ngFor="let day of daysOfWeek"
-          class="p-3 text-center font-medium text-gray-700 border-r border-gray-200 last:border-r-0"
+          class="calendar-day-header p-3 text-center font-medium border-r last:border-r-0"
         >
           {{ day }}
         </div>
@@ -60,17 +60,16 @@
       <div class="grid grid-cols-7">
         <div
           *ngFor="let day of calendarDays; trackBy: trackByDay"
-          class="min-h-[100px] border-r border-b border-gray-200 last:border-r-0 p-2 cursor-pointer hover:bg-gray-50 transition-colors relative"
-          [class.bg-gray-100]="!day.isCurrentMonth"
-          [class.bg-blue-50]="day.isToday"
-          [class.border-blue-300]="day.isToday"
+          class="calendar-day-cell min-h-[100px] border-r border-b last:border-r-0 p-2 cursor-pointer transition-colors relative"
+          [class.not-current-month]="!day.isCurrentMonth"
+          [class.today]="day.isToday"
           (click)="onDayClick(day)"
         >
           <div class="flex justify-between items-start mb-1">
             <span
-              class="text-sm font-medium"
-              [class.text-gray-400]="!day.isCurrentMonth"
-              [class.text-blue-600]="day.isToday"
+              class="text-sm font-medium day-number"
+              [class.not-current-month-text]="!day.isCurrentMonth"
+              [class.today-text]="day.isToday"
             >
               {{ day.date.getDate() }}
             </span>
@@ -85,7 +84,7 @@
           <!-- Hours display -->
           <div
             *ngIf="hasEvent(day.date)"
-            class="text-xs text-green-700 font-medium bg-green-100 rounded px-1 py-0.5 inline-block"
+            class="event-hours text-xs text-green-700 font-medium bg-green-100 rounded px-1 py-0.5 inline-block"
           >
             {{ getEventHours(day.date) }}
           </div>
@@ -96,12 +95,12 @@
     <!-- Week View -->
     <div
       *ngIf="viewMode === 'week'"
-      class="calendar-container bg-white rounded-lg shadow-md overflow-hidden mt-4"
+      class="calendar-container rounded-lg shadow-md overflow-hidden mt-4"
     >
-      <div class="grid grid-cols-7 bg-gray-50">
+      <div class="grid grid-cols-7 calendar-header">
         <div
           *ngFor="let day of weekDays"
-          class="p-3 text-center font-medium text-gray-700 border-r border-gray-200 last:border-r-0"
+          class="calendar-day-header p-3 text-center font-medium border-r last:border-r-0"
         >
           <div>{{ day | date: "EEE" }}</div>
           <div class="text-lg" [class.text-blue-600]="isToday(day)">
@@ -113,7 +112,7 @@
       <div class="grid grid-cols-7">
         <div
           *ngFor="let day of weekDays"
-          class="min-h-[200px] border-r border-b border-gray-200 last:border-r-0 cursor-pointer hover:bg-gray-50 p-2 relative"
+          class="calendar-day-cell min-h-[200px] border-r border-b last:border-r-0 cursor-pointer p-2 relative"
           (click)="
             onDayClick({
               date: day,
@@ -125,7 +124,7 @@
           <!-- Hours display for week view -->
           <div
             *ngIf="hasEvent(day)"
-            class="text-xs text-green-700 font-medium bg-green-100 rounded px-2 py-1 inline-block"
+            class="event-hours text-xs text-green-700 font-medium bg-green-100 rounded px-2 py-1 inline-block"
           >
             {{ getEventHours(day) }}
           </div>
@@ -141,20 +140,20 @@
   class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
 >
   <div
-    class="bg-white p-4 rounded shadow-lg sm:w-full md:w-1/2 lg:w-1/3 xl:w-1/3 max-h-full overflow-auto"
+    class="modal-content p-4 rounded shadow-lg sm:w-full md:w-1/2 lg:w-1/3 xl:w-1/3 max-h-full overflow-auto"
   >
-    <h3 class="text-lg font-medium mb-2">
+    <h3 class="text-lg font-medium mb-2 modal-title">
       Report for {{ selectedDate | date: "fullDate" }}
     </h3>
     <form>
       <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700">Hours</label>
+        <label class="block text-sm font-medium form-label">Hours</label>
         <div class="flex items-center space-x-6">
           <!-- Hours -->
           <div class="flex items-center space-x-2">
             <button
               type="button"
-              class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-lg"
+              class="form-button px-2 py-1 rounded text-lg"
               (click)="hours = Math.max(0, (+hours || 0) - 1)"
             >
               &#9664;
@@ -164,23 +163,23 @@
               id="hours"
               name="hours"
               [(ngModel)]="hours"
-              class="w-12 text-center px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-xs"
+              class="form-input w-12 text-center px-2 py-1 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-xs"
               readonly
             />
             <button
               type="button"
-              class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-lg"
+              class="form-button px-2 py-1 rounded text-lg"
               (click)="hours = (+hours || 0) + 1"
             >
               &#9654;
             </button>
-            <span class="ml-1 text-gray-500">hrs</span>
+            <span class="ml-1 form-text">hrs</span>
           </div>
           <!-- Minutes -->
           <div class="flex items-center space-x-2">
             <button
               type="button"
-              class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-lg"
+              class="form-button px-2 py-1 rounded text-lg"
               (click)="minutes = Math.max(0, (+minutes || 0) - 5)"
             >
               &#9664;
@@ -190,24 +189,24 @@
               id="minutes"
               name="minutes"
               [(ngModel)]="minutes"
-              class="w-12 text-center px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-xs"
+              class="form-input w-12 text-center px-2 py-1 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-xs"
               readonly
             />
             <button
               type="button"
-              class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-lg"
+              class="form-button px-2 py-1 rounded text-lg"
               (click)="minutes = Math.min(55, (+minutes || 0) + 5)"
             >
               &#9654;
             </button>
-            <span class="ml-1 text-gray-500">min</span>
+            <span class="ml-1 form-text">min</span>
           </div>
         </div>
       </div>
       <div class="mb-4" *ngIf="hasExistingEvent; else noEvent">
         <label
           for="is_joined_ministry"
-          class="block text-sm font-medium text-gray-700"
+          class="block text-sm font-medium form-label"
           >Did you participate in the ministry today?</label
         >
         <input
@@ -215,7 +214,7 @@
           id="is_joined_ministry"
           name="is_joined_ministry"
           [(ngModel)]="joined_ministry"
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          class="form-input mt-1 block w-full px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           readonly
         />
       </div>
@@ -223,14 +222,14 @@
         <div class="mb-4">
           <label
             for="is_joined_ministry"
-            class="block text-sm font-medium text-gray-700"
+            class="block text-sm font-medium form-label"
             >Did you participate in the ministry today?</label
           >
           <select
             id="is_joined_ministry"
             name="is_joined_ministry"
             [(ngModel)]="joined_ministry"
-            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            class="form-input mt-1 block w-full px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           >
             <option value="yes">Yes</option>
             <option value="no">No</option>
@@ -239,7 +238,7 @@
       </ng-template>
 
       <div class="mb-4">
-        <label for="note" class="block text-sm font-medium text-gray-700"
+        <label for="note" class="block text-sm font-medium form-label"
           >Notes <span>(Optional)</span></label
         >
         <textarea
@@ -247,7 +246,7 @@
           name="note"
           [(ngModel)]="note"
           rows="5"
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          class="form-input mt-1 block w-full px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
         >
         </textarea>
       </div>

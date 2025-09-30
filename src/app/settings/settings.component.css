@@ -1,0 +1,71 @@
+/* Settings/Spiritual Goals Dark Mode Support */
+
+.settings-card {
+  background-color: var(--card-bg);
+  transition: background-color 0.3s ease;
+}
+
+.settings-title {
+  color: var(--text-primary);
+}
+
+.settings-subtitle {
+  color: var(--text-secondary);
+}
+
+.goal-card {
+  background-color: rgba(99, 102, 241, 0.05);
+  border-color: rgba(99, 102, 241, 0.2);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.dark .goal-card {
+  background-color: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.goal-title {
+  color: #6366f1;
+}
+
+.dark .goal-title {
+  color: #a5b4fc;
+}
+
+.goal-description {
+  color: var(--text-secondary);
+}
+
+.goal-metadata {
+  color: var(--text-tertiary);
+}
+
+.delete-button {
+  color: var(--text-tertiary);
+}
+
+.delete-button:hover {
+  color: #ef4444;
+}
+
+.edit-button {
+  background-color: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+}
+
+.edit-button:hover {
+  background-color: rgba(99, 102, 241, 0.2);
+}
+
+.dark .edit-button {
+  background-color: rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+}
+
+.dark .edit-button:hover {
+  background-color: rgba(99, 102, 241, 0.3);
+}
+
+.empty-state {
+  color: var(--text-tertiary);
+}

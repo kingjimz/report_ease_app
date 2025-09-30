@@ -1,0 +1,156 @@
+/* Home Component Dark Mode Support */
+
+.tab-card-container {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.dark .bg-white {
+  background-color: var(--card-bg) !important;
+}
+
+.dark .bg-gray-50 {
+  background-color: var(--bg-secondary) !important;
+}
+
+.dark .bg-gray-100 {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.dark .bg-gray-200 {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.dark .bg-blue-50 {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+}
+
+.dark .bg-amber-50 {
+  background-color: rgba(245, 158, 11, 0.15) !important;
+}
+
+/* Ensure text is visible on colored backgrounds in dark mode */
+/* Target report type selector specifically - using ::ng-deep */
+:host-context(.dark) ::ng-deep app-modal label.bg-blue-50,
+:host-context(.dark) ::ng-deep label.bg-blue-50.border-blue-500,
+:host-context(.dark) ::ng-deep label.border-blue-500.bg-blue-50 {
+  background-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+:host-context(.dark) ::ng-deep app-modal label.bg-blue-50 span,
+:host-context(.dark) ::ng-deep app-modal label.bg-blue-50 i,
+:host-context(.dark) ::ng-deep label.bg-blue-50.border-blue-500 span,
+:host-context(.dark) ::ng-deep label.bg-blue-50.border-blue-500 i,
+:host-context(.dark) ::ng-deep label.border-blue-500.bg-blue-50 span,
+:host-context(.dark) ::ng-deep label.border-blue-500.bg-blue-50 i {
+  color: #eff6ff !important;
+  font-weight: 700 !important;
+  text-shadow: 0 0 2px rgba(59, 130, 246, 0.5) !important;
+}
+
+:host-context(.dark) ::ng-deep app-modal label.bg-amber-50,
+:host-context(.dark) ::ng-deep label.bg-amber-50.border-amber-500,
+:host-context(.dark) ::ng-deep label.border-amber-500.bg-amber-50 {
+  background-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+:host-context(.dark) ::ng-deep app-modal label.bg-amber-50 span,
+:host-context(.dark) ::ng-deep app-modal label.bg-amber-50 i,
+:host-context(.dark) ::ng-deep label.bg-amber-50.border-amber-500 span,
+:host-context(.dark) ::ng-deep label.bg-amber-50.border-amber-500 i,
+:host-context(.dark) ::ng-deep label.border-amber-500.bg-amber-50 span,
+:host-context(.dark) ::ng-deep label.border-amber-500.bg-amber-50 i {
+  color: #fffbeb !important;
+  font-weight: 700 !important;
+  text-shadow: 0 0 2px rgba(245, 158, 11, 0.5) !important;
+}
+
+/* Make borders more visible in dark mode for selected state */
+:host-context(.dark) ::ng-deep app-modal label.border-blue-500,
+:host-context(.dark) ::ng-deep label.bg-blue-50.border-blue-500,
+:host-context(.dark) ::ng-deep label.border-blue-500.bg-blue-50 {
+  border-color: #60a5fa !important;
+  border-width: 2px !important;
+}
+
+:host-context(.dark) ::ng-deep app-modal label.border-amber-500,
+:host-context(.dark) ::ng-deep label.bg-amber-50.border-amber-500,
+:host-context(.dark) ::ng-deep label.border-amber-500.bg-amber-50 {
+  border-color: #fbbf24 !important;
+  border-width: 2px !important;
+}
+
+.dark .text-gray-900,
+.dark .text-gray-800 {
+  color: var(--text-primary) !important;
+}
+
+.dark .text-gray-700,
+.dark .text-gray-600 {
+  color: var(--text-secondary) !important;
+}
+
+.dark .text-gray-500 {
+  color: var(--text-tertiary) !important;
+}
+
+.dark .border-gray-100,
+.dark .border-gray-200 {
+  border-color: var(--border-color) !important;
+}
+
+.dark .border-gray-300 {
+  border-color: var(--border-color) !important;
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Report type radio buttons */
+.dark label span.font-medium {
+  color: var(--text-primary) !important;
+}
+
+.dark label .font-medium {
+  color: var(--text-primary) !important;
+}
+
+.dark label {
+  color: var(--text-primary) !important;
+}
+
+/* Buttons in modal */
+.dark .bg-gray-200 {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.dark .hover\:bg-gray-300:hover {
+  background-color: var(--border-color) !important;
+}
+
+/* Modal specific overrides */
+.dark app-modal label {
+  color: var(--text-secondary) !important;
+}
+
+.dark app-modal .text-gray-700 {
+  color: var(--text-secondary) !important;
+}
+
+.dark app-modal .text-gray-900 {
+  color: var(--text-primary) !important;
+}
+
+.dark app-modal .text-gray-500 {
+  color: var(--text-tertiary) !important;
+}
+
+.dark app-modal button span {
+  color: inherit !important;
+}

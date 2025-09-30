@@ -1,0 +1,22 @@
+.header-container {
+  background-color: var(--card-bg);
+  box-shadow: 0 4px 6px -1px var(--shadow);
+  transition: background-color 0.3s ease;
+}
+
+.header-text {
+  color: var(--text-primary);
+}
+
+.header-icon {
+  color: var(--text-primary);
+}
+
+.dropdown-menu {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+.hover-effect:hover {
+  background-color: var(--bg-secondary);
+}

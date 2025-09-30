@@ -1,9 +1,23 @@
 .bottom-nav-labels {
-    user-select: none;
+  user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
 
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Dark Mode Support for Tab Card */
+:host ::ng-deep .bg-white {
+  background-color: var(--card-bg);
+  transition: background-color 0.3s ease;
+}
+
+.dark :host ::ng-deep .bg-white {
+  background-color: var(--card-bg);
+}
+
+.dark .text-gray-500 {
+  color: var(--text-tertiary) !important;
 }

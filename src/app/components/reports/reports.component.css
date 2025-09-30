@@ -1,5 +1,98 @@
 /* Reports Component Professional Styling */
 
+/* Dark Mode Support */
+:host ::ng-deep .reports-page {
+  background: linear-gradient(to bottom right, #f8fafc, #eff6ff, #eef2ff);
+  transition: background 0.3s ease;
+  min-height: 100vh;
+}
+
+:host-context(.dark) ::ng-deep .reports-page {
+  background: linear-gradient(to bottom right, var(--bg-primary), var(--bg-secondary), var(--bg-primary)) !important;
+}
+
+:host ::ng-deep .page-title {
+  color: var(--text-primary);
+}
+
+:host ::ng-deep .page-subtitle {
+  color: var(--text-secondary);
+}
+
+/* Override all text colors in dark mode */
+:host-context(.dark) ::ng-deep .text-gray-900,
+:host-context(.dark) ::ng-deep .text-gray-800 {
+  color: var(--text-primary) !important;
+}
+
+:host-context(.dark) ::ng-deep .text-gray-700,
+:host-context(.dark) ::ng-deep .text-gray-600 {
+  color: var(--text-secondary) !important;
+}
+
+:host-context(.dark) ::ng-deep .text-gray-500 {
+  color: var(--text-tertiary) !important;
+}
+
+/* Cards and backgrounds */
+:host-context(.dark) ::ng-deep .bg-white {
+  background-color: var(--card-bg) !important;
+}
+
+:host-context(.dark) ::ng-deep .bg-gray-50 {
+  background-color: var(--bg-secondary) !important;
+}
+
+:host-context(.dark) ::ng-deep .bg-gray-100 {
+  background-color: var(--bg-tertiary) !important;
+}
+
+:host-context(.dark) ::ng-deep .bg-blue-50 {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+:host-context(.dark) ::ng-deep .bg-emerald-50 {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+}
+
+:host-context(.dark) ::ng-deep .bg-red-50 {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+}
+
+/* Borders */
+:host-context(.dark) ::ng-deep .border-gray-100,
+:host-context(.dark) ::ng-deep .border-gray-200 {
+  border-color: var(--border-color) !important;
+}
+
+/* Hover states */
+:host-context(.dark) ::ng-deep .hover\:bg-gray-50:hover {
+  background-color: var(--bg-secondary) !important;
+}
+
+:host-context(.dark) ::ng-deep .hover\:bg-gray-100:hover {
+  background-color: var(--bg-tertiary) !important;
+}
+
+/* Dropdowns */
+:host-context(.dark) ::ng-deep select {
+  background-color: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--text-primary) !important;
+}
+
+:host-context(.dark) ::ng-deep input,
+:host-context(.dark) ::ng-deep textarea {
+  background-color: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Progress bars */
+:host-context(.dark) ::ng-deep .bg-gray-200 {
+  background-color: var(--bg-tertiary) !important;
+}
+
 /* Card Hover Effects */
 .group:hover .group-hover\:shadow-xl {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
