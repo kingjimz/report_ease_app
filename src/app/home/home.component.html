@@ -32,32 +32,32 @@
 <!-- Manual Report Modal -->
 <ng-container *ngIf="showManualReportModal">
   <app-modal>
-    <div class="max-w-2xl mx-auto">
+    <div class="w-full">
       <!-- Modal Header -->
-      <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
-        <div class="flex items-center space-x-3">
-          <div class="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
-            <i class="bi bi-clipboard-plus text-white text-lg"></i>
+      <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
+        <div class="flex items-center space-x-2 min-w-0 flex-1">
+          <div class="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex-shrink-0">
+            <i class="bi bi-clipboard-plus text-white text-base"></i>
           </div>
-          <div>
-            <h3 class="text-lg font-bold text-gray-900">Generate Report Manually</h3>
-            <p class="text-sm text-gray-500">Create a ministry service report for a specific date</p>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-base font-bold text-gray-900 truncate">Generate Report Manually</h3>
+            <p class="text-xs text-gray-500 truncate">Create a ministry service report for a specific date</p>
           </div>
         </div>
         <button
           (click)="closeManualReportModal()"
-          class="flex items-center justify-center w-9 h-9 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
+          class="flex items-center justify-center w-8 h-8 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors flex-shrink-0 ml-2"
           title="Close"
         >
-          <i class="bi bi-x-lg text-sm"></i>
+          <i class="bi bi-x-lg text-xs"></i>
         </button>
       </div>
 
       <!-- Report Form -->
-      <form (ngSubmit)="generateManualReport()" class="space-y-6">
+      <form (ngSubmit)="generateManualReport()" class="space-y-4">
         <!-- Date Selection -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">
             <i class="bi bi-calendar-event mr-1"></i>
             Report Date *
           </label>
@@ -66,18 +66,18 @@
             [(ngModel)]="reportDate"
             name="reportDate"
             required
-            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
+            class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
           />
         </div>
 
         <!-- Report Type -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">
             <i class="bi bi-person-badge mr-1"></i>
             Report Type *
           </label>
-          <div class="flex space-x-3">
-            <label class="flex-1 flex items-center justify-center p-3 border-2 rounded-lg cursor-pointer transition-all"
+          <div class="flex gap-2">
+            <label class="flex-1 flex items-center justify-center p-2.5 border-2 rounded-lg cursor-pointer transition-all min-w-0"
               [class.border-blue-500]="!isPioneer"
               [class.bg-blue-50]="!isPioneer"
               [class.border-gray-300]="isPioneer">
@@ -86,12 +86,12 @@
                 name="reportType"
                 [value]="false"
                 [(ngModel)]="isPioneer"
-                class="mr-2"
+                class="mr-1.5 flex-shrink-0"
               />
-              <i class="bi bi-person mr-2"></i>
-              <span class="font-medium">Publisher</span>
+              <i class="bi bi-person mr-1 text-sm flex-shrink-0"></i>
+              <span class="font-medium text-sm truncate">Publisher</span>
             </label>
-            <label class="flex-1 flex items-center justify-center p-3 border-2 rounded-lg cursor-pointer transition-all"
+            <label class="flex-1 flex items-center justify-center p-2.5 border-2 rounded-lg cursor-pointer transition-all min-w-0"
               [class.border-amber-500]="isPioneer"
               [class.bg-amber-50]="isPioneer"
               [class.border-gray-300]="!isPioneer">
@@ -100,21 +100,21 @@
                 name="reportType"
                 [value]="true"
                 [(ngModel)]="isPioneer"
-                class="mr-2"
+                class="mr-1.5 flex-shrink-0"
               />
-              <i class="bi bi-award mr-2"></i>
-              <span class="font-medium">Pioneer</span>
+              <i class="bi bi-award mr-1 text-sm flex-shrink-0"></i>
+              <span class="font-medium text-sm truncate">Pioneer</span>
             </label>
           </div>
         </div>
 
         <!-- Hours -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">
             <i class="bi bi-clock mr-1"></i>
             Hours *
           </label>
-          <div class="flex items-center space-x-2">
+          <div class="flex items-center gap-2">
             <button
               type="button"
               (click)="decrementHours()"
@@ -141,11 +141,11 @@
 
         <!-- Bible Studies -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">
             <i class="bi bi-book mr-1"></i>
             Bible Studies
           </label>
-          <div class="flex items-center space-x-2">
+          <div class="flex items-center gap-2">
             <button
               type="button"
               (click)="decrementBibleStudies()"
@@ -172,7 +172,7 @@
 
         <!-- Ministry Participation -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">
             <i class="bi bi-people mr-1"></i>
             Did you participate in the ministry today? *
           </label>
@@ -180,7 +180,7 @@
             [(ngModel)]="joined_ministry"
             name="joined_ministry"
             required
-            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
+            class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
           >
             <option value="yes">Yes</option>
             <option value="no">No</option>
@@ -195,18 +195,18 @@
         ></app-alerts>
 
         <!-- Modal Footer -->
-        <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+        <div class="flex justify-end gap-2 pt-3 border-t border-gray-200">
           <button
             type="button"
             (click)="closeManualReportModal()"
-            class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
+            class="px-3 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
           >
             Cancel
           </button>
           <button
             type="submit"
             [disabled]="isSubmitting || !reportDate || !hours || !joined_ministry"
-            class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            class="px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span
               *ngIf="isSubmitting"
