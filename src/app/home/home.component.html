@@ -24,6 +24,198 @@
 >
   <app-tab-card
     (tabChange)="onTabChange($event)"
+    (manualReportModalOpen)="onManualReportModalOpen()"
     [selectedTab]="selectedTab"
   ></app-tab-card>
 </div>
+
+<!-- Manual Report Modal -->
+<ng-container *ngIf="showManualReportModal">
+  <app-modal>
+    <div class="max-w-2xl mx-auto">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+        <div class="flex items-center space-x-3">
+          <div class="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
+            <i class="bi bi-clipboard-plus text-white text-lg"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-gray-900">Generate Report Manually</h3>
+            <p class="text-sm text-gray-500">Create a ministry service report for a specific date</p>
+          </div>
+        </div>
+        <button
+          (click)="closeManualReportModal()"
+          class="flex items-center justify-center w-9 h-9 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
+          title="Close"
+        >
+          <i class="bi bi-x-lg text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Report Form -->
+      <form (ngSubmit)="generateManualReport()" class="space-y-6">
+        <!-- Date Selection -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            <i class="bi bi-calendar-event mr-1"></i>
+            Report Date *
+          </label>
+          <input
+            type="date"
+            [(ngModel)]="reportDate"
+            name="reportDate"
+            required
+            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
+          />
+        </div>
+
+        <!-- Report Type -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            <i class="bi bi-person-badge mr-1"></i>
+            Report Type *
+          </label>
+          <div class="flex space-x-3">
+            <label class="flex-1 flex items-center justify-center p-3 border-2 rounded-lg cursor-pointer transition-all"
+              [class.border-blue-500]="!isPioneer"
+              [class.bg-blue-50]="!isPioneer"
+              [class.border-gray-300]="isPioneer">
+              <input
+                type="radio"
+                name="reportType"
+                [value]="false"
+                [(ngModel)]="isPioneer"
+                class="mr-2"
+              />
+              <i class="bi bi-person mr-2"></i>
+              <span class="font-medium">Publisher</span>
+            </label>
+            <label class="flex-1 flex items-center justify-center p-3 border-2 rounded-lg cursor-pointer transition-all"
+              [class.border-amber-500]="isPioneer"
+              [class.bg-amber-50]="isPioneer"
+              [class.border-gray-300]="!isPioneer">
+              <input
+                type="radio"
+                name="reportType"
+                [value]="true"
+                [(ngModel)]="isPioneer"
+                class="mr-2"
+              />
+              <i class="bi bi-award mr-2"></i>
+              <span class="font-medium">Pioneer</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Hours -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            <i class="bi bi-clock mr-1"></i>
+            Hours *
+          </label>
+          <div class="flex items-center space-x-2">
+            <button
+              type="button"
+              (click)="decrementHours()"
+              class="flex items-center justify-center w-12 h-12 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
+            >
+              <i class="bi bi-dash-lg text-lg"></i>
+            </button>
+            <input
+              type="number"
+              [(ngModel)]="hours"
+              name="hours"
+              min="0"
+              class="flex-1 text-center p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-2xl font-bold"
+            />
+            <button
+              type="button"
+              (click)="incrementHours()"
+              class="flex items-center justify-center w-12 h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+            >
+              <i class="bi bi-plus-lg text-lg"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Bible Studies -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            <i class="bi bi-book mr-1"></i>
+            Bible Studies
+          </label>
+          <div class="flex items-center space-x-2">
+            <button
+              type="button"
+              (click)="decrementBibleStudies()"
+              class="flex items-center justify-center w-12 h-12 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
+            >
+              <i class="bi bi-dash-lg text-lg"></i>
+            </button>
+            <input
+              type="number"
+              [(ngModel)]="bibleStudiesCount"
+              name="bibleStudiesCount"
+              min="0"
+              class="flex-1 text-center p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-2xl font-bold"
+            />
+            <button
+              type="button"
+              (click)="incrementBibleStudies()"
+              class="flex items-center justify-center w-12 h-12 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors"
+            >
+              <i class="bi bi-plus-lg text-lg"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Ministry Participation -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            <i class="bi bi-people mr-1"></i>
+            Did you participate in the ministry today? *
+          </label>
+          <select
+            [(ngModel)]="joined_ministry"
+            name="joined_ministry"
+            required
+            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
+          >
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+
+        <!-- Alert Messages -->
+        <app-alerts
+          *ngIf="alertMessage"
+          [isSuccess]="isSuccess"
+          [alertMessage]="alertMessage"
+        ></app-alerts>
+
+        <!-- Modal Footer -->
+        <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+          <button
+            type="button"
+            (click)="closeManualReportModal()"
+            class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            [disabled]="isSubmitting || !reportDate || !hours || !joined_ministry"
+            class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span
+              *ngIf="isSubmitting"
+              class="animate-spin rounded-full h-4 w-4 border-t-2 border-white inline-block mr-2"
+            ></span>
+            {{ isSubmitting ? 'Generating...' : 'Generate Report' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </app-modal>
+</ng-container>

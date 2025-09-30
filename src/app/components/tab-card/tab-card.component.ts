@@ -12,6 +12,7 @@ import { CalendarComponent } from '../calendar/calendar.component';
 })
 export class TabCardComponent implements OnInit {
   @Output() tabChange = new EventEmitter<string>();
+  @Output() manualReportModalOpen = new EventEmitter<void>();
   @Input() selectedTab: string = 'dashboard';
 
   activeTab = 'dashboard';
@@ -57,5 +58,9 @@ export class TabCardComponent implements OnInit {
   selectTab(tabId: string) {
     this.activeTab = tabId;
     this.tabChange.emit(tabId);
+  }
+
+  openManualReportModal() {
+    this.manualReportModalOpen.emit();
   }
 }

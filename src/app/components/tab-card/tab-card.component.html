@@ -1,7 +1,28 @@
 <div class="bg-white w-full">
-  <div class="flex justify-around p-4">
+  <div class="flex justify-around items-center p-4">
     <div
-      *ngFor="let tab of tabs"
+      *ngFor="let tab of tabs.slice(0, 2)"
+      (click)="selectTab(tab.id)"
+      class="flex flex-col items-center cursor-pointer"
+      [ngClass]="{
+        'text-blue-500 border-b-2 border-blue-500 scale-105':
+          activeTab === tab.id,
+        'text-gray-500': activeTab !== tab.id,
+      }"
+    >
+      <i [class]="tab.icon" class="text-lg"></i>
+      <div class="text-sm font-semibold text-center bottom-nav-labels">{{ tab.title }}</div>
+    </div>
+
+    <!-- Plus Icon Button -->
+    <div class="flex flex-col items-center cursor-pointer" (click)="openManualReportModal()">
+      <div class="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200">
+        <i class="bi bi-plus-lg text-white text-2xl"></i>
+      </div>
+    </div>
+
+    <div
+      *ngFor="let tab of tabs.slice(2)"
       (click)="selectTab(tab.id)"
       class="flex flex-col items-center cursor-pointer"
       [ngClass]="{
