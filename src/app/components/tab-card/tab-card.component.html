@@ -4,6 +4,7 @@
       *ngFor="let tab of tabs.slice(0, 2)"
       (click)="selectTab(tab.id)"
       class="flex flex-col items-center cursor-pointer"
+      style="font-size: 9pt;"
       [ngClass]="{
         'text-blue-500 border-b-2 border-blue-500 scale-105':
           activeTab === tab.id,
@@ -11,7 +12,7 @@
       }"
     >
       <i [class]="tab.icon" class="text-lg"></i>
-      <div class="text-sm font-semibold text-center bottom-nav-labels">{{ tab.title }}</div>
+      <div class="font-semibold text-center bottom-nav-labels">{{ tab.title }}</div>
     </div>
 
     <!-- Plus Icon Button -->
@@ -25,6 +26,7 @@
       *ngFor="let tab of tabs.slice(2)"
       (click)="selectTab(tab.id)"
       class="flex flex-col items-center cursor-pointer"
+      style="font-size: 9pt;"
       [ngClass]="{
         'text-blue-500 border-b-2 border-blue-500 scale-105':
           activeTab === tab.id,
@@ -32,7 +34,7 @@
       }"
     >
       <i [class]="tab.icon" class="text-lg"></i>
-      <div class="text-sm font-semibold text-center bottom-nav-labels">{{ tab.title }}</div>
+      <div class="font-semibold text-center bottom-nav-labels">{{ tab.title }}</div>
     </div>
   </div>
 </div>

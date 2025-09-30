@@ -20,7 +20,7 @@ export class TabCardComponent implements OnInit {
   tabs = [
     {
       id: 'dashboard',
-      title: 'Dashboard',
+      title: 'Home',
       icon: 'bi bi-house-fill',
       description: 'Overview of your activities',
     },
