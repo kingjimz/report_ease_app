@@ -1,11 +1,11 @@
 <div class="min-h-screen">
   <div class="container py-2 sm:py-2 md:py-4 px-2">
     <!-- Header Section -->
-    <div class="mb-6 sm:mb-8 md:mb-12">
+    <div class="mb-4 sm:mb-6 md:mb-8">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900 mb-2">Dashboard</h1>
-          <p class="text-gray-600">
+          <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">Dashboard</h1>
+          <p class="text-sm sm:text-base text-gray-600">
             Welcome back! Here's an overview of your ministry activities.
           </p>
         </div>
@@ -13,6 +13,160 @@
           <div class="text-right">
             <p class="text-sm text-gray-500">Last updated</p>
             <p class="text-sm font-medium text-gray-700">{{ getCurrentDate() }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pioneer Year Progress Section -->
+    <div *ngIf="showPioneerSection" class="mb-4 sm:mb-6 md:mb-8 px-0">
+      <div class="pioneer-year-card bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <!-- Header -->
+        <div class="pioneer-header bg-gradient-to-r from-blue-600 to-indigo-700">
+          <div class="px-4 py-4 sm:px-6 sm:py-6">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+              <div class="flex items-center space-x-3 sm:space-x-4">
+                <div class="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-white bg-opacity-20 backdrop-blur-sm rounded-lg sm:rounded-xl flex-shrink-0">
+                  <i class="bi bi-trophy text-white text-xl sm:text-2xl md:text-3xl"></i>
+                </div>
+                <div>
+                  <h2 class="text-base sm:text-xl md:text-2xl font-bold text-white mb-0.5 sm:mb-1">Pioneer Year Progress</h2>
+                  <p class="text-white text-opacity-90 text-xs sm:text-sm md:text-base">{{ serviceYearStart }} - {{ serviceYearEnd }}</p>
+                </div>
+              </div>
+              <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg sm:rounded-xl px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4">
+                <p class="text-white text-opacity-80 text-xs font-medium mb-0.5 sm:mb-1">Yearly Goal</p>
+                <p class="text-xl sm:text-2xl md:text-3xl font-bold text-white">{{ pioneerYearGoal }} hrs</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress Content -->
+        <div class="p-4 sm:p-6 md:p-8">
+          <!-- Main Progress Stats -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
+            <!-- Hours Completed -->
+            <div class="stat-box bg-blue-50 dark:bg-gray-800 rounded-lg sm:rounded-xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700">
+              <div class="flex items-center justify-between mb-2 sm:mb-3">
+                <span class="text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Hours Completed</span>
+                <div class="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <i class="bi bi-check-circle text-blue-600 dark:text-blue-400 text-lg sm:text-xl"></i>
+                </div>
+              </div>
+              <p class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">{{ pioneerYearHours }}</p>
+              <div class="flex items-center text-xs sm:text-sm">
+                <span class="font-medium text-blue-600 dark:text-blue-400">
+                  {{ pioneerYearProgress.toFixed(1) }}% of goal
+                </span>
+              </div>
+            </div>
+
+            <!-- Hours Remaining -->
+            <div class="stat-box bg-orange-50 dark:bg-gray-800 rounded-lg sm:rounded-xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700">
+              <div class="flex items-center justify-between mb-2 sm:mb-3">
+                <span class="text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Hours Remaining</span>
+                <div class="w-8 h-8 sm:w-10 sm:h-10 bg-orange-100 dark:bg-orange-900/40 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <i class="bi bi-hourglass-split text-orange-600 dark:text-orange-400 text-lg sm:text-xl"></i>
+                </div>
+              </div>
+              <p class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">{{ hoursRemaining }}</p>
+              <div class="flex items-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                <i class="bi bi-calendar-range mr-1"></i>
+                <span>{{ getMonthsRemaining() }} months left</span>
+              </div>
+            </div>
+
+            <!-- Recommended Monthly -->
+            <div class="stat-box bg-emerald-50 dark:bg-gray-800 rounded-lg sm:rounded-xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700">
+              <div class="flex items-center justify-between mb-2 sm:mb-3">
+                <span class="text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Recommended Monthly</span>
+                <div class="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-100 dark:bg-emerald-900/40 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <i class="bi bi-bullseye text-emerald-600 dark:text-emerald-400 text-lg sm:text-xl"></i>
+                </div>
+              </div>
+              <p class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">{{ getRecommendedMonthlyHours() }}</p>
+              <div class="flex items-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                <span>hrs/month to reach goal</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="mb-6 sm:mb-8">
+            <div class="flex items-center justify-between mb-2 sm:mb-3">
+              <h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Overall Progress</h3>
+              <span class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
+                {{ pioneerYearHours }} / {{ pioneerYearGoal }} hours
+              </span>
+            </div>
+            <div class="relative">
+              <div class="w-full h-5 sm:h-6 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div 
+                  class="h-full bg-gradient-to-r from-blue-600 to-indigo-700 flex items-center justify-end px-2"
+                  [style.width.%]="pioneerYearProgress"
+                >
+                  <span *ngIf="pioneerYearProgress > 10" class="text-xs font-bold text-white">
+                    {{ pioneerYearProgress.toFixed(0) }}%
+                  </span>
+                </div>
+              </div>
+              <!-- Goal marker at 100% -->
+              <div class="absolute top-0 right-0 h-5 sm:h-6 w-1 bg-gray-400 dark:bg-gray-500"></div>
+            </div>
+          </div>
+
+          <!-- Additional Stats Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6">
+            <!-- Average Monthly Hours -->
+            <div class="text-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+              <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1 sm:mb-2">Avg Monthly</p>
+              <p class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{{ averageMonthlyHours.toFixed(1) }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">hours</p>
+            </div>
+
+            <!-- Projected Total -->
+            <div class="text-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+              <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1 sm:mb-2">Projected Total</p>
+              <p class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{{ projectedTotal.toFixed(0) }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">hours</p>
+            </div>
+
+            <!-- Months Elapsed -->
+            <div class="text-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+              <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1 sm:mb-2">Months Passed</p>
+              <p class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{{ getMonthsElapsedInServiceYear() }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">of 12</p>
+            </div>
+
+            <!-- Months Remaining -->
+            <div class="text-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+              <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1 sm:mb-2">Months Left</p>
+              <p class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{{ getMonthsRemaining() }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">remaining</p>
+            </div>
+          </div>
+
+          <!-- Motivational Message -->
+          <div class="p-3 sm:p-4 bg-blue-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div class="flex items-start space-x-2 sm:space-x-3">
+              <div class="flex-shrink-0">
+                <i class="bi bi-lightbulb text-blue-600 dark:text-blue-400 text-lg sm:text-2xl"></i>
+              </div>
+              <div class="flex-1">
+                <h4 class="text-sm sm:text-base font-semibold text-gray-900 dark:text-white mb-1">Keep Going!</h4>
+                <p class="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
+                  <span *ngIf="hoursRemaining > 0">
+                    You need an average of <strong class="text-blue-600 dark:text-blue-400">{{ getRecommendedMonthlyHours() }} hours per month</strong> 
+                    for the remaining {{ getMonthsRemaining() }} month{{ getMonthsRemaining() !== 1 ? 's' : '' }} to reach your {{ pioneerYearGoal }}-hour goal.
+                  </span>
+                  <span *ngIf="hoursRemaining <= 0" class="text-green-600 dark:text-green-400 font-semibold">
+                    <i class="bi bi-check-circle mr-1"></i>
+                    Congratulations! You've reached your yearly goal! 🎉
+                  </span>
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

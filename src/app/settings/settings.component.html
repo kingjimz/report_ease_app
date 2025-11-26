@@ -1,65 +1,84 @@
-<!-- Button to open modal -->
-
 <!-- Modal -->
 <div
   *ngIf="showGoalModal"
-  class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm px-4"
+  (click)="showGoalModal = false; goalSelected = null"
 >
   <div
-    class="bg-white rounded-xl p-4 sm:p-8 w-full max-w-lg relative shadow-lg"
+    class="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 w-full max-w-lg relative shadow-2xl transform transition-all"
+    (click)="$event.stopPropagation()"
   >
-    <button
-      (click)="showGoalModal = false"
-      class="absolute top-3 right-3 text-gray-400 hover:text-red-600 text-xl"
-      aria-label="Close"
-    >
-      <i class="bi bi-x-lg"></i>
-    </button>
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center space-x-3">
+        <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+          <i class="bi bi-{{ goalSelected ? 'pencil' : 'plus-lg' }} text-white text-xl"></i>
+        </div>
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ goalSelected ? 'Edit Goal' : 'Add New Goal' }}</h2>
+          <p class="text-sm text-gray-600 dark:text-gray-400">{{ goalSelected ? 'Update your spiritual goal' : 'Create a spiritual goal' }}</p>
+        </div>
+      </div>
+      <button
+        type="button"
+        (click)="showGoalModal = false; goalSelected = null"
+        class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        aria-label="Close"
+      >
+        <i class="bi bi-x-lg text-gray-600 dark:text-gray-400 text-xl"></i>
+      </button>
+    </div>
 
-    <form class="space-y-4 sm:space-y-5 mt-3" (ngSubmit)="onSubmit()">
+    <form class="space-y-5" (ngSubmit)="onSubmit()">
       <div>
         <label
           for="goalTitle"
-          class="block text-xs sm:text-sm font-medium text-gray-700 mb-1"
-          >Goal Title</label
+          class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
         >
+          Goal Title *
+        </label>
         <input
           type="text"
           id="goalTitle"
           name="goalTitle"
           [(ngModel)]="goal_title"
-          class="w-full px-3 py-2 sm:px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none text-sm sm:text-base"
-          placeholder="Enter your spiritual goal"
+          required
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+          placeholder="e.g., Increase field service hours"
         />
       </div>
       <div>
         <label
           for="goalDescription"
-          class="block text-xs sm:text-sm font-medium text-gray-700 mb-1"
-          >Description</label
+          class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
         >
+          Description *
+        </label>
         <textarea
           id="goalDescription"
           name="goalDescription"
           [(ngModel)]="goal_description"
+          required
           rows="3"
-          class="w-full px-3 py-2 sm:px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none text-sm sm:text-base"
-          placeholder="Describe your goal"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm resize-none"
+          placeholder="Describe what you want to achieve and why it's important to you"
         ></textarea>
       </div>
       <div>
         <label
           for="category"
-          class="block text-xs sm:text-sm font-medium text-gray-700 mb-1"
-          >Category</label
+          class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
         >
+          Category *
+        </label>
         <select
           id="category"
           name="category"
           [(ngModel)]="category"
-          class="w-full px-3 py-2 sm:px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none text-sm sm:text-base"
+          required
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
         >
-          <option value="">Select category</option>
+          <option value="">Select a category</option>
           <option value="ministry">Ministry</option>
           <option value="congregation">Congregation</option>
           <option value="other">Other</option>
@@ -68,117 +87,177 @@
       <div>
         <label
           for="targetDate"
-          class="block text-xs sm:text-sm font-medium text-gray-700 mb-1"
-          >Target Date (Optional)</label
+          class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
         >
+          Target Date <span class="text-gray-500 text-xs ml-1">(Optional)</span>
+        </label>
         <input
           type="date"
           id="targetDate"
           name="targetDate"
           [(ngModel)]="target_date"
-          class="w-full px-3 py-2 sm:px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none text-sm sm:text-base"
+          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
         />
       </div>
-      <button
-        type="submit"
-        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-lg transition text-base"
-      >
-        {{ goalSelected ? "Update" : "Add Goal" }}
-      </button>
+      <div class="flex space-x-3 pt-2">
+        <button
+          type="button"
+          (click)="showGoalModal = false; goalSelected = null"
+          class="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-xl transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl"
+        >
+          {{ goalSelected ? "Update Goal" : "Add Goal" }}
+        </button>
+      </div>
     </form>
   </div>
 </div>
 
-<div
-  class="settings-card max-w-2xl mx-auto rounded-xl p-2 sm:p-2 lg:mb-6 xl:mb-6"
-  style="position: relative; overflow: visible"
->
-  <h2 class="text-2xl sm:text-2xl font-bold mb-1 flex items-center gap-2 settings-title">
-    <i class="bi bi-bullseye text-indigo-500 text-xl sm:text-2xl"></i>
-    Spiritual Goals
-  </h2>
-  <span class="settings-subtitle text-sm max-w-2xl">
-    Set and track your spiritual goals.
-  </span>
-
-  <button
-    (click)="showGoalModal = true"
-    class="fixed right-6 z-[9999] bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-5 rounded-full shadow-lg transition text-base flex items-center gap-2"
-    style="bottom: 90px; box-shadow: 0 4px 16px rgba(60, 60, 120, 0.15)"
-    aria-label="Add Spiritual Goal"
-  >
-    <i class="bi bi-plus-lg text-lg"></i>
-  </button>
-
-  <div class="flex items-center justify-end mb-4">
-    <!-- Filter Dropdown (inline) -->
-    <div>
-      <label for="goalFilter" class="sr-only">Filter by Category</label>
-      <select
-        id="goalFilter"
-        [(ngModel)]="goalFilter"
-        name="goalFilter"
-        class="px-3 py-2 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none text-sm sm:text-base bg-indigo-50 text-indigo-700"
-        style="max-width: 200px"
-      >
-        <option value="">All Categories</option>
-        <option value="ministry">Ministry</option>
-        <option value="congregation">Congregation</option>
-        <option value="other">Other</option>
-      </select>
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 py-6 px-4">
+  <div class="max-w-4xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-8">
+      <div class="flex items-center space-x-4 mb-4">
+        <div class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+          <i class="bi bi-bullseye text-white text-2xl"></i>
+        </div>
+        <div>
+          <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
+            Spiritual Goals
+          </h1>
+          <p class="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+            Set and track your spiritual progress
+          </p>
+        </div>
+      </div>
     </div>
-  </div>
-  <div
-    *ngIf="filteredGoals().length === 0"
-    class="empty-state text-sm sm:text-base text-center py-6"
-  >
-    No goals yet. Add your first spiritual goal!
-  </div>
-  <div
-    *ngFor="let goal of filteredGoals()"
-    class="goal-card border rounded-lg p-3 sm:p-4 mb-3 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 shadow-sm relative"
-  >
+
+    <!-- Add Goal FAB -->
     <button
-      type="button"
-      (click)="deleteGoal(goal)"
-      class="delete-button absolute top-2 right-2 transition"
-      aria-label="Delete goal"
+      (click)="showGoalModal = true"
+      class="fixed right-6 bottom-24 z-[9999] w-14 h-14 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-full shadow-2xl transition-all hover:scale-110 flex items-center justify-center"
+      aria-label="Add Spiritual Goal"
     >
-      <i class="bi bi-trash-fill text-lg"></i>
+      <i class="bi bi-plus-lg text-2xl"></i>
     </button>
-    <div class="flex-1 w-full">
-      <h4
-        class="text-sm sm:text-md font-bold goal-title sm:mt-0 mb-1 sm:mb-2 order-1 sm:order-none"
-      >
-        {{ goal.goal_title }}
-      </h4>
-      <p class="goal-description text-xs sm:text-sm mt-1 sm:mt-0">
-        {{ goal.goal_description }}
-      </p>
-      <small class="goal-metadata block mt-2 text-xs sm:text-sm"
-        >Category:
-        <span class="font-medium text-indigo-600">{{
-          goal.category
-        }}</span></small
-      >
-      <small
-        class="goal-metadata block mt-1 text-xs sm:text-sm"
-        *ngIf="goal.target_date"
-        >Target Date:
-        <span *ngIf="goal.target_date" class="font-medium text-indigo-600"
-          >{{ goal.target_date }}
-        </span>
-      </small>
-      <div class="flex justify-center mt-3">
-        <span
-          class="edit-button inline-block text-xs px-3 py-1 rounded-full cursor-pointer transition"
-          (click)="editGoal(goal); $event.stopPropagation()"
+
+    <!-- Filter and Stats Bar -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+      <div class="flex items-center space-x-4">
+        <div class="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <span class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{{ goals.length }}</span>
+          <span class="text-sm text-gray-600 dark:text-gray-400 ml-1">Goals</span>
+        </div>
+      </div>
+      <div>
+        <label for="goalFilter" class="sr-only">Filter by Category</label>
+        <select
+          id="goalFilter"
+          [(ngModel)]="goalFilter"
+          name="goalFilter"
+          class="px-4 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm shadow-sm"
         >
-          Click to edit
-        </span>
+          <option value="">All Categories</option>
+          <option value="ministry">Ministry</option>
+          <option value="congregation">Congregation</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div
+      *ngIf="filteredGoals().length === 0 && goals.length === 0"
+      class="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center border-2 border-dashed border-gray-300 dark:border-gray-700"
+    >
+      <div class="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+        <i class="bi bi-bullseye text-indigo-600 dark:text-indigo-400 text-4xl"></i>
+      </div>
+      <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">No Goals Yet</h3>
+      <p class="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+        Start your spiritual journey by setting your first goal. Track your progress and stay motivated!
+      </p>
+      <button
+        (click)="showGoalModal = true"
+        class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl"
+      >
+        <i class="bi bi-plus-lg mr-2"></i>
+        Add Your First Goal
+      </button>
+    </div>
+
+    <!-- No Results State -->
+    <div
+      *ngIf="filteredGoals().length === 0 && goals.length > 0"
+      class="bg-white dark:bg-gray-800 rounded-2xl p-8 text-center border border-gray-200 dark:border-gray-700"
+    >
+      <i class="bi bi-search text-gray-400 text-4xl mb-4"></i>
+      <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No goals found</h3>
+      <p class="text-gray-600 dark:text-gray-400">
+        Try selecting a different category filter
+      </p>
+    </div>
+
+    <!-- Goals Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-20">
+      <div
+        *ngFor="let goal of filteredGoals(); let i = index"
+        class="goal-card-enhanced group"
+      >
+        <!-- Delete Button -->
+        <button
+          type="button"
+          (click)="deleteGoal(goal)"
+          class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-lg bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all opacity-0 group-hover:opacity-100 z-10"
+          aria-label="Delete goal"
+        >
+          <i class="bi bi-trash text-sm"></i>
+        </button>
+
+        <!-- Goal Content -->
+        <div class="relative cursor-pointer" (click)="editGoal(goal)">
+          <!-- Category Badge -->
+          <div class="flex items-center justify-between mb-3">
+            <span
+              class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide"
+              [ngClass]="{
+                'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300': goal.category === 'ministry',
+                'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300': goal.category === 'congregation',
+                'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300': goal.category === 'other'
+              }"
+            >
+              {{ goal.category }}
+            </span>
+          </div>
+
+          <!-- Goal Title -->
+          <h3 class="text-lg font-bold text-indigo-600 dark:text-indigo-400 mb-2 line-clamp-2">
+            {{ goal.goal_title }}
+          </h3>
+
+          <!-- Goal Description -->
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-3">
+            {{ goal.goal_description }}
+          </p>
+
+          <!-- Target Date -->
+          <div *ngIf="goal.target_date" class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+            <span>Target: <span class="font-medium text-indigo-600 dark:text-indigo-400">{{ goal.target_date }}</span></span>
+          </div>
+
+          <!-- Edit Hint -->
+          <div class="pt-3 border-t border-gray-100 dark:border-gray-700">
+            <div class="text-center text-xs text-gray-500 dark:text-gray-400">
+              <span>Click to edit</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-  <br />
-  <br />
 </div>

@@ -241,3 +241,76 @@
   background: linear-gradient(90deg, #3b82f6, #1d4ed8);
   transition: width 0.5s ease;
 }
+
+/* Pioneer Year Progress Card */
+.pioneer-year-card {
+  /* No animations */
+}
+
+.pioneer-header {
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-box {
+  transition: all 0.3s ease;
+}
+
+.stat-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive adjustments for pioneer section */
+@media (max-width: 640px) {
+  .pioneer-header {
+    padding: 1rem;
+  }
+
+  .pioneer-year-card .stat-box {
+    padding: 1rem;
+  }
+
+  .pioneer-year-card .text-4xl {
+    font-size: 2rem;
+  }
+}
+
+/* Dark mode specific for pioneer section */
+:host-context(.dark) .stat-box {
+  background: rgba(17, 24, 39, 0.5);
+  border-color: rgba(75, 85, 99, 0.3);
+}
+
+:host-context(.dark) .stat-box:hover {
+  background: rgba(31, 41, 55, 0.6);
+  box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.4);
+}
+
+/* Tooltip for progress */
+.progress-tooltip {
+  position: relative;
+}
+
+.progress-tooltip:hover::after {
+  content: attr(data-progress);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  z-index: 10;
+  margin-bottom: 0.5rem;
+}
+
+/* Mobile touch optimization */
+@media (hover: none) and (pointer: coarse) {
+  .stat-box:active {
+    transform: scale(0.98);
+  }
+}

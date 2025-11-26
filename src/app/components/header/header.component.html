@@ -14,6 +14,15 @@
 
   <!-- Theme Toggle & Profile -->
   <div class="flex items-center gap-3">
+    <!-- Configure Button -->
+    <button
+      (click)="openConfigureModal()"
+      class="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+      title="Configure"
+    >
+      <i class="bi bi-sliders header-icon text-xl"></i>
+    </button>
+
     <app-theme-toggle></app-theme-toggle>
 
     <!-- Profile Dropdown -->
@@ -54,3 +63,96 @@
   </div>
   </div>
 </header>
+
+<!-- Configure Modal -->
+<div
+  *ngIf="showConfigureModal"
+  class="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm"
+  (click)="closeConfigureModal()"
+>
+  <div
+    class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6 sm:p-8 relative"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center space-x-3">
+        <div class="flex items-center justify-center w-12 h-12 bg-blue-100 dark:bg-blue-900/40 rounded-xl">
+          <i class="bi bi-sliders text-blue-600 dark:text-blue-400 text-2xl"></i>
+        </div>
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Configure</h2>
+          <p class="text-sm text-gray-600 dark:text-gray-400">Customize your dashboard</p>
+        </div>
+      </div>
+      <button
+        (click)="closeConfigureModal()"
+        class="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        aria-label="Close"
+      >
+        <i class="bi bi-x-lg text-gray-600 dark:text-gray-400 text-xl"></i>
+      </button>
+    </div>
+
+    <!-- Success Message -->
+    <div
+      *ngIf="showSuccessMessage"
+      class="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center space-x-3 animate-in"
+    >
+      <i class="bi bi-check-circle text-green-600 dark:text-green-400 text-xl"></i>
+      <span class="text-sm text-green-800 dark:text-green-200 font-medium">{{ successMessage }}</span>
+    </div>
+
+    <!-- Component Toggles -->
+    <div class="space-y-4">
+      <!-- Pioneer Status Toggle -->
+      <div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+        <div class="flex items-start justify-between">
+          <div class="flex-1 pr-4">
+            <div class="flex items-center space-x-2 mb-2">
+              <i class="bi bi-trophy text-blue-600 dark:text-blue-400 text-lg"></i>
+              <h3 class="font-semibold text-gray-900 dark:text-white">Pioneer Year Progress</h3>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+              Display the 600-hour yearly goal tracker for pioneers (September - August)
+            </p>
+          </div>
+          <div class="flex items-center flex-shrink-0">
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                [(ngModel)]="isPioneer"
+                (change)="togglePioneerStatus()"
+                class="sr-only peer"
+              />
+              <div class="w-11 h-6 bg-gray-300 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info Box -->
+      <div class="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
+        <div class="flex items-start space-x-3">
+          <i class="bi bi-info-circle text-blue-600 dark:text-blue-400 text-lg mt-0.5 flex-shrink-0"></i>
+          <div>
+            <p class="text-sm text-blue-900 dark:text-blue-100 font-medium mb-1">Configuration Tips</p>
+            <p class="text-xs text-blue-800 dark:text-blue-200">
+              Changes take effect immediately. Enable Pioneer Year Progress to track your ministry hours from September to August on the dashboard.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+      <button
+        (click)="closeConfigureModal()"
+        class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors shadow-sm"
+      >
+        Done
+      </button>
+    </div>
+  </div>
+</div>
