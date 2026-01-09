@@ -18,8 +18,15 @@ export class SettingsComponent {
   goal_description = '';
   goals: any[] = [];
   goalFilter = '';
+  searchQuery = '';
   showGoalModal = false;
   goalSelected: any = null;
+  showDeleteConfirm = false;
+  goalToDelete: any = null;
+  showAllGoals = false;
+  
+  // Expose Math to template
+  Math = Math;
 
   constructor(public api: ApiService) {
     this.loadGoals();
@@ -37,10 +44,7 @@ export class SettingsComponent {
           goal_description: this.goal_description,
         })
         .then(() => {
-          this.target_date = '';
-          this.category = '';
-          this.goal_title = '';
-          this.goal_description = '';
+          this.resetForm();
           this.showGoalModal = false;
           this.loadGoals();
         })
@@ -59,6 +63,19 @@ export class SettingsComponent {
     }
   }
 
+  openDeleteConfirm(goal: any) {
+    this.goalToDelete = goal;
+    this.showDeleteConfirm = true;
+  }
+
+  confirmDelete() {
+    if (this.goalToDelete) {
+      this.deleteGoal(this.goalToDelete);
+      this.showDeleteConfirm = false;
+      this.goalToDelete = null;
+    }
+  }
+
   deleteGoal(goal: any) {
     this.api
       .deleteGoal(goal)
@@ -73,14 +90,49 @@ export class SettingsComponent {
   }
 
   filteredGoals() {
-    if (!this.goalFilter) {
-      return this.goals;
+    let filtered = this.goals;
+
+    // Apply category filter
+    if (this.goalFilter) {
+      filtered = filtered.filter(
+        (goal) =>
+          goal.category &&
+          goal.category.toLowerCase().includes(this.goalFilter.toLowerCase()),
+      );
     }
-    return this.goals.filter(
-      (goal) =>
-        goal.category &&
-        goal.category.toLowerCase().includes(this.goalFilter.toLowerCase()),
-    );
+
+    // Apply search filter
+    if (this.searchQuery) {
+      const query = this.searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (goal) =>
+          goal.goal_title?.toLowerCase().includes(query) ||
+          goal.goal_description?.toLowerCase().includes(query) ||
+          goal.category?.toLowerCase().includes(query),
+      );
+    }
+
+    return filtered;
+  }
+
+  getDisplayedGoals() {
+    const filtered = this.filteredGoals();
+    if (this.showAllGoals) {
+      return filtered;
+    }
+    return filtered.slice(0, 3);
+  }
+
+  toggleShowAllGoals() {
+    this.showAllGoals = !this.showAllGoals;
+  }
+
+  onSearchChange() {
+    // Search is handled in filteredGoals()
+  }
+
+  getCategoryCount(category: string): number {
+    return this.goals.filter((goal) => goal.category === category).length;
   }
 
   editGoal(goal: any) {
@@ -93,6 +145,7 @@ export class SettingsComponent {
     this.goalSelected = goal;
     this.showGoalModal = true;
   }
+
   async updateGoal() {
     if (!this.goalSelected || !this.goalSelected.id) {
       console.error('No goal selected or missing ID');
@@ -107,10 +160,7 @@ export class SettingsComponent {
         goal_description: this.goal_description,
       })
       .then(() => {
-        this.target_date = '';
-        this.category = '';
-        this.goal_title = '';
-        this.goal_description = '';
+        this.resetForm();
         this.showGoalModal = false;
         this.goalSelected = null;
         this.loadGoals();
@@ -118,5 +168,55 @@ export class SettingsComponent {
       .catch((error) => {
         console.error('Error updating goal:', error);
       });
+  }
+
+  resetForm() {
+    this.target_date = '';
+    this.category = '';
+    this.goal_title = '';
+    this.goal_description = '';
+    this.goalSelected = null;
+  }
+
+  formatTargetDate(dateString: string): string {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  }
+
+  getDaysUntilTarget(dateString: string): number | null {
+    if (!dateString) return null;
+    const targetDate = new Date(dateString);
+    if (isNaN(targetDate.getTime())) return null;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    targetDate.setHours(0, 0, 0, 0);
+    
+    const diffTime = targetDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays;
+  }
+
+  getGoalStatus(goal: any): string | null {
+    if (!goal.target_date) return null;
+    
+    const daysUntil = this.getDaysUntilTarget(goal.target_date);
+    if (daysUntil === null) return null;
+    
+    if (daysUntil < 0) {
+      return 'overdue';
+    } else if (daysUntil <= 7) {
+      return 'due-soon';
+    } else {
+      return 'on-track';
+    }
   }
 }

@@ -55,6 +55,8 @@ export class CalendarComponent implements OnInit {
   noChangeDetected = false;
   reports: any[] = [];
   public Math = Math;
+  showDeleteConfirmModal = false;
+  isDeleting = false;
   constructor(
     private api: ApiService,
     private util: UtilService,
@@ -295,6 +297,38 @@ export class CalendarComponent implements OnInit {
       this.reInitializeVariables();
     } catch (error) {
       console.error('Error updating report:', error);
+    }
+  }
+
+  openDeleteConfirmModal() {
+    if (!this.report_id || !this.selectedDate) {
+      return;
+    }
+    this.showDeleteConfirmModal = true;
+  }
+
+  closeDeleteConfirmModal() {
+    this.showDeleteConfirmModal = false;
+  }
+
+  async confirmDeleteReport() {
+    if (!this.report_id || !this.selectedDate) {
+      return;
+    }
+
+    this.isDeleting = true;
+
+    try {
+      await this.api.deleteReport(this.report_id);
+      this.showDeleteConfirmModal = false;
+      this.selectedDate = null;
+      await this.loadReports();
+      this.reInitializeVariables();
+    } catch (error) {
+      console.error('Error deleting report:', error);
+      alert('Error deleting report. Please try again.');
+    } finally {
+      this.isDeleting = false;
     }
   }
 

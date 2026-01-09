@@ -10,7 +10,7 @@
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div class="flex-1">
             <h1 class="text-2xl font-bold page-title">Reports</h1>
-            <p class="page-subtitle mb-3">
+            <p class="page-subtitle mb-3 text-sm">
               Track your spiritual activities, download reports, and manage your ministry service records.
             </p>
           </div>
@@ -33,254 +33,135 @@
         </div>
       </div>
 
-      <!-- Reports Table -->
-      <div *ngIf="reports && reports.length > 0" class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-8">
-        <!-- Table Header -->
-        <div class="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-4">
-          <div class="flex items-center justify-between">
-            <h2 class="text-xl font-semibold text-white flex items-center">
-              <i class="bi bi-table mr-3"></i>
-              Monthly Ministry Reports
-            </h2>
+      <!-- Reports Library Section -->
+      <div *ngIf="reports && reports.length > 0" class="mb-8">
+        <!-- Section Header with Search -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center mb-2">
+                <i class="bi bi-journal-text text-blue-600 dark:text-blue-400 mr-3"></i>
+                Reports Library
+              </h2>
+              <p class="text-sm text-gray-600 dark:text-gray-400">
+                Browse and download your monthly ministry reports
+              </p>
+            </div>
+            <div class="flex items-center gap-3">
+              <!-- Show All Toggle -->
+              <button
+                (click)="toggleShowAllReports()"
+                class="flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-all text-base font-medium text-gray-700 dark:text-gray-300"
+              >
+                <i [class]="showAllReports ? 'bi bi-eye-slash mr-2' : 'bi bi-eye mr-2'"></i>
+                {{ showAllReports ? 'Show Less' : 'Show All' }}
+              </button>
+            </div>
           </div>
         </div>
         
-        <!-- Desktop Table View -->
-        <div class="hidden lg:block overflow-x-auto">
-          <table class="w-full">
-            <thead class="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Period
-                </th>
-                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Hours
-                </th>
-                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Participation
-                </th>
-                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr 
-                *ngFor="let report of paginatedReports; let i = index" 
-                class="hover:bg-gray-50 transition-colors duration-150"
-                [class.bg-blue-25]="hoveredReport === i"
-                (mouseenter)="hoveredReport = i"
-                (mouseleave)="hoveredReport = null"
-              >
-                <!-- Period Column -->
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex items-center">
-                    <div class="flex-shrink-0 h-10 w-10">
-                      <div class="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                        <i class="bi bi-calendar-event text-white text-sm"></i>
-                      </div>
-                    </div>
-                    <div class="ml-4">
-                      <div class="text-sm font-medium text-gray-900">
-                        {{ report.month_name }} {{ report.year }}
-                      </div>
-                      <div class="text-sm text-gray-500">Service Report</div>
-                    </div>
-                  </div>
-                </td>
-                
-                <!-- Hours Column -->
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex items-center">
-                    <div class="text-2xl font-bold text-gray-900 mr-2">{{ report.total_hours }}</div>
-                    <div class="flex flex-col">
-                      <span class="text-xs text-gray-500">hours</span>
-                      <!-- Progress indicator -->
-                      <div class="w-16 bg-gray-200 rounded-full h-1.5 mt-1">
-                        <div 
-                          class="bg-gradient-to-r from-blue-500 to-indigo-600 h-1.5 rounded-full transition-all duration-500" 
-                          [style.width.%]="getProgressWidth(report.total_hours)"
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                
-                <!-- Participation Column -->
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex items-center">
-                    <div 
-                      class="flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center mr-3"
-                      [ngClass]="report.is_joined_ministry ? 'bg-emerald-100' : 'bg-red-100'"
-                    >
-                      <i 
-                        class="text-sm"
-                        [ngClass]="report.is_joined_ministry ? 'bi bi-check-circle text-emerald-600' : 'bi bi-x-circle text-red-600'"
-                      ></i>
-                    </div>
-                    <div>
-                      <div 
-                        class="text-sm font-medium"
-                        [ngClass]="report.is_joined_ministry ? 'text-emerald-800' : 'text-red-800'"
-                      >
-                        {{ report.is_joined_ministry ? "Participated" : "Not Participated" }}
-                      </div>
-                      <div class="text-xs text-gray-500">Ministry Activity</div>
-                    </div>
-                  </div>
-                </td>
-                
-                <!-- Actions Column -->
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div class="relative inline-block">
-                    <button
-                      class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
-                      (click)="toggleDropdown(i)"
-                    >
-                      <i class="bi bi-download mr-1"></i>
-                      Download
-                      <i 
-                        class="bi bi-chevron-down ml-1 transition-transform duration-200"
-                        [class.rotate-180]="dropdownOpen[i]"
-                      ></i>
-                    </button>
-                    
-                    <!-- Dropdown Menu -->
-                    <div
-                      *ngIf="dropdownOpen[i]"
-                      class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-30"
-                    >
-                      <div class="py-1">
-                        <button
-                          class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                          (click)="downloadReport(report, true, i)"
-                        >
-                          <i class="bi bi-award text-amber-500 mr-2"></i>
-                          Pioneer Report
-                        </button>
-                        <button
-                          class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                          (click)="downloadReport(report, false, i)"
-                        >
-                          <i class="bi bi-person text-blue-500 mr-2"></i>
-                          Publisher Report
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Mobile Card View -->
-        <div class="lg:hidden divide-y divide-gray-200">
+        <!-- Reports Grid View -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        
+          <!-- Report Cards -->
           <div 
             *ngFor="let report of paginatedReports; let i = index" 
-            class="p-4 hover:bg-gray-50 transition-colors duration-150"
+            class="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            [class.border-blue-300]="hoveredReport === i"
+            (mouseenter)="hoveredReport = i"
+            (mouseleave)="hoveredReport = null"
           >
-            <!-- Mobile Card Header -->
-            <div class="flex items-center justify-between mb-4">
-              <div class="flex items-center space-x-3">
-                <div class="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
-                  <i class="bi bi-calendar-event text-white text-sm"></i>
+            <!-- Card Header with Gradient -->
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-4">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                  <div class="w-12 h-12 bg-white bg-opacity-20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <i class="bi bi-calendar-month text-white text-xl"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-lg font-bold text-white">{{ report.month_name }} {{ report.year }}</h3>
+                    <p class="text-sm text-blue-100">Monthly Service Report</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 class="font-semibold text-gray-900">{{ report.month_name }} {{ report.year }}</h3>
-                  <p class="text-sm text-gray-500">Service Report</p>
-                </div>
-              </div>
-              
-              <!-- Mobile Download Button -->
-              <div class="relative">
-                <button
-                  class="flex items-center px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all"
-                  (click)="toggleDropdown(i)"
-                >
-                  <i class="bi bi-download mr-1"></i>
-                  <span class="hidden sm:inline">Download</span>
-                  <i 
-                    class="bi bi-chevron-down ml-1 transition-transform duration-200"
-                    [class.rotate-180]="dropdownOpen[i]"
-                  ></i>
-                </button>
-                
-                <!-- Mobile Dropdown -->
-                <div
-                  *ngIf="dropdownOpen[i]"
-                  class="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-200 z-30"
-                >
-                  <div class="py-1">
-                    <button
-                      class="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                      (click)="downloadReport(report, true, i)"
-                    >
-                      <i class="bi bi-award text-amber-500 mr-2"></i>
-                      Pioneer Report
-                    </button>
-                    <button
-                      class="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                      (click)="downloadReport(report, false, i)"
-                    >
-                      <i class="bi bi-person text-blue-500 mr-2"></i>
-                      Publisher Report
-                    </button>
+                <div class="relative">
+                  <button
+                    class="flex items-center px-3 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-lg transition-all backdrop-blur-sm"
+                    (click)="toggleDropdown(i)"
+                  >
+                    <i class="bi bi-download mr-1"></i>
+                    <i 
+                      class="bi bi-chevron-down ml-1 transition-transform duration-200 text-xs"
+                      [class.rotate-180]="dropdownOpen[i]"
+                    ></i>
+                  </button>
+                  
+                  <!-- Dropdown Menu -->
+                  <div
+                    *ngIf="dropdownOpen[i]"
+                    class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-30 animate-in"
+                  >
+                    <div class="py-1">
+                      <button
+                        class="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        (click)="downloadReport(report, true, i)"
+                      >
+                        <i class="bi bi-award text-amber-500 mr-2"></i>
+                        Pioneer Report
+                      </button>
+                      <button
+                        class="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        (click)="downloadReport(report, false, i)"
+                      >
+                        <i class="bi bi-person text-blue-500 mr-2"></i>
+                        Publisher Report
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
             
-            <!-- Mobile Card Content -->
-            <div class="grid grid-cols-2 gap-4">
-              <!-- Hours Section -->
-              <div class="bg-blue-50 rounded-lg p-3">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-gray-600">Hours</span>
-                  <i class="bi bi-clock text-blue-600"></i>
+            <!-- Card Body -->
+            <div class="p-6">
+              <!-- Hours Display -->
+              <div class="mb-6">
+                <div class="flex items-baseline justify-between mb-3">
+                  <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Hours</span>
+                  <div class="flex items-baseline space-x-1">
+                    <span class="text-4xl font-bold text-gray-900 dark:text-white">{{ report.total_hours }}</span>
+                    <span class="text-lg text-gray-500 dark:text-gray-400">hrs</span>
+                  </div>
                 </div>
-                <div class="flex items-baseline space-x-1">
-                  <span class="text-2xl font-bold text-gray-900">{{ report.total_hours }}</span>
-                  <span class="text-sm text-gray-500">hrs</span>
-                </div>
-                <!-- Mobile Progress Bar -->
-                <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                <!-- Progress Bar -->
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
                   <div 
-                    class="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-500" 
+                    class="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-500" 
                     [style.width.%]="getProgressWidth(report.total_hours)"
                   ></div>
                 </div>
               </div>
               
-              <!-- Participation Section -->
+              <!-- Participation Status - Full Width -->
               <div 
-                class="rounded-lg p-3"
-                [ngClass]="report.is_joined_ministry ? 'bg-emerald-50' : 'bg-red-50'"
+                class="p-4 rounded-xl border-2 transition-all"
+                [ngClass]="report.is_joined_ministry ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'"
               >
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-gray-600">Participation</span>
-                  <i 
-                    [ngClass]="report.is_joined_ministry ? 'bi bi-check-circle text-emerald-600' : 'bi bi-x-circle text-red-600'"
-                  ></i>
-                </div>
-                <div>
-                  <span 
-                    class="text-sm font-semibold"
-                    [ngClass]="report.is_joined_ministry ? 'text-emerald-800' : 'text-red-800'"
-                  >
-                    {{ report.is_joined_ministry ? "Yes" : "No" }}
-                  </span>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Reports Count -->
-            <div class="mt-4 pt-3 border-t border-gray-100">
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-gray-600">Reports Submitted</span>
-                <div class="flex items-center space-x-1">
-                  <i class="bi bi-file-text text-gray-400"></i>
-                  <span class="font-semibold text-gray-900">{{ report.report_count || 0 }}</span>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-3">
+                    <i 
+                      [ngClass]="report.is_joined_ministry ? 'bi bi-check-circle-fill text-emerald-600 dark:text-emerald-400' : 'bi bi-x-circle-fill text-red-600 dark:text-red-400'"
+                      class="text-xl"
+                    ></i>
+                    <div>
+                      <span class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase block mb-1">Ministry Participation</span>
+                      <p 
+                        class="text-base font-bold"
+                        [ngClass]="report.is_joined_ministry ? 'text-emerald-800 dark:text-emerald-300' : 'text-red-800 dark:text-red-300'"
+                      >
+                        {{ report.is_joined_ministry ? "Participated" : "Not Participated" }}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -288,7 +169,7 @@
         </div>
         
         <!-- Pagination Controls -->
-        <div *ngIf="totalPages > 1" class="px-6 py-4 border-t border-gray-200 bg-white">
+        <div *ngIf="totalPages > 1 && !showAllReports" class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
           <div class="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
             <!-- Mobile Pagination -->
             <div class="flex sm:hidden items-center space-x-2">
@@ -371,12 +252,12 @@
         </div>
         
         <!-- Table Footer with Summary -->
-        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
-          <div class="flex items-center justify-between text-sm text-gray-600">
+        <div class="bg-gray-50 dark:bg-gray-700/50 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+          <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
             <span>Total of {{ reports.length }} monthly reports</span>
             <span>
               Total Hours: 
-              <span class="font-semibold text-gray-900">
+              <span class="font-semibold text-gray-900 dark:text-white">
                 {{ getTotalHours() }}
               </span>
             </span>
@@ -390,8 +271,8 @@
           <div class="flex items-center justify-center w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full mx-auto mb-6">
             <i class="bi bi-clipboard-data text-blue-600 text-4xl"></i>
           </div>
-          <h3 class="text-2xl font-bold text-gray-900 mb-3">No Reports Yet</h3>
-          <p class="text-gray-600 text-lg mb-8">
+          <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">No Reports Yet</h3>
+          <p class="text-gray-600 dark:text-gray-400 text-lg mb-8">
             Your ministry reports will appear here once you start submitting them.
           </p>
           
@@ -403,19 +284,19 @@
                 <div class="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                   <span class="text-blue-600 text-sm font-bold">1</span>
                 </div>
-                <p class="text-sm text-gray-600">Submit your first ministry report to begin tracking</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Submit your first ministry report to begin tracking</p>
               </div>
               <div class="flex items-start space-x-3">
                 <div class="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                   <span class="text-blue-600 text-sm font-bold">2</span>
                 </div>
-                <p class="text-sm text-gray-600">View your monthly progress and statistics</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">View your monthly progress and statistics</p>
               </div>
               <div class="flex items-start space-x-3">
                 <div class="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                   <span class="text-blue-600 text-sm font-bold">3</span>
                 </div>
-                <p class="text-sm text-gray-600">Download formatted reports for record keeping</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Download formatted reports for record keeping</p>
               </div>
             </div>
           </div>
@@ -423,134 +304,229 @@
       </div>
     </div>
 
-    <!-- Bible Studies Section -->
-    <div class="container mx-auto px-6 pb-8">
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+    <!-- Bible Studies Library Section -->
+    <div class="container mx-auto px-2 pb-8">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <!-- Section Header -->
-        <div class="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-4">
-          <div class="flex items-center justify-between">
-            <h2 class="text-xl font-semibold text-white flex items-center">
-              <i class="bi bi-book mr-3"></i>
-              Bible Studies & Return Visits
-            </h2>
+        <div class="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-5">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-bold text-white flex items-center mb-1">
+                <i class="bi bi-book mr-3"></i>
+                Bible Studies Library
+              </h2>
+              <p class="text-sm text-emerald-100">
+                Manage your spiritual conversations and return visits
+              </p>
+            </div>
             <button
               (click)="showStudyModal = true"
-              class="inline-flex items-center px-3 py-2 sm:px-4 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-lg transition-all duration-300 hover:scale-105 font-medium text-sm"
+              class="inline-flex items-center justify-center px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-lg transition-all duration-300 hover:scale-105 font-medium text-sm backdrop-blur-sm"
             >
-              <i class="bi bi-plus-lg"></i>
-              <span class="hidden sm:inline sm:ml-2">Add</span>
+              <i class="bi bi-plus-lg mr-2"></i>
+              Add Study
             </button>
           </div>
         </div>
         
+        <!-- Search and Filter Bar -->
+        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
+          <div class="flex flex-col sm:flex-row gap-4">
+            <!-- Search Input -->
+            <div class="flex-1 relative">
+              <i class="bi bi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+              <input
+                type="text"
+                [(ngModel)]="searchQuery"
+                (input)="onSearchChange()"
+                placeholder="Search by name, address, or schedule..."
+                class="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+              />
+            </div>
+            
+            <!-- Filter Buttons -->
+            <div class="flex items-center gap-2">
+              <button
+                (click)="filterType = 'all'; onFilterChange()"
+                [class.bg-emerald-600]="filterType === 'all'"
+                [class.text-white]="filterType === 'all'"
+                [class.bg-white]="filterType !== 'all'"
+                [class.text-gray-700]="filterType !== 'all'"
+                [class.dark:bg-gray-800]="filterType !== 'all'"
+                [class.dark:text-gray-300]="filterType !== 'all'"
+                class="px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 transition-all font-medium text-sm"
+              >
+                All
+              </button>
+              <button
+                (click)="filterType = 'bs'; onFilterChange()"
+                [class.bg-emerald-600]="filterType === 'bs'"
+                [class.text-white]="filterType === 'bs'"
+                [class.bg-white]="filterType !== 'bs'"
+                [class.text-gray-700]="filterType !== 'bs'"
+                [class.dark:bg-gray-800]="filterType !== 'bs'"
+                [class.dark:text-gray-300]="filterType !== 'bs'"
+                class="px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 transition-all font-medium text-sm flex items-center"
+              >
+                <i class="bi bi-book mr-1.5"></i>
+                Studies
+              </button>
+              <button
+                (click)="filterType = 'rv'; onFilterChange()"
+                [class.bg-emerald-600]="filterType === 'rv'"
+                [class.text-white]="filterType === 'rv'"
+                [class.bg-white]="filterType !== 'rv'"
+                [class.text-gray-700]="filterType !== 'rv'"
+                [class.dark:bg-gray-800]="filterType !== 'rv'"
+                [class.dark:text-gray-300]="filterType !== 'rv'"
+                class="px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 transition-all font-medium text-sm flex items-center"
+              >
+                <i class="bi bi-arrow-repeat mr-1.5"></i>
+                <span class="hidden sm:inline">Return Visits</span>
+                <span class="sm:hidden">RVs</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Results Count -->
+          <div class="mt-3 text-sm text-gray-600 dark:text-gray-400">
+            Showing <span class="font-semibold text-gray-900 dark:text-white">{{ filteredBibleStudies.length }}</span> 
+            of <span class="font-semibold text-gray-900 dark:text-white">{{ bibleStudies.length }}</span> studies
+          </div>
+        </div>
+        
         <!-- Studies Content -->
-        <div *ngIf="bibleStudies && bibleStudies.length > 0; else noStudiesState">
-          <!-- Studies List -->
-          <div class="divide-y divide-gray-200">
-          <div 
-            *ngFor="let study of bibleStudies; let i = index" 
-            class="px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
-            (click)="editStudy(study)"
-          >
-            <div class="flex items-center justify-between">
-              <div class="flex items-start space-x-3 sm:space-x-4 flex-1 min-w-0">
-                <!-- Study Type Icon -->
-                <div 
-                  class="flex-shrink-0 h-10 w-10 rounded-lg flex items-center justify-center"
-                  [ngClass]="study.type === 'bs' ? 'bg-emerald-100' : 'bg-amber-100'"
-                >
-                  <i 
-                    class="text-lg"
-                    [ngClass]="study.type === 'bs' ? 'bi bi-book text-emerald-600' : 'bi bi-arrow-repeat text-amber-600'"
-                  ></i>
+        <div *ngIf="filteredBibleStudies && filteredBibleStudies.length > 0; else noStudiesState">
+          <!-- Show All Button for Bible Studies -->
+          <div *ngIf="filteredBibleStudies.length > 3" class="px-6 pt-6 pb-2">
+            <button
+              (click)="toggleShowAllBibleStudies()"
+                class="flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-all text-base font-medium text-gray-700 dark:text-gray-300"
+            >
+              <i [class]="showAllBibleStudies ? 'bi bi-eye-slash mr-2' : 'bi bi-eye mr-2'"></i>
+              {{ showAllBibleStudies ? 'Show Less' : 'Show All (' + filteredBibleStudies.length + ')' }}
+            </button>
+          </div>
+          
+          <!-- Studies Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
+            <div 
+              *ngFor="let study of getDisplayedBibleStudies(); let i = index" 
+              class="group relative bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg hover:border-emerald-300 dark:hover:border-emerald-600 transition-all duration-300 cursor-pointer"
+              (click)="editStudy(study)"
+            >
+              <!-- Card Header -->
+              <div 
+                class="px-5 py-4 border-b-2"
+                [ngClass]="study.type === 'bs' ? 'bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border-emerald-200 dark:border-emerald-800' : 'bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-amber-200 dark:border-amber-800'"
+              >
+                <div class="flex items-center justify-between mb-3">
+                  <div 
+                    class="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"
+                    [ngClass]="study.type === 'bs' ? 'bg-emerald-500' : 'bg-amber-500'"
+                  >
+                    <i 
+                      class="text-white text-xl"
+                      [ngClass]="study.type === 'bs' ? 'bi bi-book' : 'bi bi-arrow-repeat'"
+                    ></i>
+                  </div>
+                  <span 
+                    class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold"
+                    [ngClass]="study.type === 'bs' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'"
+                  >
+                    {{ study.type === 'bs' ? 'Bible Study' : 'Return Visit' }}
+                  </span>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white line-clamp-1">{{ study.bible_study }}</h3>
+              </div>
+              
+              <!-- Card Body -->
+              <div class="p-5">
+                <!-- Address -->
+                <div class="mb-4">
+                  <div class="flex items-start space-x-2">
+                    <i class="bi bi-geo-alt text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0"></i>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{{ study.address }}</p>
+                  </div>
                 </div>
                 
-                <!-- Study Info -->
-                <div class="flex-1 min-w-0">
-                  <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-3 mb-2">
-                    <h3 class="text-lg font-medium text-gray-900 truncate">{{ study.bible_study }}</h3>
-                    <span 
-                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-1 sm:mt-0 self-start"
-                      [ngClass]="study.type === 'bs' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
-                    >
-                      {{ study.type === 'bs' ? 'Bible Study' : 'Return Visit' }}
-                    </span>
+                <!-- Schedule -->
+                <div class="mb-4">
+                  <div class="flex items-center space-x-2">
+                    <i class="bi bi-clock text-gray-400 dark:text-gray-500 flex-shrink-0"></i>
+                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ formatScheduleForDisplay(study.schedule) }}</p>
                   </div>
-                  
-                  <!-- Mobile-optimized info layout -->
-                  <div class="space-y-1 text-sm text-gray-600">
-                    <div class="flex items-start">
-                      <i class="bi bi-geo-alt mr-1 text-gray-400 mt-0.5 flex-shrink-0"></i>
-                      <span class="break-words">{{ study.address }}</span>
-                    </div>
-                    <div class="flex items-center">
-                      <i class="bi bi-clock mr-1 text-gray-400 flex-shrink-0"></i>
-                      <span>{{ study.schedule }}</span>
-                    </div>
-                  </div>
-                  
-                  <!-- Last Study Date -->
-                  <div *ngIf="study.updated_at" class="mt-2 text-xs text-gray-500">
-                    <span class="block sm:inline">Last studied: {{ util.formatDateToHumanReadable(study.updated_at) }}</span>
-                    <span class="block sm:inline sm:ml-2 text-gray-400">
-                      ({{ util.calculateDaysAgo(study.updated_at) }} 
-                      {{ util.calculateDaysAgo(study.updated_at) === 1 ? 'day' : 'days' }} ago)
+                </div>
+                
+                <!-- Last Study Date -->
+                <div *ngIf="study.updated_at" class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs text-gray-500 dark:text-gray-400">Last studied</span>
+                    <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                      {{ util.calculateDaysAgo(study.updated_at) }} 
+                      {{ util.calculateDaysAgo(study.updated_at) === 1 ? 'day' : 'days' }} ago
                     </span>
                   </div>
                 </div>
               </div>
               
-              <!-- Action Arrow -->
-              <div class="flex-shrink-0 ml-2">
-                <i class="bi bi-chevron-right text-gray-400"></i>
-              </div>
+              <!-- Hover Indicator -->
+              <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                   [ngClass]="study.type === 'rv' ? 'from-amber-500 to-orange-500' : ''"></div>
             </div>
           </div>
-        </div>
         </div>
         
         <!-- Empty State Template -->
         <ng-template #noStudiesState>
-          <div class="px-6 py-12 text-center">
-            <div class="max-w-md mx-auto">
-              <div class="flex items-center justify-center w-20 h-20 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full mx-auto mb-6">
-                <i class="bi bi-book text-emerald-600 text-3xl"></i>
+          <div class="px-6 py-16 text-center">
+            <div class="max-w-lg mx-auto">
+              <div class="flex items-center justify-center w-24 h-24 bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-3xl mx-auto mb-6">
+                <i class="bi bi-book text-emerald-600 dark:text-emerald-400 text-4xl"></i>
               </div>
-              <h3 class="text-xl font-bold text-gray-900 mb-3">No Bible Studies Yet</h3>
-              <p class="text-gray-600 mb-6">
-                Start tracking your spiritual conversations and return visits by adding your first study.
+              <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                {{ searchQuery || filterType !== 'all' ? 'No Results Found' : 'No Bible Studies Yet' }}
+              </h3>
+              <p class="text-gray-600 dark:text-gray-400 mb-8 text-lg">
+                <span *ngIf="searchQuery || filterType !== 'all'">
+                  Try adjusting your search or filter to find what you're looking for.
+                </span>
+                <span *ngIf="!searchQuery && filterType === 'all'">
+                  Start tracking your spiritual conversations and return visits by adding your first study.
+                </span>
               </p>
               
               <!-- Call to Action Button -->
               <button
+                *ngIf="!searchQuery && filterType === 'all'"
                 (click)="showStudyModal = true"
-                class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 font-medium"
+                class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 font-medium mb-8"
               >
                 <i class="bi bi-plus-lg mr-2"></i>
                 Add Your First Study
               </button>
               
               <!-- Quick Guide -->
-              <div class="mt-8 bg-emerald-50 rounded-xl p-6 text-left">
-                <h4 class="font-semibold text-emerald-900 mb-3 text-center">Getting Started</h4>
+              <div *ngIf="!searchQuery && filterType === 'all'" class="bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl p-6 text-left border border-emerald-200 dark:border-emerald-800">
+                <h4 class="font-semibold text-emerald-900 dark:text-emerald-300 mb-4 text-center">Getting Started</h4>
                 <div class="space-y-3 text-sm">
                   <div class="flex items-start space-x-3">
-                    <div class="flex-shrink-0 w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center">
-                      <span class="text-emerald-600 text-xs font-bold">1</span>
+                    <div class="flex-shrink-0 w-7 h-7 bg-emerald-100 dark:bg-emerald-900/40 rounded-full flex items-center justify-center">
+                      <span class="text-emerald-600 dark:text-emerald-400 text-xs font-bold">1</span>
                     </div>
-                    <p class="text-emerald-800">Click "Add Your First Study" to create a new entry</p>
+                      <p class="text-sm text-emerald-800 dark:text-emerald-300 pt-1">Click "Add Your First Study" to create a new entry</p>
                   </div>
                   <div class="flex items-start space-x-3">
-                    <div class="flex-shrink-0 w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center">
-                      <span class="text-emerald-600 text-xs font-bold">2</span>
+                    <div class="flex-shrink-0 w-7 h-7 bg-emerald-100 dark:bg-emerald-900/40 rounded-full flex items-center justify-center">
+                      <span class="text-emerald-600 dark:text-emerald-400 text-xs font-bold">2</span>
                     </div>
-                    <p class="text-emerald-800">Choose between Bible Study or Return Visit</p>
+                    <p class="text-sm text-emerald-800 dark:text-emerald-300 pt-1">Choose between Bible Study or Return Visit</p>
                   </div>
                   <div class="flex items-start space-x-3">
-                    <div class="flex-shrink-0 w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center">
-                      <span class="text-emerald-600 text-xs font-bold">3</span>
+                    <div class="flex-shrink-0 w-7 h-7 bg-emerald-100 dark:bg-emerald-900/40 rounded-full flex items-center justify-center">
+                      <span class="text-emerald-600 dark:text-emerald-400 text-xs font-bold">3</span>
                     </div>
-                    <p class="text-emerald-800">Track your progress and schedule follow-ups</p>
+                    <p class="text-sm text-emerald-800 dark:text-emerald-300 pt-1">Track your progress and schedule follow-ups</p>
                   </div>
                 </div>
               </div>
@@ -574,7 +550,10 @@
                 ></i>
               </div>
               <div>
-                <h3 class="text-lg font-bold text-gray-900">{{ studySelected.bible_study }}</h3>
+                <h3 class="text-lg font-bold text-gray-900">
+                  <span class="hidden sm:inline">{{ studySelected.bible_study }}</span>
+                  <span class="sm:hidden">{{ formatNameForMobile(studySelected.bible_study) }}</span>
+                </h3>
                 <span
                   class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-1"
                   [ngClass]="studySelected.type === 'rv' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'"
@@ -623,14 +602,13 @@
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     <i class="bi bi-clock mr-1"></i>
-                    Schedule
+                    Next Schedule
                   </label>
                   <input
-                    type="text"
+                    type="datetime-local"
                     [(ngModel)]="editSchedule"
                     name="editSchedule"
                     class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
-                    placeholder="e.g., Thursday, 10 AM"
                   />
                 </div>
               </div>
@@ -668,41 +646,6 @@
                       {{ isCopied ? "Copied!" : "Copy" }}
                     </span>
                   </button>
-                </div>
-              </div>
-              
-              <!-- Study History -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  <i class="bi bi-calendar-check mr-1"></i>
-                  Study History
-                </label>
-                <div class="p-3 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg">
-                  <div *ngIf="studySelected?.updated_at && util.calculateDaysAgo(studySelected.updated_at) > 0; else noDate">
-                    <div class="flex items-center justify-between">
-                      <div>
-                        <p class="text-sm text-gray-700 font-medium">
-                          Last studied: {{ util.formatDateToHumanReadable(studySelected.updated_at) }}
-                        </p>
-                        <p class="text-xs text-gray-600 mt-1">
-                          {{ util.calculateDaysAgo(studySelected.updated_at) }}
-                          {{ util.calculateDaysAgo(studySelected.updated_at) === 1 ? "day" : "days" }} ago
-                        </p>
-                      </div>
-                      <div class="text-right">
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
-                          <i class="bi bi-clock-history mr-1"></i>
-                          Recent
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <ng-template #noDate>
-                    <div class="flex items-center space-x-2">
-                      <i class="bi bi-exclamation-triangle text-amber-600"></i>
-                      <span class="text-amber-700 font-medium text-sm">No recent study activity detected</span>
-                    </div>
-                  </ng-template>
                 </div>
               </div>
             </div>
@@ -831,7 +774,7 @@
             <div>
               <h4 class="text-base font-semibold text-gray-900 mb-3 flex items-center">
                 <i class="bi bi-geo-alt text-emerald-600 mr-2"></i>
-                Location & Schedule
+                Location & Next Schedule
               </h4>
               <div class="space-y-4">
                 <div>
@@ -851,15 +794,14 @@
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     <i class="bi bi-clock mr-1"></i>
-                    Schedule *
+                    Next Schedule *
                   </label>
                   <input
-                    type="text"
+                    type="datetime-local"
                     [(ngModel)]="schedule"
                     name="schedule"
                     required
                     class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
-                    placeholder="e.g., Thursday, 10 AM"
                   />
                 </div>
               </div>

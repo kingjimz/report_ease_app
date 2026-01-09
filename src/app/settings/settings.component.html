@@ -1,17 +1,55 @@
-<!-- Modal -->
+<!-- Delete Confirmation Modal -->
+<div
+  *ngIf="showDeleteConfirm"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm px-4"
+  (click)="showDeleteConfirm = false; goalToDelete = null"
+>
+  <div
+    class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md relative shadow-2xl"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="text-center">
+      <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="bi bi-exclamation-triangle text-red-600 dark:text-red-400 text-2xl"></i>
+      </div>
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Delete Goal</h3>
+      <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
+        Are you sure you want to delete "<span class="font-semibold">{{ goalToDelete?.goal_title }}</span>"? This action cannot be undone.
+      </p>
+      <div class="flex space-x-3">
+        <button
+          type="button"
+          (click)="showDeleteConfirm = false; goalToDelete = null"
+          class="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          (click)="confirmDelete()"
+          class="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Goal Modal -->
 <div
   *ngIf="showGoalModal"
   class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm px-4"
-  (click)="showGoalModal = false; goalSelected = null"
+  (click)="showGoalModal = false; goalSelected = null; resetForm()"
 >
   <div
-    class="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 w-full max-w-lg relative shadow-2xl transform transition-all"
+    class="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 w-full max-w-lg relative shadow-2xl transform transition-all max-h-[90vh] overflow-y-auto"
     (click)="$event.stopPropagation()"
   >
     <!-- Modal Header -->
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center space-x-3">
-        <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+        <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
           <i class="bi bi-{{ goalSelected ? 'pencil' : 'plus-lg' }} text-white text-xl"></i>
         </div>
         <div>
@@ -21,7 +59,7 @@
       </div>
       <button
         type="button"
-        (click)="showGoalModal = false; goalSelected = null"
+        (click)="showGoalModal = false; goalSelected = null; resetForm()"
         class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
         aria-label="Close"
       >
@@ -102,7 +140,7 @@
       <div class="flex space-x-3 pt-2">
         <button
           type="button"
-          (click)="showGoalModal = false; goalSelected = null"
+          (click)="showGoalModal = false; goalSelected = null; resetForm()"
           class="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-xl transition-colors"
         >
           Cancel
@@ -118,55 +156,100 @@
   </div>
 </div>
 
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 py-6 px-4">
-  <div class="max-w-4xl mx-auto">
+<div class="min-h-screen bg-white dark:bg-gray-900 py-6 px-4">
+  <div class="max-w-6xl mx-auto">
     <!-- Page Header -->
     <div class="mb-8">
-      <div class="flex items-center space-x-4 mb-4">
-        <div class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-          <i class="bi bi-bullseye text-white text-2xl"></i>
+      <div class="flex flex-col items-center gap-4 mb-6">
+        <div class="flex items-center space-x-4">
+          <div class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+            <i class="bi bi-bullseye text-white text-2xl"></i>
+          </div>
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+              Spiritual Goals
+            </h1>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+              Set and track your spiritual progress
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
-            Spiritual Goals
-          </h1>
-          <p class="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
-            Set and track your spiritual progress
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Add Goal FAB -->
-    <button
-      (click)="showGoalModal = true"
-      class="fixed right-6 bottom-24 z-[9999] w-14 h-14 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-full shadow-2xl transition-all hover:scale-110 flex items-center justify-center"
-      aria-label="Add Spiritual Goal"
-    >
-      <i class="bi bi-plus-lg text-2xl"></i>
-    </button>
-
-    <!-- Filter and Stats Bar -->
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-      <div class="flex items-center space-x-4">
-        <div class="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <span class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{{ goals.length }}</span>
-          <span class="text-sm text-gray-600 dark:text-gray-400 ml-1">Goals</span>
-        </div>
-      </div>
-      <div>
-        <label for="goalFilter" class="sr-only">Filter by Category</label>
-        <select
-          id="goalFilter"
-          [(ngModel)]="goalFilter"
-          name="goalFilter"
-          class="px-4 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm shadow-sm"
+        <button
+          (click)="showGoalModal = true; goalSelected = null; resetForm()"
+          class="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium rounded-lg transition-all shadow-md hover:shadow-lg"
         >
-          <option value="">All Categories</option>
-          <option value="ministry">Ministry</option>
-          <option value="congregation">Congregation</option>
-          <option value="other">Other</option>
-        </select>
+          <i class="bi bi-plus-lg mr-2"></i>
+          Add Goal
+        </button>
+      </div>
+
+      <!-- Stats and Search Bar -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <!-- Stats -->
+          <div class="flex flex-wrap items-center gap-4">
+            <div class="px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
+              <div class="flex items-center space-x-2">
+                <i class="bi bi-bullseye text-indigo-600 dark:text-indigo-400"></i>
+                <div>
+                  <p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{{ goals.length }}</p>
+                  <p class="text-xs text-gray-600 dark:text-gray-400">Total Goals</p>
+                </div>
+              </div>
+            </div>
+            <div class="px-4 py-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div class="flex items-center space-x-2">
+                <i class="bi bi-briefcase text-blue-600 dark:text-blue-400"></i>
+                <div>
+                  <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ getCategoryCount('ministry') }}</p>
+                  <p class="text-xs text-gray-600 dark:text-gray-400">Ministry</p>
+                </div>
+              </div>
+            </div>
+            <div class="px-4 py-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+              <div class="flex items-center space-x-2">
+                <i class="bi bi-people text-purple-600 dark:text-purple-400"></i>
+                <div>
+                  <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{ getCategoryCount('congregation') }}</p>
+                  <p class="text-xs text-gray-600 dark:text-gray-400">Congregation</p>
+                </div>
+              </div>
+            </div>
+            <div class="px-4 py-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+              <div class="flex items-center space-x-2">
+                <i class="bi bi-star text-amber-600 dark:text-amber-400"></i>
+                <div>
+                  <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">{{ getCategoryCount('other') }}</p>
+                  <p class="text-xs text-gray-600 dark:text-gray-400">Other</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Search and Filter -->
+          <div class="flex flex-col sm:flex-row gap-3 flex-1 lg:max-w-md">
+            <div class="relative flex-1">
+              <i class="bi bi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+              <input
+                type="text"
+                [(ngModel)]="searchQuery"
+                (input)="onSearchChange()"
+                placeholder="Search goals..."
+                class="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm"
+              />
+            </div>
+            <select
+              [(ngModel)]="goalFilter"
+              name="goalFilter"
+              class="px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+            >
+              <option value="">All Categories</option>
+              <option value="ministry">Ministry</option>
+              <option value="congregation">Congregation</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -183,7 +266,7 @@
         Start your spiritual journey by setting your first goal. Track your progress and stay motivated!
       </p>
       <button
-        (click)="showGoalModal = true"
+        (click)="showGoalModal = true; goalSelected = null; resetForm()"
         class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl"
       >
         <i class="bi bi-plus-lg mr-2"></i>
@@ -199,30 +282,41 @@
       <i class="bi bi-search text-gray-400 text-4xl mb-4"></i>
       <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No goals found</h3>
       <p class="text-gray-600 dark:text-gray-400">
-        Try selecting a different category filter
+        Try adjusting your search or filter criteria
       </p>
     </div>
 
+    <!-- Show All Button -->
+    <div *ngIf="filteredGoals().length > 3" class="mb-4 flex justify-end">
+      <button
+        (click)="toggleShowAllGoals()"
+        class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        <i [class]="showAllGoals ? 'bi bi-eye-slash mr-2' : 'bi bi-eye mr-2'"></i>
+        {{ showAllGoals ? 'Show Less' : 'Show All (' + filteredGoals().length + ')' }}
+      </button>
+    </div>
+
     <!-- Goals Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-20">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
       <div
-        *ngFor="let goal of filteredGoals(); let i = index"
-        class="goal-card-enhanced group"
+        *ngFor="let goal of getDisplayedGoals(); let i = index"
+        class="goal-card-enhanced group relative bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
       >
         <!-- Delete Button -->
         <button
           type="button"
-          (click)="deleteGoal(goal)"
-          class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-lg bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all opacity-0 group-hover:opacity-100 z-10"
+          (click)="openDeleteConfirm(goal); $event.stopPropagation()"
+          class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-lg bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all opacity-0 group-hover:opacity-100 z-10"
           aria-label="Delete goal"
         >
           <i class="bi bi-trash text-sm"></i>
         </button>
 
         <!-- Goal Content -->
-        <div class="relative cursor-pointer" (click)="editGoal(goal)">
-          <!-- Category Badge -->
-          <div class="flex items-center justify-between mb-3">
+        <div class="relative cursor-pointer p-6" (click)="editGoal(goal)">
+          <!-- Category Badge and Status -->
+          <div class="flex items-center justify-between mb-4">
             <span
               class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide"
               [ngClass]="{
@@ -231,12 +325,27 @@
                 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300': goal.category === 'other'
               }"
             >
+              <i [ngClass]="{
+                'bi bi-briefcase': goal.category === 'ministry',
+                'bi bi-people': goal.category === 'congregation',
+                'bi bi-star': goal.category === 'other'
+              }" class="mr-1.5"></i>
               {{ goal.category }}
+            </span>
+            <span *ngIf="getGoalStatus(goal)" 
+              class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+              [ngClass]="{
+                'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300': getGoalStatus(goal) === 'overdue',
+                'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300': getGoalStatus(goal) === 'due-soon',
+                'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300': getGoalStatus(goal) === 'on-track'
+              }"
+            >
+              {{ getGoalStatus(goal) === 'overdue' ? 'Overdue' : getGoalStatus(goal) === 'due-soon' ? 'Due Soon' : 'On Track' }}
             </span>
           </div>
 
           <!-- Goal Title -->
-          <h3 class="text-lg font-bold text-indigo-600 dark:text-indigo-400 mb-2 line-clamp-2">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2 line-clamp-2">
             {{ goal.goal_title }}
           </h3>
 
@@ -246,13 +355,36 @@
           </p>
 
           <!-- Target Date -->
-          <div *ngIf="goal.target_date" class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-            <span>Target: <span class="font-medium text-indigo-600 dark:text-indigo-400">{{ goal.target_date }}</span></span>
+          <div *ngIf="goal.target_date" class="mb-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+            <div class="flex items-center space-x-2">
+              <i class="bi bi-calendar-event text-gray-500 dark:text-gray-400"></i>
+              <div class="flex-1">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Target Date</p>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ formatTargetDate(goal.target_date) }}</p>
+                <p *ngIf="getDaysUntilTarget(goal.target_date) !== null" class="text-xs mt-1"
+                   [ngClass]="{
+                     'text-red-600 dark:text-red-400': getDaysUntilTarget(goal.target_date)! < 0,
+                     'text-yellow-600 dark:text-yellow-400': getDaysUntilTarget(goal.target_date)! >= 0 && getDaysUntilTarget(goal.target_date)! <= 7,
+                     'text-gray-500 dark:text-gray-400': getDaysUntilTarget(goal.target_date)! > 7
+                   }">
+                  <span *ngIf="getDaysUntilTarget(goal.target_date)! < 0">
+                    {{ Math.abs(getDaysUntilTarget(goal.target_date)!) }} days overdue
+                  </span>
+                  <span *ngIf="getDaysUntilTarget(goal.target_date)! >= 0 && getDaysUntilTarget(goal.target_date)! <= 7">
+                    {{ getDaysUntilTarget(goal.target_date) }} days remaining
+                  </span>
+                  <span *ngIf="getDaysUntilTarget(goal.target_date)! > 7">
+                    {{ getDaysUntilTarget(goal.target_date) }} days remaining
+                  </span>
+                </p>
+              </div>
+            </div>
           </div>
 
           <!-- Edit Hint -->
           <div class="pt-3 border-t border-gray-100 dark:border-gray-700">
-            <div class="text-center text-xs text-gray-500 dark:text-gray-400">
+            <div class="flex items-center justify-center text-xs text-gray-500 dark:text-gray-400">
+              <i class="bi bi-pencil-square mr-1"></i>
               <span>Click to edit</span>
             </div>
           </div>

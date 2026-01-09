@@ -29,7 +29,7 @@ export class ReportsComponent {
   isSelected = false;
   studyDelete = false;
   next_lesson = '';
-  editSchedule = ''; // Add property for editing schedule
+  editSchedule = ''; // Add property for editing schedule (datetime-local format)
   openDownloadModal = false;
   isPioneer = false;
   selectedReport: any = null;
@@ -52,8 +52,15 @@ export class ReportsComponent {
 
   // Pagination properties
   currentPage = 1;
-  itemsPerPage = 5;
+  itemsPerPage = 3;
   totalPages = 0;
+  showAllReports = false;
+  
+  // Library view properties
+  searchQuery: string = '';
+  filterType: 'all' | 'bs' | 'rv' = 'all';
+  filteredBibleStudies: any[] = [];
+  showAllBibleStudies = false;
 
   constructor(
     public api: ApiService,
@@ -78,8 +85,43 @@ export class ReportsComponent {
         this.numberOfReturnVisits = this.bibleStudies.filter(
           (study) => study.type === 'rv',
         ).length;
+        this.applyFilters();
+      } else {
+        this.bibleStudies = [];
+        this.filteredBibleStudies = [];
+        this.numberOfBibleStudies = 0;
+        this.numberOfReturnVisits = 0;
       }
     });
+  }
+  
+  applyFilters() {
+    let filtered = [...this.bibleStudies];
+    
+    // Filter by type
+    if (this.filterType !== 'all') {
+      filtered = filtered.filter(study => study.type === this.filterType);
+    }
+    
+    // Filter by search query
+    if (this.searchQuery.trim()) {
+      const query = this.searchQuery.toLowerCase();
+      filtered = filtered.filter(study => 
+        study.bible_study?.toLowerCase().includes(query) ||
+        study.address?.toLowerCase().includes(query) ||
+        study.schedule?.toLowerCase().includes(query)
+      );
+    }
+    
+    this.filteredBibleStudies = filtered;
+  }
+  
+  onSearchChange() {
+    this.applyFilters();
+  }
+  
+  onFilterChange() {
+    this.applyFilters();
   }
 
   loadReports() {
@@ -90,6 +132,44 @@ export class ReportsComponent {
         this.updatePaginatedReports();
       }
     });
+  }
+  
+  toggleShowAllReports() {
+    this.showAllReports = !this.showAllReports;
+    if (this.showAllReports) {
+      this.itemsPerPage = this.reports.length;
+    } else {
+      this.itemsPerPage = 3;
+    }
+    this.calculatePagination();
+    this.updatePaginatedReports();
+  }
+  
+  toggleShowAllBibleStudies() {
+    this.showAllBibleStudies = !this.showAllBibleStudies;
+  }
+  
+  getDisplayedBibleStudies() {
+    if (this.showAllBibleStudies) {
+      return this.filteredBibleStudies;
+    }
+    return this.filteredBibleStudies.slice(0, 3);
+  }
+  
+  formatNameForMobile(name: string): string {
+    if (!name) return '';
+    
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return name; // Single name, return as is
+    
+    // Get all parts except the last one (first/middle names)
+    const firstNames = parts.slice(0, -1);
+    const lastName = parts[parts.length - 1];
+    
+    // Convert first names to initials
+    const initials = firstNames.map(part => part.charAt(0).toUpperCase() + '.').join(' ');
+    
+    return `${initials} ${lastName}`;
   }
 
   calculatePagination() {
@@ -146,7 +226,80 @@ export class ReportsComponent {
     this.isSelected = true;
     this.studySelected = study;
     this.next_lesson = study.lesson;
-    this.editSchedule = study.schedule; // Initialize with current schedule
+    // Convert schedule to datetime-local format
+    if (study.schedule) {
+      const scheduleDate = this.parseScheduleToDate(study.schedule);
+      this.editSchedule = scheduleDate ? this.formatDateForInput(scheduleDate) : '';
+    } else {
+      this.editSchedule = '';
+    }
+  }
+  
+  // Convert schedule string/date to Date object
+  parseScheduleToDate(schedule: any): Date | null {
+    if (!schedule) return null;
+    
+    // If it's already a Date object
+    if (schedule instanceof Date) {
+      return schedule;
+    }
+    
+    // If it's a Firestore Timestamp
+    if (schedule.toDate && typeof schedule.toDate === 'function') {
+      return schedule.toDate();
+    }
+    
+    // If it's a Firestore Timestamp with seconds
+    if (schedule.seconds) {
+      return new Date(schedule.seconds * 1000);
+    }
+    
+    // If it's a string (ISO format or other)
+    if (typeof schedule === 'string') {
+      const date = new Date(schedule);
+      return isNaN(date.getTime()) ? null : date;
+    }
+    
+    return null;
+  }
+  
+  // Format Date object to datetime-local input format (YYYY-MM-DDTHH:mm)
+  formatDateForInput(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+  
+  // Convert datetime-local string to Date object for saving
+  parseInputToDate(inputValue: string): Date | null {
+    if (!inputValue) return null;
+    const date = new Date(inputValue);
+    return isNaN(date.getTime()) ? null : date;
+  }
+  
+  // Format schedule for display (handles both Date objects and strings)
+  formatScheduleForDisplay(schedule: any): string {
+    if (!schedule) return 'Not scheduled';
+    
+    const scheduleDate = this.parseScheduleToDate(schedule);
+    if (scheduleDate) {
+      // Format as readable date and time
+      return scheduleDate.toLocaleString('en-US', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+    }
+    
+    // Fallback to string if it's not a date
+    return String(schedule);
   }
 
   closeStudyDetails() {
@@ -202,14 +355,13 @@ export class ReportsComponent {
     this.studySelected = null;
     this.isCopied = false;
 
-    if (this.next_lesson === study.lesson) {
-      return;
-    }
-
+    // Convert editSchedule to Date object for saving
+    const scheduleDate = this.parseInputToDate(this.editSchedule);
+    
     const studyData = {
       bible_study: study.bible_study,
       address: study.address,
-      schedule: study.schedule,
+      schedule: scheduleDate || this.editSchedule, // Save as Date if valid, otherwise as string
       type: study.type,
       lesson: this.next_lesson,
       updated_at: new Date(),
@@ -228,10 +380,14 @@ export class ReportsComponent {
 
   async addStudy() {
     this.loading = true;
+    
+    // Convert schedule to Date object if it's a datetime-local value
+    const scheduleDate = this.parseInputToDate(this.schedule);
+    
     const data = {
       bible_study: this.bible_study,
       address: this.address,
-      schedule: this.schedule,
+      schedule: scheduleDate || this.schedule, // Save as Date if valid, otherwise as string
       type: this.type,
       lesson: this.next_lesson,
       updated_at: new Date(),

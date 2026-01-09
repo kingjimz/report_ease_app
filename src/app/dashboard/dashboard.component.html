@@ -2,17 +2,25 @@
   <div class="container py-2 sm:py-2 md:py-4 px-2">
     <!-- Header Section -->
     <div class="mb-4 sm:mb-6 md:mb-8">
-      <div class="flex items-center justify-between">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">Dashboard</h1>
-          <p class="text-sm sm:text-base text-gray-600">
+          <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">Dashboard</h1>
+          <p class="text-sm sm:text-base text-gray-600 dark:text-gray-400">
             Welcome back! Here's an overview of your ministry activities.
           </p>
         </div>
-        <div class="hidden md:flex items-center space-x-4">
-          <div class="text-right">
-            <p class="text-sm text-gray-500">Last updated</p>
-            <p class="text-sm font-medium text-gray-700">{{ getCurrentDate() }}</p>
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
+          <!-- Quick Action: Add Report -->
+          <button
+            (click)="openAddReportModal()"
+            class="add-report-button flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md font-medium text-sm w-full sm:w-auto"
+          >
+            <i class="bi bi-plus-circle"></i>
+            <span>Add Report</span>
+          </button>
+          <div class="text-right hidden md:block">
+            <p class="text-xs text-gray-500 dark:text-gray-400">Last updated</p>
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ getCurrentDate() }}</p>
           </div>
         </div>
       </div>
@@ -25,18 +33,27 @@
         <div class="pioneer-header bg-gradient-to-r from-blue-600 to-indigo-700">
           <div class="px-4 py-4 sm:px-6 sm:py-6">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-              <div class="flex items-center space-x-3 sm:space-x-4">
+              <div class="flex items-center space-x-3 sm:space-x-4 flex-1">
                 <div class="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-white bg-opacity-20 backdrop-blur-sm rounded-lg sm:rounded-xl flex-shrink-0">
                   <i class="bi bi-trophy text-white text-xl sm:text-2xl md:text-3xl"></i>
                 </div>
-                <div>
+                <div class="flex-1">
                   <h2 class="text-base sm:text-xl md:text-2xl font-bold text-white mb-0.5 sm:mb-1">Pioneer Year Progress</h2>
                   <p class="text-white text-opacity-90 text-xs sm:text-sm md:text-base">{{ serviceYearStart }} - {{ serviceYearEnd }}</p>
                 </div>
               </div>
-              <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg sm:rounded-xl px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4">
-                <p class="text-white text-opacity-80 text-xs font-medium mb-0.5 sm:mb-1">Yearly Goal</p>
-                <p class="text-xl sm:text-2xl md:text-3xl font-bold text-white">{{ pioneerYearGoal }} hrs</p>
+              <div class="flex items-center gap-3">
+                <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg sm:rounded-xl px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4">
+                  <p class="text-white text-opacity-80 text-xs font-medium mb-0.5 sm:mb-1">Yearly Goal</p>
+                  <p class="text-xl sm:text-2xl md:text-3xl font-bold text-white">{{ pioneerYearGoal }} hrs</p>
+                </div>
+                <button
+                  (click)="toggleHidePioneerSection()"
+                  class="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm rounded-lg transition-all"
+                  [title]="isPioneer ? 'Hide Pioneer Year Progress' : 'Show Pioneer Year Progress'"
+                >
+                  <i [class]="isPioneer ? 'bi bi-eye-slash text-white text-lg sm:text-xl' : 'bi bi-eye text-white text-lg sm:text-xl'"></i>
+                </button>
               </div>
             </div>
           </div>
@@ -172,33 +189,38 @@
       </div>
     </div>
 
-    <!-- Key Metrics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 sm:mb-8 md:mb-12 px-0">
+    <!-- Key Metrics Cards - Enhanced -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8 px-0">
       <!-- Monthly Hours Card -->
-      <div class="group relative overflow-hidden bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
-        <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-600/5"></div>
-        <div class="relative p-8">
-          <div class="flex items-center justify-between mb-6">
-            <div class="flex items-center justify-center w-14 h-14 bg-blue-100 rounded-xl">
-              <i class="bi bi-clock-history text-blue-600 text-2xl"></i>
+      <div class="group relative overflow-hidden bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+        <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-600/10 dark:from-blue-500/5 dark:to-indigo-600/5"></div>
+        <div class="relative p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+              <i class="bi bi-clock-history text-white text-xl"></i>
             </div>
             <div class="text-right">
-              <p class="text-3xl font-bold text-gray-900">{{ monthlyHours }}</p>
-              <p class="text-sm font-medium text-gray-500">This Month</p>
+              <p class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{{ monthlyHours }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">This Month</p>
             </div>
           </div>
           <div>
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">Ministry Hours</h3>
-            <div class="flex items-center">
-              <span 
-                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium"
-                [ngClass]="monthlyHours - prevMonthHours >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
-              >
-                <i 
-                  [ngClass]="monthlyHours - prevMonthHours >= 0 ? 'bi bi-arrow-up' : 'bi bi-arrow-down'"
-                  class="mr-1"
-                ></i>
-                {{ monthlyHours - prevMonthHours >= 0 ? 'Higher' : 'Lower' }} than last month
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Ministry Hours</h3>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <span 
+                  class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold transition-all"
+                  [ngClass]="monthlyHours - prevMonthHours >= 0 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'"
+                >
+                  <i 
+                    [ngClass]="getTrendIcon()"
+                    class="mr-1 text-xs"
+                  ></i>
+                  {{ Math.abs(monthlyHours - prevMonthHours) }} hrs
+                </span>
+              </div>
+              <span class="text-xs font-medium" [ngClass]="getTrendColor()">
+                {{ getTrendPercentage() >= 0 ? '+' : '' }}{{ getTrendPercentage().toFixed(0) }}%
               </span>
             </div>
           </div>
@@ -206,107 +228,216 @@
       </div>
 
       <!-- Bible Studies Card -->
-      <div class="group relative overflow-hidden bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
-        <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-600/5"></div>
-        <div class="relative p-8">
-          <div class="flex items-center justify-between mb-6">
-            <div class="flex items-center justify-center w-14 h-14 bg-emerald-100 rounded-xl">
-              <i class="bi bi-book text-emerald-600 text-2xl"></i>
+      <div class="group relative overflow-hidden bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+        <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-teal-600/10 dark:from-emerald-500/5 dark:to-teal-600/5"></div>
+        <div class="relative p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg">
+              <i class="bi bi-book text-white text-xl"></i>
             </div>
             <div class="text-right">
-              <p class="text-3xl font-bold text-gray-900">{{ numberOfBibleStudies }}</p>
-              <p class="text-sm font-medium text-gray-500">Active Studies</p>
+              <p class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{{ numberOfBibleStudies }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Active Studies</p>
             </div>
           </div>
           <div>
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">Bible Studies</h3>
-            <p class="text-sm text-gray-600">Ongoing spiritual conversations</p>
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Bible Studies</h3>
+            <p class="text-xs text-gray-600 dark:text-gray-400">Ongoing spiritual conversations</p>
           </div>
         </div>
       </div>
 
       <!-- Return Visits Card -->
-      <div class="group relative overflow-hidden bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
-        <div class="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-orange-600/5"></div>
-        <div class="relative p-8">
-          <div class="flex items-center justify-between mb-6">
-            <div class="flex items-center justify-center w-14 h-14 bg-amber-100 rounded-xl">
-              <i class="bi bi-arrow-repeat text-amber-600 text-2xl"></i>
+      <div class="group relative overflow-hidden bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+        <div class="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-orange-600/10 dark:from-amber-500/5 dark:to-orange-600/5"></div>
+        <div class="relative p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl shadow-lg">
+              <i class="bi bi-arrow-repeat text-white text-xl"></i>
             </div>
             <div class="text-right">
-              <p class="text-3xl font-bold text-gray-900">{{ numberOfReturnVisits }}</p>
-              <p class="text-sm font-medium text-gray-500">Active Visits</p>
+              <p class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{{ numberOfReturnVisits }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Active Visits</p>
             </div>
           </div>
           <div>
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">Return Visits</h3>
-            <p class="text-sm text-gray-600">Follow-up opportunities</p>
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Return Visits</h3>
+            <p class="text-xs text-gray-600 dark:text-gray-400">Follow-up opportunities</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weekly Hours Card -->
+      <div class="group relative overflow-hidden bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+        <div class="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-600/10 dark:from-purple-500/5 dark:to-pink-600/5"></div>
+        <div class="relative p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg">
+              <i class="bi bi-calendar-week text-white text-xl"></i>
+            </div>
+            <div class="text-right">
+              <p class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{{ weeklyHours.toFixed(1) }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">This Week</p>
+            </div>
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Weekly Hours</h3>
+            <p class="text-xs text-gray-600 dark:text-gray-400">{{ dailyAverage.toFixed(1) }} hrs/day average</p>
           </div>
         </div>
       </div>
     </div>
-    <!-- Reports Chart Section -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12 px-0">
-      <div class="lg:col-span-2">
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-          <div class="flex items-center justify-between mb-6">
+
+    <!-- Monthly Goal & Status Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8 px-0">
+      <!-- Monthly Goal Progress Card -->
+      <div class="bg-gradient-to-br rounded-2xl shadow-lg p-6 text-white overflow-hidden relative"
+           [ngClass]="getMonthlyGoalColor()">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+        <div class="relative z-10">
+          <div class="flex items-center justify-between mb-4">
             <div>
-              <h2 class="text-xl font-bold text-gray-900">Activity Overview</h2>
-              <p class="text-gray-600 mt-1">Track your daily ministry statistics</p>
+              <p class="text-sm font-medium text-white/90 mb-1">Monthly Goal</p>
+              <p class="text-3xl font-bold">{{ monthlyHours }} / {{ monthlyGoal }}</p>
+              <p class="text-xs text-white/80 mt-1">{{ getMonthlyGoalStatus() }}</p>
             </div>
-            <div class="flex items-center space-x-2">
-              <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <span class="text-sm text-gray-600">Daily Reports</span>
+            <div class="flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl">
+              <i class="bi bi-bullseye text-3xl"></i>
             </div>
           </div>
-          <div class="bg-gray-50 rounded-xl p-4">
+          <!-- Progress Bar -->
+          <div class="mt-4">
+            <div class="w-full h-2 bg-white/20 rounded-full overflow-hidden">
+              <div class="h-full bg-white rounded-full transition-all duration-500" 
+                   [style.width.%]="monthlyProgress"></div>
+            </div>
+            <div class="flex items-center justify-between mt-2 text-xs text-white/80">
+              <span>{{ monthlyProgress.toFixed(0) }}% complete</span>
+              <span>{{ daysRemainingInMonth }} days left</span>
+            </div>
+            <div class="mt-2 text-xs text-white/90">
+              <i class="bi bi-lightbulb mr-1"></i>
+              <span *ngIf="recommendedDailyHours > 0">{{ recommendedDailyHours.toFixed(1) }} hrs/day needed</span>
+              <span *ngIf="recommendedDailyHours <= 0">Goal achieved!</span>
+            </div>
+            <div *ngIf="!showPioneerSection" class="mt-3 pt-3 border-t border-white/20 text-xs text-white/80">
+              <i class="bi bi-heart mr-1"></i>
+              We encourage you to reach 15 hours monthly, even if you're not a pioneer!
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Card -->
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+           [ngClass]="isOnTrack ? 'border-green-200 dark:border-green-800' : 'border-orange-200 dark:border-orange-800'">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Status</p>
+            <p class="text-lg font-bold" [ngClass]="isOnTrack ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'">
+              {{ isOnTrack ? 'On Track' : 'Needs Attention' }}
+            </p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ recommendationMessage }}</p>
+          </div>
+          <div class="flex items-center justify-center w-12 h-12 rounded-xl"
+               [ngClass]="isOnTrack ? 'bg-green-100 dark:bg-green-900/30' : 'bg-orange-100 dark:bg-orange-900/30'">
+            <i [class]="isOnTrack ? 'bi bi-check-circle text-green-600 dark:text-green-400 text-xl' : 'bi bi-exclamation-triangle text-orange-600 dark:text-orange-400 text-xl'"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Stats Card -->
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">Quick Stats</h3>
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-gray-600 dark:text-gray-400">Daily Average</span>
+            <span class="text-sm font-bold text-gray-900 dark:text-white">{{ dailyAverage.toFixed(1) }} hrs</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-gray-600 dark:text-gray-400">Weekly Total</span>
+            <span class="text-sm font-bold text-gray-900 dark:text-white">{{ weeklyHours.toFixed(1) }} hrs</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-gray-600 dark:text-gray-400">Last Month</span>
+            <span class="text-sm font-bold text-gray-900 dark:text-white">{{ prevMonthHours }} hrs</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Reports Chart Section - Enhanced -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mb-12 px-0">
+      <div class="lg:col-span-2">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 sm:p-8">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+            <div>
+              <h2 class="text-xl font-bold text-gray-900 dark:text-white flex items-center">
+                <i class="bi bi-graph-up-arrow text-blue-600 dark:text-blue-400 mr-2"></i>
+                Activity Overview
+              </h2>
+              <p class="text-gray-600 dark:text-gray-400 mt-1 text-sm">Track your daily ministry statistics</p>
+            </div>
+            <div class="flex items-center space-x-3">
+              <div class="flex items-center space-x-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+                <span class="text-sm text-gray-700 dark:text-gray-300 font-medium">Daily Reports</span>
+              </div>
+            </div>
+          </div>
+          <div class="bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 rounded-xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
             <app-chart [reportData]="allReports"></app-chart>
           </div>
         </div>
       </div>
 
-      <!-- Quick Stats -->
+      <!-- Enhanced Sidebar -->
       <div class="space-y-6">
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Monthly Summary</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+            <i class="bi bi-calendar-month text-indigo-600 dark:text-indigo-400 mr-2"></i>
+            Monthly Summary
+          </h3>
           <div class="space-y-4">
-            <div class="flex items-center justify-between">
-              <span class="text-gray-600">Current Month</span>
-              <span class="font-semibold text-gray-900">{{ monthlyHours }} hrs</span>
+            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <span class="text-sm text-gray-600 dark:text-gray-400">Current Month</span>
+              <span class="font-bold text-lg text-gray-900 dark:text-white">{{ monthlyHours }} hrs</span>
             </div>
-            <div class="flex items-center justify-between">
-              <span class="text-gray-600">Previous Month</span>
-              <span class="font-semibold text-gray-900">{{ prevMonthHours }} hrs</span>
+            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <span class="text-sm text-gray-600 dark:text-gray-400">Previous Month</span>
+              <span class="font-bold text-lg text-gray-900 dark:text-white">{{ prevMonthHours }} hrs</span>
             </div>
-            <hr class="border-gray-200">
-            <div class="flex items-center justify-between">
-              <span class="text-gray-600">Difference</span>
+            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Difference</span>
               <span 
-                class="font-semibold"
-                [ngClass]="monthlyHours - prevMonthHours >= 0 ? 'text-green-600' : 'text-red-600'"
+                class="font-bold text-lg flex items-center"
+                [ngClass]="monthlyHours - prevMonthHours >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'"
               >
+                <i [ngClass]="getTrendIcon()" class="mr-1"></i>
                 {{ monthlyHours - prevMonthHours >= 0 ? '+' : '' }}{{ monthlyHours - prevMonthHours }} hrs
               </span>
             </div>
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Activity Breakdown</h3>
-          <div class="space-y-3">
-            <div class="flex items-center justify-between">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+            <i class="bi bi-pie-chart text-emerald-600 dark:text-emerald-400 mr-2"></i>
+            Activity Breakdown
+          </h3>
+          <div class="space-y-4">
+            <div class="flex items-center justify-between p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
               <div class="flex items-center">
                 <div class="w-3 h-3 bg-emerald-500 rounded-full mr-3"></div>
-                <span class="text-gray-600 text-sm">Bible Studies</span>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Bible Studies</span>
               </div>
-              <span class="font-medium text-gray-900">{{ numberOfBibleStudies }}</span>
+              <span class="font-bold text-lg text-gray-900 dark:text-white">{{ numberOfBibleStudies }}</span>
             </div>
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
               <div class="flex items-center">
                 <div class="w-3 h-3 bg-amber-500 rounded-full mr-3"></div>
-                <span class="text-gray-600 text-sm">Return Visits</span>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Return Visits</span>
               </div>
-              <span class="font-medium text-gray-900">{{ numberOfReturnVisits }}</span>
+              <span class="font-bold text-lg text-gray-900 dark:text-white">{{ numberOfReturnVisits }}</span>
             </div>
           </div>
         </div>
@@ -361,3 +492,176 @@
     </div>
   </div>
 </div>
+
+<!-- Add Report Modal -->
+<ng-container *ngIf="showAddReportModal">
+  <app-modal>
+    <div class="w-full">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center space-x-2 min-w-0 flex-1">
+          <div class="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex-shrink-0">
+            <i class="bi bi-calendar-plus text-white text-base"></i>
+          </div>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-base font-bold text-gray-900 dark:text-white truncate">Add Report</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">Create a ministry service report for a specific date</p>
+          </div>
+        </div>
+        <button
+          (click)="closeAddReportModal()"
+          class="flex items-center justify-center w-8 h-8 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex-shrink-0 ml-2"
+          title="Close"
+        >
+          <i class="bi bi-x-lg text-xs"></i>
+        </button>
+      </div>
+
+      <!-- Report Form -->
+      <form (ngSubmit)="saveReport()" class="space-y-4">
+        <!-- Date Selection -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <i class="bi bi-calendar-event mr-1"></i>
+            Report Date *
+          </label>
+          <input
+            type="date"
+            [(ngModel)]="reportDate"
+            name="reportDate"
+            required
+            class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          />
+        </div>
+
+        <!-- Hours and Minutes -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <i class="bi bi-clock mr-1"></i>
+            Time Spent *
+          </label>
+          <div class="grid grid-cols-2 gap-3">
+            <!-- Hours -->
+            <div>
+              <label class="text-xs text-gray-600 dark:text-gray-400 mb-1 block">Hours</label>
+              <div class="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  (click)="decrementHours()"
+                  class="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors flex-shrink-0"
+                >
+                  <i class="bi bi-dash-lg text-sm"></i>
+                </button>
+                <input
+                  type="number"
+                  [(ngModel)]="reportHours"
+                  name="reportHours"
+                  min="0"
+                  class="w-full min-w-0 text-center p-1.5 sm:p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base sm:text-lg font-bold bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                />
+                <button
+                  type="button"
+                  (click)="incrementHours()"
+                  class="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex-shrink-0"
+                >
+                  <i class="bi bi-plus-lg text-sm"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Minutes -->
+            <div>
+              <label class="text-xs text-gray-600 dark:text-gray-400 mb-1 block">Minutes</label>
+              <div class="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  (click)="decrementMinutes()"
+                  class="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors flex-shrink-0"
+                >
+                  <i class="bi bi-dash-lg text-sm"></i>
+                </button>
+                <input
+                  type="number"
+                  [(ngModel)]="reportMinutes"
+                  name="reportMinutes"
+                  min="0"
+                  max="55"
+                  step="5"
+                  class="w-full min-w-0 text-center p-1.5 sm:p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base sm:text-lg font-bold bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                />
+                <button
+                  type="button"
+                  (click)="incrementMinutes()"
+                  class="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex-shrink-0"
+                >
+                  <i class="bi bi-plus-lg text-sm"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ministry Participation -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <i class="bi bi-people mr-1"></i>
+            Did you participate in the ministry? *
+          </label>
+          <select
+            [(ngModel)]="reportJoinedMinistry"
+            name="reportJoinedMinistry"
+            required
+            class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          >
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+
+        <!-- Notes -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <i class="bi bi-sticky mr-1"></i>
+            Notes <span class="text-gray-500 dark:text-gray-400">(Optional)</span>
+          </label>
+          <textarea
+            [(ngModel)]="reportNotes"
+            name="reportNotes"
+            rows="3"
+            class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none"
+            placeholder="Add any notes about your ministry activity..."
+          ></textarea>
+        </div>
+
+        <!-- Alert Messages -->
+        <app-alerts
+          *ngIf="reportAlertMessage"
+          [isSuccess]="reportSuccess"
+          [alertMessage]="reportAlertMessage"
+        ></app-alerts>
+
+        <!-- Modal Footer -->
+        <div class="flex justify-end gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
+          <button
+            type="button"
+            (click)="closeAddReportModal()"
+            class="px-3 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium text-sm"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            [disabled]="isSubmittingReport || !reportDate || (!reportHours && !reportMinutes) || !reportJoinedMinistry"
+            class="px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span
+              *ngIf="isSubmittingReport"
+              class="animate-spin rounded-full h-4 w-4 border-t-2 border-white inline-block mr-2"
+            ></span>
+            {{ isSubmittingReport ? 'Saving...' : 'Save Report' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </app-modal>
+</ng-container>

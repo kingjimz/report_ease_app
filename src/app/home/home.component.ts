@@ -1,4 +1,4 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { AuthService } from '../_services/auth.service';
 import { Router } from '@angular/router';
 import { CalendarComponent } from '../components/calendar/calendar.component';
@@ -13,6 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../_services/api.service';
 import { AlertsComponent } from '../components/alerts/alerts.component';
 import { UtilService } from '../_services/util.service';
+import { SettingsService } from '../_services/settings.service';
 
 @Component({
   selector: 'app-home',
@@ -32,11 +33,12 @@ import { UtilService } from '../_services/util.service';
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
   activeTab = 'dashboard';
   showTab = true;
   selectedTab: string = 'dashboard';
   showManualReportModal = false;
+  showOnboardingModal = false;
 
   // Manual report form fields
   reportDate = '';
@@ -50,11 +52,15 @@ export class HomeComponent {
   isPioneer = false;
   bibleStudies: any[] = [];
 
+  // Onboarding modal
+  onboardingPioneerChoice: boolean | null = null;
+
   constructor(
     private auth: AuthService,
     private route: Router,
     private api: ApiService,
     private util: UtilService,
+    private settingsService: SettingsService,
   ) {
     // Set default date to today
     const today = new Date();
@@ -62,6 +68,21 @@ export class HomeComponent {
 
     // Load Bible studies
     this.loadBibleStudies();
+  }
+
+  ngOnInit() {
+    // Check if onboarding has been completed
+    this.checkOnboarding();
+  }
+
+  checkOnboarding() {
+    const onboardingCompleted = localStorage.getItem('onboardingCompleted');
+    if (!onboardingCompleted) {
+      // Show onboarding modal after a short delay to ensure UI is ready
+      setTimeout(() => {
+        this.showOnboardingModal = true;
+      }, 500);
+    }
   }
 
   loadBibleStudies() {
@@ -185,6 +206,24 @@ export class HomeComponent {
       this.alertMessage = 'Error generating report. Please try again.';
     } finally {
       this.isSubmitting = false;
+    }
+  }
+
+  // Onboarding modal methods
+  selectPioneerStatus(isPioneer: boolean) {
+    this.onboardingPioneerChoice = isPioneer;
+  }
+
+  completeOnboarding() {
+    if (this.onboardingPioneerChoice !== null) {
+      // Set pioneer status based on user's choice
+      this.settingsService.setIsPioneer(this.onboardingPioneerChoice);
+      
+      // Mark onboarding as completed
+      localStorage.setItem('onboardingCompleted', 'true');
+      
+      // Close modal
+      this.showOnboardingModal = false;
     }
   }
 }

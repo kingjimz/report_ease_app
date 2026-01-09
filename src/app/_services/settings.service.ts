@@ -29,7 +29,7 @@ export class SettingsService {
       }
     }
     return {
-      isPioneer: false
+      isPioneer: false  // Default to false - will be set during onboarding
     };
   }
 
@@ -64,4 +64,7 @@ export class SettingsService {
     return this.getSettings().isPioneer;
   }
 }
+
+
+
 

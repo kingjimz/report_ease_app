@@ -4,11 +4,14 @@ import { ApiService } from '../_services/api.service';
 import { UtilService } from '../_services/util.service';
 import { SettingsService } from '../_services/settings.service';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ModalComponent } from '../components/modal/modal.component';
+import { AlertsComponent } from '../components/alerts/alerts.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [ChartComponent, CommonModule],
+  imports: [ChartComponent, CommonModule, FormsModule, ModalComponent, AlertsComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
@@ -45,6 +48,29 @@ export class DashboardComponent implements OnInit {
   serviceYearEnd = '';
   averageMonthlyHours = 0;
   projectedTotal = 0;
+  
+  // New properties for enhanced features
+  weeklyHours: number = 0;
+  dailyAverage: number = 0;
+  isOnTrack: boolean = true;
+  recommendationMessage: string = '';
+  
+  // Monthly goal properties
+  monthlyGoal: number = 50; // Default monthly goal
+  monthlyProgress: number = 0;
+  daysRemainingInMonth: number = 0;
+  recommendedDailyHours: number = 0;
+  
+  // Add Report Modal properties
+  showAddReportModal: boolean = false;
+  reportDate: string = '';
+  reportHours: number = 0;
+  reportMinutes: number = 0;
+  reportJoinedMinistry: string = 'yes';
+  reportNotes: string = '';
+  isSubmittingReport: boolean = false;
+  reportSuccess: boolean = false;
+  reportAlertMessage: string = '';
 
   constructor(
     public api: ApiService,
@@ -59,14 +85,155 @@ export class DashboardComponent implements OnInit {
     this.calculateServiceYear();
     this.loadUserSettings();
   }
+  
+  calculateWeeklyHours() {
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    
+    const weeklyReports = this.allReports.filter(report => {
+      if (!report.report_date) return false;
+      let reportDate: Date;
+      if (report.report_date.toDate) {
+        reportDate = report.report_date.toDate();
+      } else if (report.report_date.seconds) {
+        reportDate = new Date(report.report_date.seconds * 1000);
+      } else {
+        reportDate = new Date(report.report_date);
+      }
+      return reportDate >= weekAgo && reportDate <= now;
+    });
+    
+    this.weeklyHours = weeklyReports.reduce((total, report) => total + (report.hours || 0), 0);
+    this.dailyAverage = this.weeklyHours / 7;
+  }
+  
+  calculateMonthlyGoal() {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    // Calculate days remaining in current month
+    const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
+    const daysInMonth = lastDayOfMonth.getDate();
+    const currentDay = now.getDate();
+    this.daysRemainingInMonth = daysInMonth - currentDay + 1; // Include today
+    
+    // Set monthly goal based on pioneer status
+    if (this.showPioneerSection) {
+      // For pioneers, use the calculated recommended monthly hours to reach 600-hour goal
+      // This ensures they stay on track for the service year
+      const recommendedMonthly = this.getRecommendedMonthlyHours();
+      // Use recommended monthly, but ensure it's at least 50 (standard pioneer monthly goal)
+      // If they're ahead, it might be less, but we'll show the recommended amount
+      this.monthlyGoal = recommendedMonthly > 0 ? recommendedMonthly : 50;
+    } else {
+      // For regular publishers, encourage 15 hours per month
+      this.monthlyGoal = 15;
+    }
+    
+    // Calculate monthly progress percentage
+    this.monthlyProgress = this.monthlyGoal > 0 
+      ? Math.min(100, (this.monthlyHours / this.monthlyGoal) * 100) 
+      : 0;
+    
+    // Calculate recommended daily hours to meet goal
+    if (this.daysRemainingInMonth > 0) {
+      const hoursNeeded = Math.max(0, this.monthlyGoal - this.monthlyHours);
+      this.recommendedDailyHours = hoursNeeded / this.daysRemainingInMonth;
+    } else {
+      this.recommendedDailyHours = 0;
+    }
+  }
+  
+  getMonthlyGoalStatus(): string {
+    if (this.monthlyProgress >= 100) {
+      return 'Completed';
+    } else if (this.monthlyProgress >= 75) {
+      return 'On Track';
+    } else if (this.monthlyProgress >= 50) {
+      return 'Good Progress';
+    } else {
+      return 'Needs Focus';
+    }
+  }
+  
+  getMonthlyGoalColor(): string {
+    if (this.monthlyProgress >= 100) {
+      return 'from-green-500 to-emerald-600';
+    } else if (this.monthlyProgress >= 75) {
+      return 'from-blue-500 to-indigo-600';
+    } else if (this.monthlyProgress >= 50) {
+      return 'from-amber-500 to-orange-600';
+    } else {
+      return 'from-orange-500 to-red-600';
+    }
+  }
+  
+  generateRecommendation() {
+    if (!this.showPioneerSection) {
+      this.recommendationMessage = 'Keep up the great work in your ministry!';
+      this.isOnTrack = true;
+      return;
+    }
+    
+    const monthsRemaining = this.getMonthsRemaining();
+    const recommendedMonthly = this.getRecommendedMonthlyHours();
+    const currentMonthlyAvg = this.averageMonthlyHours;
+    
+    if (this.hoursRemaining <= 0) {
+      this.recommendationMessage = '🎉 Congratulations! You\'ve reached your yearly goal!';
+      this.isOnTrack = true;
+    } else if (currentMonthlyAvg >= recommendedMonthly * 0.9) {
+      this.recommendationMessage = `Great progress! You're on track to meet your goal.`;
+      this.isOnTrack = true;
+    } else {
+      const hoursNeeded = recommendedMonthly - currentMonthlyAvg;
+      this.recommendationMessage = `Aim for ${recommendedMonthly.toFixed(0)} hours/month to stay on track.`;
+      this.isOnTrack = false;
+    }
+  }
+  
+  getTrendPercentage(): number {
+    if (this.prevMonthHours === 0) return 0;
+    return ((this.monthlyHours - this.prevMonthHours) / this.prevMonthHours) * 100;
+  }
+  
+  getTrendIcon(): string {
+    const trend = this.monthlyHours - this.prevMonthHours;
+    if (trend > 0) return 'bi-arrow-up';
+    if (trend < 0) return 'bi-arrow-down';
+    return 'bi-dash';
+  }
+  
+  getTrendColor(): string {
+    const trend = this.monthlyHours - this.prevMonthHours;
+    if (trend > 0) return 'text-green-600';
+    if (trend < 0) return 'text-red-600';
+    return 'text-gray-600';
+  }
 
   loadUserSettings() {
     this.settingsService.settings$.subscribe(settings => {
+      this.isPioneer = settings.isPioneer;
+      // Show section if user is pioneer (synced with configure modal toggle)
       this.showPioneerSection = settings.isPioneer;
       if (this.showPioneerSection && this.allReports.length > 0) {
         this.calculatePioneerYearHours();
       }
+      // Immediately recalculate monthly goal and status when settings change
+      this.calculateMonthlyGoal();
+      this.generateRecommendation();
     });
+  }
+
+  toggleHidePioneerSection() {
+    // Toggle pioneer status in settings (this will sync with configure modal)
+    const newPioneerStatus = !this.isPioneer;
+    this.settingsService.setIsPioneer(newPioneerStatus);
+    // Immediately update calculations and status
+    this.calculateMonthlyGoal();
+    this.generateRecommendation();
+    // The loadUserSettings subscription will handle updating showPioneerSection
   }
 
   async loadBibLeStudies() {
@@ -100,6 +267,9 @@ export class DashboardComponent implements OnInit {
         this.prevMonthHours =
           this.reports.length > 1 ? this.reports[1].total_hours || 0 : 0;
         this.calculatePioneerYearHours();
+        this.calculateWeeklyHours();
+        this.calculateMonthlyGoal();
+        this.generateRecommendation();
       })
       .catch((error) => {
         console.error('Error fetching reports:', error);
@@ -219,6 +389,11 @@ export class DashboardComponent implements OnInit {
     const monthsElapsed = this.getMonthsElapsedInServiceYear();
     this.averageMonthlyHours = monthsElapsed > 0 ? this.pioneerYearHours / monthsElapsed : 0;
     this.projectedTotal = this.averageMonthlyHours * 12;
+    
+    // Calculate additional metrics (order matters - monthly goal needs hoursRemaining)
+    this.calculateWeeklyHours();
+    this.calculateMonthlyGoal(); // This uses getRecommendedMonthlyHours() which needs hoursRemaining
+    this.generateRecommendation();
   }
 
   /**
@@ -258,10 +433,129 @@ export class DashboardComponent implements OnInit {
 
   /**
    * Get recommended monthly hours to meet goal
+   * This calculates how many hours per month are needed for the remaining months
+   * to reach the 600-hour pioneer goal by the end of the service year
    */
   getRecommendedMonthlyHours(): number {
+    if (!this.showPioneerSection) {
+      // For non-pioneers, return standard monthly goal
+      return 12;
+    }
+    
     const monthsRemaining = this.getMonthsRemaining();
-    if (monthsRemaining === 0) return 0;
-    return Math.ceil(this.hoursRemaining / monthsRemaining);
+    if (monthsRemaining === 0) {
+      // Service year ended or no months remaining
+      return 0;
+    }
+    
+    // Calculate hours needed per month to reach 600-hour goal
+    // This ensures they stay on track for the entire service year
+    const recommendedMonthly = Math.ceil(this.hoursRemaining / monthsRemaining);
+    
+    // Ensure minimum of 50 hours (standard pioneer monthly requirement)
+    // But if they're ahead, it might be less
+    return Math.max(0, recommendedMonthly);
+  }
+  
+  // Helper method for Math.abs in template
+  Math = Math;
+  
+  // Add Report Modal Methods
+  openAddReportModal() {
+    // Set default date to today
+    const today = new Date();
+    this.reportDate = today.toISOString().split('T')[0];
+    this.reportHours = 0;
+    this.reportMinutes = 0;
+    this.reportJoinedMinistry = 'yes';
+    this.reportNotes = '';
+    this.reportSuccess = false;
+    this.reportAlertMessage = '';
+    this.showAddReportModal = true;
+  }
+  
+  closeAddReportModal() {
+    this.showAddReportModal = false;
+    this.reportDate = '';
+    this.reportHours = 0;
+    this.reportMinutes = 0;
+    this.reportJoinedMinistry = 'yes';
+    this.reportNotes = '';
+    this.reportSuccess = false;
+    this.reportAlertMessage = '';
+  }
+  
+  incrementHours() {
+    this.reportHours = (this.reportHours || 0) + 1;
+  }
+  
+  decrementHours() {
+    this.reportHours = Math.max(0, (this.reportHours || 0) - 1);
+  }
+  
+  incrementMinutes() {
+    this.reportMinutes = Math.min(55, (this.reportMinutes || 0) + 5);
+  }
+  
+  decrementMinutes() {
+    this.reportMinutes = Math.max(0, (this.reportMinutes || 0) - 5);
+  }
+  
+  async saveReport() {
+    if (!this.reportDate) {
+      this.reportSuccess = false;
+      this.reportAlertMessage = 'Please select a date for the report.';
+      return;
+    }
+    
+    if (!this.reportHours && !this.reportMinutes) {
+      this.reportSuccess = false;
+      this.reportAlertMessage = 'Please enter at least some hours or minutes.';
+      return;
+    }
+    
+    if (!this.reportJoinedMinistry) {
+      this.reportSuccess = false;
+      this.reportAlertMessage = 'Please indicate if you participated in the ministry.';
+      return;
+    }
+    
+    this.isSubmittingReport = true;
+    
+    try {
+      // Convert date string to Date object
+      const selectedDate = new Date(this.reportDate);
+      // Set time to start of day to avoid timezone issues
+      selectedDate.setHours(0, 0, 0, 0);
+      
+      const report = {
+        hours: this.reportHours || 0,
+        minutes: this.reportMinutes || 0,
+        is_joined_ministry: this.reportJoinedMinistry,
+        notes: this.reportNotes || '',
+        report_date: selectedDate,
+        created_at: new Date(),
+        updated_at: new Date(),
+      };
+      
+      await this.api.createReport(report);
+      
+      this.reportSuccess = true;
+      this.reportAlertMessage = 'Report added successfully! It will appear on your calendar.';
+      
+      // Reload reports to update dashboard
+      await this.loadReports();
+      
+      // Close modal after 1.5 seconds
+      setTimeout(() => {
+        this.closeAddReportModal();
+      }, 1500);
+    } catch (error) {
+      console.error('Error saving report:', error);
+      this.reportSuccess = false;
+      this.reportAlertMessage = 'Error saving report. Please try again.';
+    } finally {
+      this.isSubmittingReport = false;
+    }
   }
 }

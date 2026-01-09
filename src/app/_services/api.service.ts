@@ -226,6 +226,28 @@ export class ApiService {
     }
   }
 
+  async deleteReport(reportId: string) {
+    try {
+      const user = this.auth.currentUser;
+      if (!user) throw new Error('User not logged in');
+      if (!reportId) throw new Error('Report ID is required');
+
+      const reportDoc = doc(
+        this.fireStore,
+        'users',
+        user.uid,
+        'reports',
+        reportId,
+      );
+
+      await deleteDoc(reportDoc);
+      // Real-time listener will update automatically
+    } catch (error) {
+      console.error('Error deleting report:', error);
+      throw error;
+    }
+  }
+
   async addStudy(study: any) {
     try {
       const user = this.auth.currentUser;

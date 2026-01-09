@@ -1,0 +1,21 @@
+.chart-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.chart-wrapper canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Chart hover effects */
+.chart-wrapper:hover {
+  cursor: pointer;
+}
+
+/* Responsive chart container */
+@media (max-width: 768px) {
+  .chart-wrapper {
+    padding: 0.5rem;
+  }
+}

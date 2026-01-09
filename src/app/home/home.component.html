@@ -219,3 +219,96 @@
     </div>
   </app-modal>
 </ng-container>
+
+<!-- Onboarding Modal -->
+<ng-container *ngIf="showOnboardingModal">
+  <app-modal>
+    <div class="w-full max-w-md mx-auto">
+      <!-- Modal Header -->
+      <div class="text-center mb-6">
+        <div class="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl mx-auto mb-4">
+          <i class="bi bi-award text-white text-3xl"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Welcome to Report Ease!</h2>
+        <p class="text-gray-600 dark:text-gray-400">Let's set up your profile to get started</p>
+      </div>
+
+      <!-- Question -->
+      <div class="mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
+          Are you a pioneer?
+        </h3>
+        
+        <!-- Pioneer Options -->
+        <div class="space-y-3">
+          <!-- Yes Option -->
+          <button
+            (click)="selectPioneerStatus(true)"
+            class="w-full p-4 rounded-xl border-2 transition-all text-left hover:border-amber-400 dark:border-gray-600"
+            [ngClass]="{
+              'border-amber-500 bg-amber-50 dark:bg-amber-900/20': onboardingPioneerChoice === true,
+              'border-gray-300': onboardingPioneerChoice !== true
+            }"
+          >
+            <div class="flex items-center space-x-3">
+              <div class="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex-shrink-0">
+                <i class="bi bi-award text-white text-xl"></i>
+              </div>
+              <div class="flex-1">
+                <p class="font-semibold text-gray-900 dark:text-white">Yes, I'm a pioneer</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Track your 600-hour annual goal</p>
+              </div>
+              <i 
+                *ngIf="onboardingPioneerChoice === true"
+                class="bi bi-check-circle-fill text-amber-500 text-xl"
+              ></i>
+            </div>
+          </button>
+
+          <!-- No Option -->
+          <button
+            (click)="selectPioneerStatus(false)"
+            class="w-full p-4 rounded-xl border-2 transition-all text-left hover:border-blue-400 dark:border-gray-600"
+            [ngClass]="{
+              'border-blue-500 bg-blue-50 dark:bg-blue-900/20': onboardingPioneerChoice === false,
+              'border-gray-300': onboardingPioneerChoice !== false
+            }"
+          >
+            <div class="flex items-center space-x-3">
+              <div class="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex-shrink-0">
+                <i class="bi bi-person text-white text-xl"></i>
+              </div>
+              <div class="flex-1">
+                <p class="font-semibold text-gray-900 dark:text-white">No, I'm a publisher</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Track your monthly service hours</p>
+              </div>
+              <i 
+                *ngIf="onboardingPioneerChoice === false"
+                class="bi bi-check-circle-fill text-blue-500 text-xl"
+              ></i>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Info Message -->
+      <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+        <p class="text-sm text-gray-600 dark:text-gray-400 text-center">
+          <i class="bi bi-info-circle mr-1"></i>
+          You can change this setting anytime in the Configure menu
+        </p>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex justify-end">
+        <button
+          (click)="completeOnboarding()"
+          [disabled]="onboardingPioneerChoice === null"
+          class="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Continue
+        </button>
+      </div>
+    </div>
+  </app-modal>
+</ng-container>
