@@ -247,6 +247,36 @@
   background-size: 800px 104px;
 }
 
+/* Ensure all form inputs have consistent width, especially on mobile */
+:host ::ng-deep input[type="text"],
+:host ::ng-deep input[type="datetime-local"],
+:host ::ng-deep input[type="date"],
+:host ::ng-deep input[type="time"],
+:host ::ng-deep select,
+:host ::ng-deep textarea {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Specifically target datetime-local inputs to ensure consistent width */
+:host ::ng-deep input[type="datetime-local"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+}
+
+/* Ensure input containers don't overflow */
+:host ::ng-deep .min-w-0 {
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

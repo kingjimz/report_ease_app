@@ -738,7 +738,7 @@
                 Basic Information
               </h4>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                <div class="min-w-0 w-full">
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     <i class="bi bi-person mr-1"></i>
                     Name *
@@ -748,11 +748,12 @@
                     [(ngModel)]="bible_study"
                     name="bible_study"
                     required
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
+                    class="w-full min-w-0 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
+                    style="box-sizing: border-box; width: 100%;"
                     placeholder="Enter person's name"
                   />
                 </div>
-                <div>
+                <div class="min-w-0 w-full">
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     <i class="bi bi-tag mr-1"></i>
                     Type *
@@ -761,7 +762,8 @@
                     [(ngModel)]="type"
                     name="type"
                     required
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
+                    class="w-full min-w-0 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
+                    style="box-sizing: border-box; width: 100%;"
                   >
                     <option value="rv">Return Visit</option>
                     <option value="bs">Bible Study</option>
@@ -777,7 +779,7 @@
                 Location & Next Schedule
               </h4>
               <div class="space-y-4">
-                <div class="min-w-0">
+                <div class="min-w-0 w-full">
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     <i class="bi bi-geo-alt mr-1"></i>
                     Address *
@@ -788,10 +790,11 @@
                     required
                     rows="2"
                     class="w-full min-w-0 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm resize-none"
+                    style="box-sizing: border-box; width: 100%;"
                     placeholder="Enter the address"
                   ></textarea>
                 </div>
-                <div class="min-w-0">
+                <div class="min-w-0 w-full">
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     <i class="bi bi-clock mr-1"></i>
                     Next Schedule *
@@ -802,7 +805,7 @@
                     name="schedule"
                     required
                     class="w-full min-w-0 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
-                    style="max-width: 100%; box-sizing: border-box;"
+                    style="box-sizing: border-box; width: 100%; max-width: 100%;"
                   />
                 </div>
               </div>
@@ -814,7 +817,7 @@
                 <i class="bi bi-journal-text text-emerald-600 mr-2"></i>
                 Study Details
               </h4>
-              <div class="min-w-0">
+              <div class="min-w-0 w-full">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   <i class="bi bi-book mr-1"></i>
                   Next Lesson/Topic *
@@ -825,6 +828,7 @@
                   required
                   rows="3"
                   class="w-full min-w-0 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm resize-none"
+                  style="box-sizing: border-box; width: 100%;"
                   placeholder="Enter the next lesson or topic to discuss"
                 ></textarea>
               </div>
