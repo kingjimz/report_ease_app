@@ -5,6 +5,7 @@ import { ApiService } from '../../_services/api.service';
 import { UtilService } from '../../_services/util.service';
 import { LoaderComponent } from '../loader/loader.component';
 import { ModalService } from '../../_services/modal.service';
+import { Subscription } from 'rxjs';
 
 interface CalendarDay {
   date: Date;
@@ -58,6 +59,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
   public Math = Math;
   showDeleteConfirmModal = false;
   isDeleting = false;
+  private reportsSubscription?: Subscription;
+
   constructor(
     private api: ApiService,
     private util: UtilService,
@@ -68,12 +71,23 @@ export class CalendarComponent implements OnInit, OnDestroy {
     this.generateCalendar();
     this.generateWeekDays();
     this.loadReports();
+    
+    // Subscribe to reports$ for immediate updates when reports are added offline
+    this.reportsSubscription = this.api.reports$.subscribe((reports) => {
+      if (reports && reports.length > 0) {
+        this.updateEventsFromReports(reports);
+      }
+    });
   }
 
   ngOnDestroy(): void {
     // Clean up modal state if component is destroyed with modals open
     if (this.selectedDate || this.showDeleteConfirmModal) {
       this.modalService.closeModal();
+    }
+    // Clean up subscription
+    if (this.reportsSubscription) {
+      this.reportsSubscription.unsubscribe();
     }
   }
 
@@ -214,25 +228,47 @@ export class CalendarComponent implements OnInit, OnDestroy {
       const data = await this.api.getReports();
       this.reports = this.util.aggregateReportsByMonth(data);
       this.api.updateAggregatedData(this.reports);
-
-      this.events = data.map((report: any) => {
-        return {
-          title: report.hours + ' Hours',
-          start: new Date(report.report_date.seconds * 1000),
-          color: { primary: '#008000', secondary: '#90EE90' },
-          meta: {
-            hours: report.hours || 0,
-            minutes: report.minutes || 0,
-            report_id: report.id,
-            notes: report.notes,
-            joined_ministry: report.is_joined_ministry,
-          },
-        };
-      });
+      this.updateEventsFromReports(data);
     } catch (error) {
       console.error('Error fetching reports:', error);
     }
     this.isLoading = false;
+  }
+
+  private updateEventsFromReports(reports: any[]) {
+    this.events = reports.map((report: any) => {
+      // Handle different date formats: Firestore timestamp, Date object, or temp ID
+      let reportDate: Date;
+      if (report.report_date?.seconds) {
+        // Firestore timestamp
+        reportDate = new Date(report.report_date.seconds * 1000);
+      } else if (report.report_date?.toDate) {
+        // Firestore timestamp with toDate method
+        reportDate = report.report_date.toDate();
+      } else if (report.report_date instanceof Date) {
+        // Date object
+        reportDate = report.report_date;
+      } else if (typeof report.report_date === 'string') {
+        // String date
+        reportDate = new Date(report.report_date);
+      } else {
+        // Fallback to current date if invalid
+        reportDate = new Date();
+      }
+
+      return {
+        title: (report.hours || 0) + ' Hours',
+        start: reportDate,
+        color: { primary: '#008000', secondary: '#90EE90' },
+        meta: {
+          hours: report.hours || 0,
+          minutes: report.minutes || 0,
+          report_id: report.id,
+          notes: report.notes || '',
+          joined_ministry: report.is_joined_ministry || '',
+        },
+      };
+    });
   }
 
   async saveReport() {
@@ -321,10 +357,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
 
   closeDeleteConfirmModal() {
     this.showDeleteConfirmModal = false;
-    // Only close modal service if the main modal is also closed
-    if (!this.selectedDate) {
-      this.modalService.closeModal();
-    }
+    // Close the delete confirmation modal (main modal remains open)
+    this.modalService.closeModal();
   }
 
   async confirmDeleteReport() {
@@ -338,7 +372,9 @@ export class CalendarComponent implements OnInit, OnDestroy {
       await this.api.deleteReport(this.report_id);
       this.showDeleteConfirmModal = false;
       this.selectedDate = null;
-      this.modalService.closeModal();
+      // Close both modals: delete confirmation modal and main modal
+      this.modalService.closeModal(); // Close delete confirmation modal
+      this.modalService.closeModal(); // Close main modal
       await this.loadReports();
       this.reInitializeVariables();
     } catch (error) {

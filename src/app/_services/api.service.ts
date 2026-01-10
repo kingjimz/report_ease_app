@@ -245,11 +245,20 @@ export class ApiService {
       // If offline, queue the operation
       if (!this.networkService.isOnline) {
         await this.offlineStorage.queueOperation('create', 'reports', report);
-        // Update local state optimistically
+        // Update local state optimistically with properly formatted report
+        const tempId = `temp_${Date.now()}`;
+        const tempReport = {
+          ...report,
+          id: tempId,
+          // Ensure report_date is properly formatted for calendar display
+          report_date: report.report_date instanceof Date 
+            ? { seconds: Math.floor(report.report_date.getTime() / 1000) }
+            : report.report_date
+        };
         const currentReports = this.reportSignal();
-        this.reportSignal.set([...currentReports, { ...report, id: `temp_${Date.now()}` }]);
-        this.reportsSubject.next([...currentReports, { ...report, id: `temp_${Date.now()}` }]);
-        console.log('Report queued for sync when online');
+        this.reportSignal.set([...currentReports, tempReport]);
+        this.reportsSubject.next([...currentReports, tempReport]);
+        console.log('Report queued for sync when online and added to calendar');
         return;
       }
 

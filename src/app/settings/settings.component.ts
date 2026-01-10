@@ -84,10 +84,8 @@ export class SettingsComponent implements OnDestroy {
   closeDeleteConfirm() {
     this.showDeleteConfirm = false;
     this.goalToDelete = null;
-    // Only close modal service if goal modal is also closed
-    if (!this.showGoalModal) {
-      this.modalService.closeModal();
-    }
+    // Always close the delete confirmation modal
+    this.modalService.closeModal();
   }
 
   deleteGoal(goal: any) {
@@ -197,10 +195,8 @@ export class SettingsComponent implements OnDestroy {
     this.showGoalModal = false;
     this.goalSelected = null;
     this.resetForm();
-    // Only close modal service if delete confirm is also closed
-    if (!this.showDeleteConfirm) {
-      this.modalService.closeModal();
-    }
+    // Always close the goal modal
+    this.modalService.closeModal();
   }
 
   resetForm() {

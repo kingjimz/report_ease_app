@@ -1,4 +1,4 @@
-import { Component, Signal, computed, OnInit } from '@angular/core';
+import { Component, Signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { ApiService } from '../../_services/api.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -6,6 +6,7 @@ import { UtilService } from '../../_services/util.service';
 import { ModalComponent } from '../modal/modal.component';
 import { LoaderComponent } from '../loader/loader.component';
 import { AlertsComponent } from '../alerts/alerts.component';
+import { ModalService } from '../../_services/modal.service';
 
 @Component({
   selector: 'app-reports',
@@ -20,7 +21,7 @@ import { AlertsComponent } from '../alerts/alerts.component';
   templateUrl: './reports.component.html',
   styleUrl: './reports.component.css',
 })
-export class ReportsComponent {
+export class ReportsComponent implements OnDestroy {
   reports: any[] = [];
   paginatedReports: any[] = [];
 
@@ -65,6 +66,7 @@ export class ReportsComponent {
   constructor(
     public api: ApiService,
     public util: UtilService,
+    private modalService: ModalService,
   ) {}
 
   ngOnInit() {
@@ -313,11 +315,13 @@ export class ReportsComponent {
     this.studyDelete = true;
     this.studySelected = study;
     this.isCopied = false;
+    this.modalService.openModal();
   }
 
   async confirmDelete() {
     this.studyDelete = false;
     this.isCopied = false;
+    this.modalService.closeModal();
     if (!this.studySelected?.id) return;
 
     const study = this.studySelected;
@@ -348,6 +352,7 @@ export class ReportsComponent {
   closeDeleteModal() {
     this.studyDelete = false;
     this.isCopied = false;
+    this.modalService.closeModal();
   }
 
   updateStudy(study: any) {
@@ -538,5 +543,12 @@ export class ReportsComponent {
       'border-l-4 border-orange-500',
     ];
     return colors[index % colors.length];
+  }
+
+  ngOnDestroy(): void {
+    // Clean up modal state if component is destroyed with modals open
+    if (this.studyDelete) {
+      this.modalService.closeModal();
+    }
   }
 }
