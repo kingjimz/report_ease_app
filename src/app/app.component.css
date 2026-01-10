@@ -17,6 +17,10 @@
   animation: slideDown 0.3s ease-out;
 }
 
+.offline-content-padding {
+  padding-top: 56px; /* Account for offline banner height */
+}
+
 .offline-content {
   display: flex;
   align-items: center;

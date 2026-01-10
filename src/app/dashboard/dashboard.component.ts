@@ -79,11 +79,61 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.calculateServiceYear();
+    this.loadUserSettings();
+    
+    // Subscribe to real-time data streams (works offline with Firestore cache)
+    this.subscribeToDataStreams();
+    
+    // Also try to load initial data (will use cache if offline)
     this.loadReports();
     this.loadBibLeStudies();
     this.loadGoals();
-    this.calculateServiceYear();
-    this.loadUserSettings();
+  }
+  
+  subscribeToDataStreams() {
+    // Subscribe to reports stream (updates in real-time, works offline)
+    this.api.reports$.subscribe((reports) => {
+      if (reports && reports.length >= 0) {
+        this.allReports = reports;
+        this.reports = this.util.aggregateReportsByMonth(reports);
+        this.api.updateAggregatedData(this.reports);
+        this.monthlyHours =
+          this.reports.length > 0 ? this.reports[0].total_hours || 0 : 0;
+        this.prevMonthHours =
+          this.reports.length > 1 ? this.reports[1].total_hours || 0 : 0;
+        this.calculatePioneerYearHours();
+        this.calculateWeeklyHours();
+        this.calculateMonthlyGoal();
+        this.generateRecommendation();
+        this.loading = false;
+      }
+    });
+    
+    // Subscribe to bible studies stream
+    this.api.bibleStudies$.subscribe((studies) => {
+      if (studies && studies.length >= 0) {
+        this.bibleStudies = studies;
+        this.api.updateBibleStudies(studies);
+        this.numberOfBibleStudies = this.bibleStudies.filter(
+          (study) => study.type === 'bs',
+        ).length;
+        this.numberOfReturnVisits = this.bibleStudies.filter(
+          (study) => study.type === 'rv',
+        ).length;
+        this.loading = false;
+      }
+    });
+    
+    // Subscribe to goals stream
+    this.api.goals$.subscribe((goals) => {
+      if (goals && goals.length >= 0) {
+        this.goals = goals;
+        this.randomizeGoals(this.goals);
+        this.api.notifyGoalChange(goals);
+        this.loading = false;
+      }
+    });
   }
   
   calculateWeeklyHours() {
@@ -237,9 +287,9 @@ export class DashboardComponent implements OnInit {
   }
 
   async loadBibLeStudies() {
-    await this.api
-      .getBibleStudies()
-      .then((data) => {
+    try {
+      const data = await this.api.getBibleStudies();
+      if (data) {
         this.bibleStudies = data;
         this.api.updateBibleStudies(data);
         this.numberOfBibleStudies = this.bibleStudies.filter(
@@ -248,16 +298,18 @@ export class DashboardComponent implements OnInit {
         this.numberOfReturnVisits = this.bibleStudies.filter(
           (study) => study.type === 'rv',
         ).length;
-      })
-      .catch((error) => {
-        console.error('Error fetching Bible studies:', error);
-      });
+      }
+      this.loading = false;
+    } catch (error) {
+      console.error('Error fetching Bible studies:', error);
+      this.loading = false; // Still set loading to false even on error
+    }
   }
 
   async loadReports() {
-    await this.api
-      .getReports()
-      .then((data) => {
+    try {
+      const data = await this.api.getReports();
+      if (data) {
         this.allReports = data;
         this.reports = data;
         this.reports = this.util.aggregateReportsByMonth(data);
@@ -270,23 +322,27 @@ export class DashboardComponent implements OnInit {
         this.calculateWeeklyHours();
         this.calculateMonthlyGoal();
         this.generateRecommendation();
-      })
-      .catch((error) => {
-        console.error('Error fetching reports:', error);
-      });
+      }
+      this.loading = false;
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+      this.loading = false; // Still set loading to false even on error
+    }
   }
 
-  loadGoals() {
-    this.api
-      .getGoals()
-      .then((goals) => {
+  async loadGoals() {
+    try {
+      const goals = await this.api.getGoals();
+      if (goals) {
         this.goals = goals;
         this.randomizeGoals(this.goals);
         this.api.notifyGoalChange(goals);
-      })
-      .catch((error) => {
-        console.error('Error loading goals:', error);
-      });
+      }
+      this.loading = false;
+    } catch (error) {
+      console.error('Error loading goals:', error);
+      this.loading = false; // Still set loading to false even on error
+    }
   }
 
   shuffle(array: any[]) {

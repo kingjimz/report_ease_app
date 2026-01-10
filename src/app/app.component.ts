@@ -44,9 +44,13 @@ export class AppComponent implements OnInit, OnDestroy {
     onAuthStateChanged(this.auth, (user) => {
       if (user) {
         this.router.navigateByUrl('/');
+        // Load Bible studies (will use cache if offline)
         this.loadBibleStudies();
       } else {
-        this.router.navigateByUrl('/login');
+        // Only redirect to login if online (offline users should stay on current page)
+        if (this.networkService.isOnline) {
+          this.router.navigateByUrl('/login');
+        }
       }
     });
   }

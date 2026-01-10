@@ -59,6 +59,10 @@ export class ApiService {
         if (this.networkService.isOnline) {
           this.syncQueuedOperations();
         }
+        // If offline, try to load from cache immediately
+        if (!this.networkService.isOnline) {
+          this.loadCachedDataOnInit();
+        }
       } else {
         this.cleanupListeners();
       }
@@ -70,6 +74,35 @@ export class ApiService {
         this.syncQueuedOperations();
       }
     });
+  }
+  
+  // Load cached data when user is offline on initialization
+  private async loadCachedDataOnInit() {
+    const user = this.auth.currentUser;
+    if (!user) return;
+    
+    try {
+      // Try to load from cache and update signals/subjects
+      const cachedReports = await this.offlineStorage.getCachedData(`reports_${user.uid}`);
+      if (cachedReports && cachedReports.length >= 0) {
+        this.reportSignal.set(cachedReports);
+        this.reportsSubject.next(cachedReports);
+      }
+      
+      const cachedStudies = await this.offlineStorage.getCachedData(`bibleStudies_${user.uid}`);
+      if (cachedStudies && cachedStudies.length >= 0) {
+        this.bibleStudySignal.set(cachedStudies);
+        this.bibleStudiesSubject.next(cachedStudies);
+      }
+      
+      const cachedGoals = await this.offlineStorage.getCachedData(`goals_${user.uid}`);
+      if (cachedGoals && cachedGoals.length >= 0) {
+        this.goalsSignal.set(cachedGoals);
+        this.goalsSubject.next(cachedGoals);
+      }
+    } catch (error) {
+      console.error('Error loading cached data on init:', error);
+    }
   }
 
   private setupRealtimeListeners() {

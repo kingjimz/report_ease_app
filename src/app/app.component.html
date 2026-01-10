@@ -5,4 +5,6 @@
     <span class="offline-text">You're offline. Changes will sync when you're back online.</span>
   </div>
 </div>
-<router-outlet></router-outlet>
+<div [class.offline-content-padding]="!isOnline">
+  <router-outlet></router-outlet>
+</div>
