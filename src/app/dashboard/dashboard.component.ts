@@ -114,7 +114,8 @@ export class DashboardComponent implements OnInit {
     this.api.bibleStudies$.subscribe((studies) => {
       if (studies && studies.length >= 0) {
         this.bibleStudies = studies;
-        this.api.updateBibleStudies(studies);
+        // Don't call updateBibleStudies here - it would create an infinite loop
+        // The data is already coming from the subject
         this.numberOfBibleStudies = this.bibleStudies.filter(
           (study) => study.type === 'bs',
         ).length;
@@ -130,7 +131,8 @@ export class DashboardComponent implements OnInit {
       if (goals && goals.length >= 0) {
         this.goals = goals;
         this.randomizeGoals(this.goals);
-        this.api.notifyGoalChange(goals);
+        // Don't call notifyGoalChange here - it would create an infinite loop
+        // The data is already coming from the subject
         this.loading = false;
       }
     });
@@ -291,7 +293,8 @@ export class DashboardComponent implements OnInit {
       const data = await this.api.getBibleStudies();
       if (data) {
         this.bibleStudies = data;
-        this.api.updateBibleStudies(data);
+        // Don't call updateBibleStudies here - the real-time listener will handle updates
+        // Calling it would create a loop since we're also subscribed to bibleStudies$
         this.numberOfBibleStudies = this.bibleStudies.filter(
           (study) => study.type === 'bs',
         ).length;
@@ -336,7 +339,8 @@ export class DashboardComponent implements OnInit {
       if (goals) {
         this.goals = goals;
         this.randomizeGoals(this.goals);
-        this.api.notifyGoalChange(goals);
+        // Don't call notifyGoalChange here - the real-time listener will handle updates
+        // Calling it could create a loop since we're also subscribed to goals$
       }
       this.loading = false;
     } catch (error) {
