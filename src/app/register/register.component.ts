@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../_services/auth.service';
 import { RouterLink } from '@angular/router';
+import { ThemeService } from '../services/theme.service';
 
 @Component({
   selector: 'app-register',
@@ -11,13 +12,22 @@ import { RouterLink } from '@angular/router';
   templateUrl: './register.component.html',
   styleUrl: './register.component.css',
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnInit {
   email = '';
   password = '';
   confirmPassword = '';
   errorMessage = '';
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private themeService: ThemeService,
+  ) {}
+
+  ngOnInit(): void {
+    // Ensure theme is applied on component initialization
+    const isDark = this.themeService.isDarkMode();
+    this.themeService.setTheme(isDark);
+  }
 
   signUp() {
     if (this.password !== this.confirmPassword) {

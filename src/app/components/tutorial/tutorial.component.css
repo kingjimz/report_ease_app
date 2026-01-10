@@ -1,0 +1,56 @@
+/* Tutorial Component Styles */
+.tutorial-modal {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Dark mode support */
+.dark .tutorial-modal {
+  background-color: var(--card-bg, #1f2937);
+}
+
+.dark .text-gray-900 {
+  color: var(--text-primary, #f9fafb);
+}
+
+.dark .text-gray-600,
+.dark .text-gray-400 {
+  color: var(--text-secondary, #d1d5db);
+}
+
+.dark .bg-gray-100 {
+  background-color: var(--bg-tertiary, #374151);
+}
+
+.dark .bg-gray-200 {
+  background-color: var(--bg-tertiary, #4b5563);
+}
+
+.dark .hover\:bg-gray-200:hover {
+  background-color: var(--bg-tertiary, #4b5563);
+}
+
+.dark .hover\:bg-gray-600:hover {
+  background-color: var(--bg-tertiary, #4b5563);
+}
+
+/* Ensure buttons are visible in dark mode */
+.dark button {
+  color: inherit;
+}
+
+/* Progress bar animation */
+.bg-gradient-to-r {
+  transition: width 0.3s ease-out;
+}
+

@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../_services/api.service';
 import { AlertsComponent } from '../components/alerts/alerts.component';
+import { ModalService } from '../_services/modal.service';
 
 @Component({
   selector: 'app-settings',
@@ -11,7 +12,7 @@ import { AlertsComponent } from '../components/alerts/alerts.component';
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css',
 })
-export class SettingsComponent {
+export class SettingsComponent implements OnDestroy {
   target_date = '';
   category = '';
   goal_title = '';
@@ -28,7 +29,10 @@ export class SettingsComponent {
   // Expose Math to template
   Math = Math;
 
-  constructor(public api: ApiService) {
+  constructor(
+    public api: ApiService,
+    private modalService: ModalService,
+  ) {
     this.loadGoals();
   }
 
@@ -46,6 +50,7 @@ export class SettingsComponent {
         .then(() => {
           this.resetForm();
           this.showGoalModal = false;
+          this.modalService.closeModal();
           this.loadGoals();
         })
         .catch((error) => {
@@ -66,13 +71,22 @@ export class SettingsComponent {
   openDeleteConfirm(goal: any) {
     this.goalToDelete = goal;
     this.showDeleteConfirm = true;
+    this.modalService.openModal();
   }
 
   confirmDelete() {
     if (this.goalToDelete) {
       this.deleteGoal(this.goalToDelete);
-      this.showDeleteConfirm = false;
-      this.goalToDelete = null;
+      this.closeDeleteConfirm();
+    }
+  }
+
+  closeDeleteConfirm() {
+    this.showDeleteConfirm = false;
+    this.goalToDelete = null;
+    // Only close modal service if goal modal is also closed
+    if (!this.showGoalModal) {
+      this.modalService.closeModal();
     }
   }
 
@@ -144,6 +158,7 @@ export class SettingsComponent {
     this.goal_description = goal.goal_description || '';
     this.goalSelected = goal;
     this.showGoalModal = true;
+    this.modalService.openModal();
   }
 
   async updateGoal() {
@@ -163,11 +178,29 @@ export class SettingsComponent {
         this.resetForm();
         this.showGoalModal = false;
         this.goalSelected = null;
+        this.modalService.closeModal();
         this.loadGoals();
       })
       .catch((error) => {
         console.error('Error updating goal:', error);
       });
+  }
+
+  openGoalModal() {
+    this.showGoalModal = true;
+    this.goalSelected = null;
+    this.resetForm();
+    this.modalService.openModal();
+  }
+
+  closeGoalModal() {
+    this.showGoalModal = false;
+    this.goalSelected = null;
+    this.resetForm();
+    // Only close modal service if delete confirm is also closed
+    if (!this.showDeleteConfirm) {
+      this.modalService.closeModal();
+    }
   }
 
   resetForm() {
@@ -217,6 +250,13 @@ export class SettingsComponent {
       return 'due-soon';
     } else {
       return 'on-track';
+    }
+  }
+
+  ngOnDestroy(): void {
+    // Clean up modal state if component is destroyed with modals open
+    if (this.showGoalModal || this.showDeleteConfirm) {
+      this.modalService.closeModal();
     }
   }
 }

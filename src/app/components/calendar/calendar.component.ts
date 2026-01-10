@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../_services/api.service';
 import { UtilService } from '../../_services/util.service';
 import { LoaderComponent } from '../loader/loader.component';
+import { ModalService } from '../../_services/modal.service';
 
 interface CalendarDay {
   date: Date;
@@ -31,7 +32,7 @@ interface CalendarEvent {
   templateUrl: './calendar.component.html',
   styleUrls: ['./calendar.component.css'],
 })
-export class CalendarComponent implements OnInit {
+export class CalendarComponent implements OnInit, OnDestroy {
   isLoading = false;
   viewMode: 'month' | 'week' | 'day' = 'month';
   viewDate = new Date();
@@ -60,12 +61,20 @@ export class CalendarComponent implements OnInit {
   constructor(
     private api: ApiService,
     private util: UtilService,
+    private modalService: ModalService,
   ) {}
 
   ngOnInit() {
     this.generateCalendar();
     this.generateWeekDays();
     this.loadReports();
+  }
+
+  ngOnDestroy(): void {
+    // Clean up modal state if component is destroyed with modals open
+    if (this.selectedDate || this.showDeleteConfirmModal) {
+      this.modalService.closeModal();
+    }
   }
 
   generateCalendar() {
@@ -245,6 +254,7 @@ export class CalendarComponent implements OnInit {
       await this.api.createReport(report);
       this.noChangeDetected = false;
       this.selectedDate = null;
+      this.modalService.closeModal();
       await this.loadReports();
       this.reInitializeVariables();
     } catch (error) {
@@ -293,6 +303,7 @@ export class CalendarComponent implements OnInit {
       await this.api.updateReport(report);
       this.noChangeDetected = false;
       this.selectedDate = null;
+      this.modalService.closeModal();
       await this.loadReports();
       this.reInitializeVariables();
     } catch (error) {
@@ -305,10 +316,15 @@ export class CalendarComponent implements OnInit {
       return;
     }
     this.showDeleteConfirmModal = true;
+    this.modalService.openModal();
   }
 
   closeDeleteConfirmModal() {
     this.showDeleteConfirmModal = false;
+    // Only close modal service if the main modal is also closed
+    if (!this.selectedDate) {
+      this.modalService.closeModal();
+    }
   }
 
   async confirmDeleteReport() {
@@ -322,6 +338,7 @@ export class CalendarComponent implements OnInit {
       await this.api.deleteReport(this.report_id);
       this.showDeleteConfirmModal = false;
       this.selectedDate = null;
+      this.modalService.closeModal();
       await this.loadReports();
       this.reInitializeVariables();
     } catch (error) {
@@ -350,6 +367,7 @@ export class CalendarComponent implements OnInit {
 
   onDayClick(day: CalendarDay) {
     this.selectedDate = new Date(day.date);
+    this.modalService.openModal();
     const existingEvent = this.events.find(
       (e) => e.start.toDateString() === this.selectedDate?.toDateString(),
     );
@@ -372,6 +390,7 @@ export class CalendarComponent implements OnInit {
   closeModal() {
     this.selectedDate = null;
     this.noChangeDetected = false;
+    this.modalService.closeModal();
   }
 
   reInitializeVariables() {

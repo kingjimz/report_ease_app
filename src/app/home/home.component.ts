@@ -14,6 +14,9 @@ import { ApiService } from '../_services/api.service';
 import { AlertsComponent } from '../components/alerts/alerts.component';
 import { UtilService } from '../_services/util.service';
 import { SettingsService } from '../_services/settings.service';
+import { TutorialComponent } from '../components/tutorial/tutorial.component';
+import { TutorialService } from '../_services/tutorial.service';
+import { ModalService } from '../_services/modal.service';
 
 @Component({
   selector: 'app-home',
@@ -29,6 +32,7 @@ import { SettingsService } from '../_services/settings.service';
     ModalComponent,
     FormsModule,
     AlertsComponent,
+    TutorialComponent,
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
@@ -39,6 +43,8 @@ export class HomeComponent implements OnInit {
   selectedTab: string = 'dashboard';
   showManualReportModal = false;
   showOnboardingModal = false;
+  showTutorial = false;
+  isAnyModalOpen = false;
 
   // Manual report form fields
   reportDate = '';
@@ -61,6 +67,8 @@ export class HomeComponent implements OnInit {
     private api: ApiService,
     private util: UtilService,
     private settingsService: SettingsService,
+    private tutorialService: TutorialService,
+    private modalService: ModalService,
   ) {
     // Set default date to today
     const today = new Date();
@@ -73,6 +81,11 @@ export class HomeComponent implements OnInit {
   ngOnInit() {
     // Check if onboarding has been completed
     this.checkOnboarding();
+    
+    // Subscribe to modal state to hide tab bar on mobile when modals are open
+    this.modalService.modalOpen$.subscribe((isOpen) => {
+      this.isAnyModalOpen = isOpen;
+    });
   }
 
   checkOnboarding() {
@@ -82,6 +95,18 @@ export class HomeComponent implements OnInit {
       setTimeout(() => {
         this.showOnboardingModal = true;
       }, 500);
+    } else {
+      // If onboarding is completed, check if tutorial should be shown
+      this.checkTutorial();
+    }
+  }
+
+  checkTutorial() {
+    // Show tutorial if it hasn't been completed
+    if (!this.tutorialService.hasCompletedTutorial()) {
+      setTimeout(() => {
+        this.showTutorial = true;
+      }, 1000); // Show tutorial 1 second after page load
     }
   }
 
@@ -224,6 +249,19 @@ export class HomeComponent implements OnInit {
       
       // Close modal
       this.showOnboardingModal = false;
+      
+      // Show tutorial after onboarding is completed
+      setTimeout(() => {
+        this.checkTutorial();
+      }, 500);
     }
+  }
+
+  onTutorialComplete() {
+    this.showTutorial = false;
+  }
+
+  onTutorialSkip() {
+    this.showTutorial = false;
   }
 }

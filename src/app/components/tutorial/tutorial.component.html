@@ -1,0 +1,90 @@
+<div
+  *ngIf="showTutorial"
+  class="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm transition-opacity"
+  (click)="skipTutorial()"
+>
+  <div
+    class="tutorial-modal bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 sm:p-8 relative animate-in"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Progress Bar -->
+    <div class="mb-6">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-medium text-gray-600 dark:text-gray-400">
+          Step {{ currentStep + 1 }} of {{ steps.length }}
+        </span>
+        <span class="text-xs font-medium text-gray-600 dark:text-gray-400">
+          {{ Math.round(progress) }}%
+        </span>
+      </div>
+      <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+        <div
+          class="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-300"
+          [style.width.%]="progress"
+        ></div>
+      </div>
+    </div>
+
+    <!-- Step Content -->
+    <div class="text-center mb-6">
+      <!-- Icon -->
+      <div
+        class="flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mx-auto mb-4"
+      >
+        <i [class]="currentStepData.icon" class="text-white text-4xl"></i>
+      </div>
+
+      <!-- Title -->
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+        {{ currentStepData.title }}
+      </h2>
+
+      <!-- Description -->
+      <p class="text-gray-600 dark:text-gray-400 leading-relaxed text-base">
+        {{ currentStepData.description }}
+      </p>
+    </div>
+
+    <!-- Step Indicators -->
+    <div class="flex justify-center gap-2 mb-6">
+      <div
+        *ngFor="let step of steps; let i = index"
+        class="h-2 rounded-full transition-all duration-300"
+        [class.w-8]="i === currentStep"
+        [class.w-2]="i !== currentStep"
+        [class.bg-blue-500]="i === currentStep"
+        [class.bg-gray-300]="i !== currentStep && i < currentStep"
+        [class.bg-gray-200]="i > currentStep"
+        [class.dark:bg-gray-600]="i > currentStep"
+      ></div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex gap-3">
+      <button
+        (click)="skipTutorial()"
+        class="flex-1 px-4 py-3 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium"
+      >
+        Skip
+      </button>
+      <button
+        *ngIf="!isFirstStep"
+        (click)="previousStep()"
+        class="px-4 py-3 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium"
+      >
+        <i class="bi bi-chevron-left"></i>
+      </button>
+      <button
+        (click)="isLastStep ? completeTutorial() : nextStep()"
+        class="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md font-medium"
+      >
+        {{ isLastStep ? 'Get Started' : 'Next' }}
+        <i
+          *ngIf="!isLastStep"
+          class="bi bi-chevron-right ml-1 inline-block"
+        ></i>
+      </button>
+    </div>
+  </div>
+</div>
+

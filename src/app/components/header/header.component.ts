@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../_services/auth.service';
 import { SettingsService } from '../../_services/settings.service';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
+import { ModalService } from '../../_services/modal.service';
 
 @Component({
   selector: 'app-header',
@@ -13,7 +14,7 @@ import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
 })
-export class HeaderComponent implements OnInit {
+export class HeaderComponent implements OnInit, OnDestroy {
   dropdownOpen = false;
   userData: any;
   showConfigureModal = false;
@@ -24,7 +25,8 @@ export class HeaderComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private router: Router,
-    private settingsService: SettingsService
+    private settingsService: SettingsService,
+    private modalService: ModalService,
   ) {
     this.authService.user$.subscribe((user) => {
       this.userData = user;
@@ -52,11 +54,19 @@ export class HeaderComponent implements OnInit {
   openConfigureModal() {
     this.showConfigureModal = true;
     this.dropdownOpen = false;
+    this.modalService.openModal();
   }
 
   closeConfigureModal() {
     this.showConfigureModal = false;
     this.showSuccessMessage = false;
+    this.modalService.closeModal();
+  }
+
+  ngOnDestroy(): void {
+    if (this.showConfigureModal) {
+      this.modalService.closeModal();
+    }
   }
 
   togglePioneerStatus() {

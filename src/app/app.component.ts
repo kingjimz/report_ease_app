@@ -4,6 +4,7 @@ import { Router, RouterOutlet } from '@angular/router';
 import { ApiService } from './_services/api.service';
 import { CommonModule } from '@angular/common';
 import { PwaInstallPromptComponent } from './components/pwa-install-prompt/pwa-install-prompt.component';
+import { ThemeService } from './services/theme.service';
 
 @Component({
   standalone: true,
@@ -17,6 +18,7 @@ export class AppComponent implements OnInit {
     private auth: Auth,
     private router: Router,
     private api: ApiService,
+    private themeService: ThemeService,
   ) {}
 
   ngOnInit() {

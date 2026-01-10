@@ -20,6 +20,8 @@
 <!-- Fixed bottom tab card -->
 <div
   class="tab-card-container fixed bottom-0 left-0 w-full z-50 border-t shadow-md"
+  [class.hidden]="isAnyModalOpen"
+  [class.md:block]="true"
   *ngIf="showTab"
 >
   <app-tab-card
@@ -219,6 +221,13 @@
     </div>
   </app-modal>
 </ng-container>
+
+<!-- Tutorial Component -->
+<app-tutorial
+  [showTutorial]="showTutorial"
+  (tutorialComplete)="onTutorialComplete()"
+  (tutorialSkip)="onTutorialSkip()"
+></app-tutorial>
 
 <!-- Onboarding Modal -->
 <ng-container *ngIf="showOnboardingModal">
