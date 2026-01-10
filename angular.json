@@ -21,7 +21,17 @@
             "assets": [
               "src/assets",
               "src/favicon.ico",
-              "src/manifest.webmanifest"
+              "src/manifest.webmanifest",
+              {
+                "glob": "_redirects",
+                "input": "public",
+                "output": "/"
+              },
+              {
+                "glob": "netlify.toml",
+                "input": ".",
+                "output": "/"
+              }
             ],
             "styles": [
               "src/styles.css",

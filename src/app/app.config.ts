@@ -24,7 +24,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideClientHydration(),
     provideFirebaseApp(() => initializeApp(environment.firebase)),
-    // Modified: Use initializeFirestore with persistentLocalCache instead of getFirestore
+    // Modified: Use initializeFirestore with persistentLocalCache for offline support
     provideFirestore(() =>
       initializeFirestore(initializeApp(environment.firebase), {
         localCache: persistentLocalCache(),

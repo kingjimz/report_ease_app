@@ -1,2 +1,8 @@
 <app-pwa-install-prompt></app-pwa-install-prompt>
+<div *ngIf="!isOnline" class="offline-banner">
+  <div class="offline-content">
+    <span class="offline-icon">📡</span>
+    <span class="offline-text">You're offline. Changes will sync when you're back online.</span>
+  </div>
+</div>
 <router-outlet></router-outlet>
