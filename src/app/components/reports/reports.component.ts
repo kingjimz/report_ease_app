@@ -63,6 +63,27 @@ export class ReportsComponent implements OnDestroy {
   filterType: 'all' | 'bs' | 'rv' = 'all';
   filteredBibleStudies: any[] = [];
   showAllBibleStudies = false;
+  
+  // Add Report Modal properties
+  showAddReportModal: boolean = false;
+  reportDate: string = '';
+  reportHours: number = 0;
+  reportMinutes: number = 0;
+  reportJoinedMinistry: string = 'yes';
+  reportNotes: string = '';
+  isSubmittingReport: boolean = false;
+  reportSuccess: boolean = false;
+  reportAlertMessage: string = '';
+  
+  // Generate Report Modal properties
+  showGenerateReportModal: boolean = false;
+  generateReportDate: string = '';
+  generateReportHours: number = 0;
+  generateReportBibleStudies: number = 0;
+  generateReportJoinedMinistry: string = 'yes';
+  isGeneratingReport: boolean = false;
+  generateReportSuccess: boolean = false;
+  generateReportAlertMessage: string = '';
 
   constructor(
     public api: ApiService,
@@ -75,6 +96,10 @@ export class ReportsComponent implements OnDestroy {
     this.loadReports();
     this.loadBibLeStudies();
     this.loadUserSettings();
+    // Set default date to today for modals
+    const today = new Date();
+    this.reportDate = today.toISOString().split('T')[0];
+    this.generateReportDate = today.toISOString().split('T')[0];
     setTimeout(() => {
       this.loading = false;
     }, 1000);
@@ -614,6 +639,207 @@ export class ReportsComponent implements OnDestroy {
     // Clean up modal state if component is destroyed with modals open
     if (this.studyDelete) {
       this.modalService.closeModal();
+    }
+  }
+  
+  // Add Report Modal Methods
+  openAddReportModal() {
+    // Set default date to today
+    const today = new Date();
+    this.reportDate = today.toISOString().split('T')[0];
+    this.reportHours = 0;
+    this.reportMinutes = 0;
+    this.reportJoinedMinistry = 'yes';
+    this.reportNotes = '';
+    this.reportSuccess = false;
+    this.reportAlertMessage = '';
+    this.showAddReportModal = true;
+  }
+  
+  closeAddReportModal() {
+    this.showAddReportModal = false;
+    this.reportDate = '';
+    this.reportHours = 0;
+    this.reportMinutes = 0;
+    this.reportJoinedMinistry = 'yes';
+    this.reportNotes = '';
+    this.reportSuccess = false;
+    this.reportAlertMessage = '';
+  }
+  
+  incrementHours() {
+    this.reportHours = (this.reportHours || 0) + 1;
+  }
+  
+  decrementHours() {
+    this.reportHours = Math.max(0, (this.reportHours || 0) - 1);
+  }
+  
+  incrementMinutes() {
+    this.reportMinutes = Math.min(55, (this.reportMinutes || 0) + 5);
+  }
+  
+  decrementMinutes() {
+    this.reportMinutes = Math.max(0, (this.reportMinutes || 0) - 5);
+  }
+  
+  openDatePicker(event: Event) {
+    const input = event.target as HTMLInputElement;
+    // Use showPicker() if available (modern browsers)
+    if (input && typeof input.showPicker === 'function') {
+      try {
+        input.showPicker();
+      } catch (error) {
+        // Fallback: just focus the input, which will open the picker on most browsers
+        input.focus();
+        input.click();
+      }
+    } else {
+      // Fallback for older browsers
+      input.focus();
+      input.click();
+    }
+  }
+  
+  async saveReport() {
+    if (!this.reportDate) {
+      this.reportSuccess = false;
+      this.reportAlertMessage = 'Please select a date for the report.';
+      return;
+    }
+    
+    if (!this.reportHours && !this.reportMinutes) {
+      this.reportSuccess = false;
+      this.reportAlertMessage = 'Please enter at least some hours or minutes.';
+      return;
+    }
+    
+    if (!this.reportJoinedMinistry) {
+      this.reportSuccess = false;
+      this.reportAlertMessage = 'Please indicate if you participated in the ministry.';
+      return;
+    }
+    
+    this.isSubmittingReport = true;
+    
+    try {
+      // Convert date string to Date object
+      const selectedDate = new Date(this.reportDate);
+      // Set time to start of day to avoid timezone issues
+      selectedDate.setHours(0, 0, 0, 0);
+      
+      const report = {
+        hours: this.reportHours || 0,
+        minutes: this.reportMinutes || 0,
+        is_joined_ministry: this.reportJoinedMinistry,
+        notes: this.reportNotes || '',
+        report_date: selectedDate,
+        created_at: new Date(),
+        updated_at: new Date(),
+      };
+      
+      await this.api.createReport(report);
+      
+      this.reportSuccess = true;
+      this.reportAlertMessage = 'Report added successfully! It will appear on your calendar.';
+      
+      // Reports will update automatically through subscriptions
+      
+      // Close modal after 1.5 seconds
+      setTimeout(() => {
+        this.closeAddReportModal();
+      }, 1500);
+    } catch (error) {
+      console.error('Error saving report:', error);
+      this.reportSuccess = false;
+      this.reportAlertMessage = 'Error saving report. Please try again.';
+    } finally {
+      this.isSubmittingReport = false;
+    }
+  }
+  
+  // Generate Report Modal Methods
+  openGenerateReportModal() {
+    const today = new Date();
+    this.generateReportDate = today.toISOString().split('T')[0];
+    this.generateReportHours = 0;
+    this.generateReportBibleStudies = 0;
+    this.generateReportJoinedMinistry = 'yes';
+    this.isGeneratingReport = false;
+    this.generateReportSuccess = false;
+    this.generateReportAlertMessage = '';
+    this.showGenerateReportModal = true;
+  }
+  
+  closeGenerateReportModal() {
+    this.showGenerateReportModal = false;
+    this.generateReportDate = '';
+    this.generateReportHours = 0;
+    this.generateReportBibleStudies = 0;
+    this.generateReportJoinedMinistry = 'yes';
+    this.generateReportSuccess = false;
+    this.generateReportAlertMessage = '';
+  }
+  
+  incrementGenerateHours() {
+    this.generateReportHours++;
+  }
+  
+  decrementGenerateHours() {
+    if (this.generateReportHours > 0) {
+      this.generateReportHours--;
+    }
+  }
+  
+  incrementGenerateBibleStudies() {
+    this.generateReportBibleStudies++;
+  }
+  
+  decrementGenerateBibleStudies() {
+    if (this.generateReportBibleStudies > 0) {
+      this.generateReportBibleStudies--;
+    }
+  }
+  
+  generateManualReport() {
+    if (!this.generateReportDate || !this.generateReportHours || !this.generateReportJoinedMinistry) {
+      this.generateReportSuccess = false;
+      this.generateReportAlertMessage = 'Please fill in all required fields.';
+      return;
+    }
+
+    this.isGeneratingReport = true;
+
+    // Parse the date to get month and year
+    const selectedDate = new Date(this.generateReportDate);
+    const monthName = selectedDate.toLocaleDateString('en-US', { month: 'long' });
+    const year = selectedDate.getFullYear();
+
+    // Prepare data for PNG generation (exactly matching reports component structure)
+    const reportData = {
+      month: `${monthName} ${year}`,
+      bibleStudies: this.generateReportBibleStudies,
+      is_joined_ministry: this.generateReportJoinedMinistry,
+      hours: this.isPioneer ? this.generateReportHours : undefined,
+      report_count: 1,
+    };
+
+    try {
+      // Generate PNG without saving to database
+      this.util.generatePNG(reportData, this.isPioneer);
+
+      this.generateReportSuccess = true;
+      this.generateReportAlertMessage = 'Report generated successfully! Check your downloads.';
+
+      setTimeout(() => {
+        this.closeGenerateReportModal();
+      }, 1500);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      this.generateReportSuccess = false;
+      this.generateReportAlertMessage = 'Error generating report. Please try again.';
+    } finally {
+      this.isGeneratingReport = false;
     }
   }
 }

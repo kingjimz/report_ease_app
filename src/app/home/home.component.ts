@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { AuthService } from '../_services/auth.service';
 import { Router } from '@angular/router';
 import { CalendarComponent } from '../components/calendar/calendar.component';
@@ -39,6 +39,8 @@ import { NavigationService } from '../_services/navigation.service';
   styleUrl: './home.component.css',
 })
 export class HomeComponent implements OnInit {
+  @ViewChild(ReportsComponent) reportsComponent?: ReportsComponent;
+  
   activeTab = 'dashboard';
   showTab = true;
   selectedTab: string = 'dashboard';
@@ -180,6 +182,29 @@ export class HomeComponent implements OnInit {
 
   onManualReportModalOpen() {
     this.showManualReportModal = true;
+  }
+  
+  onAddReportModalOpen() {
+    // If we're on the reports tab, open the modal directly
+    if (this.activeTab === 'reports' && this.reportsComponent) {
+      this.reportsComponent.openAddReportModal();
+    } else {
+      // Otherwise, switch to reports tab first, then open modal
+      this.onTabChange('reports');
+      // Use setTimeout to ensure the component is rendered before accessing it
+      setTimeout(() => {
+        if (this.reportsComponent) {
+          this.reportsComponent.openAddReportModal();
+        } else {
+          // If still not available, try again after a longer delay
+          setTimeout(() => {
+            if (this.reportsComponent) {
+              this.reportsComponent.openAddReportModal();
+            }
+          }, 200);
+        }
+      }, 100);
+    }
   }
 
   closeManualReportModal() {

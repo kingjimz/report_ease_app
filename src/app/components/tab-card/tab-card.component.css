@@ -21,3 +21,20 @@
 .dark .text-gray-500 {
   color: var(--text-tertiary) !important;
 }
+
+/* Spin animation for + button icon */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  3% {
+    transform: rotate(360deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.spin-icon {
+  animation: spin 10.3s linear infinite;
+}

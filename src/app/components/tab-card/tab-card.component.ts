@@ -15,6 +15,7 @@ import { Subscription } from 'rxjs';
 export class TabCardComponent implements OnInit, OnChanges, OnDestroy {
   @Output() tabChange = new EventEmitter<string>();
   @Output() manualReportModalOpen = new EventEmitter<void>();
+  @Output() addReportModalOpen = new EventEmitter<void>();
   @Input() selectedTab: string = 'dashboard';
 
   activeTab = 'dashboard';
@@ -84,5 +85,9 @@ export class TabCardComponent implements OnInit, OnChanges, OnDestroy {
 
   openManualReportModal() {
     this.manualReportModalOpen.emit();
+  }
+  
+  openAddReportModal() {
+    this.addReportModalOpen.emit();
   }
 }
