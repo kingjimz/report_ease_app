@@ -89,10 +89,20 @@ export class HomeComponent implements OnInit {
       this.isAnyModalOpen = isOpen;
     });
 
+    // Load persisted tab from localStorage
+    const persistedTab = localStorage.getItem('activeTab');
+    if (persistedTab) {
+      this.activeTab = persistedTab;
+      this.selectedTab = persistedTab;
+      this.navigationService.changeTab(persistedTab);
+    }
+
     // Subscribe to navigation service for tab changes
     this.navigationService.tabChange$.subscribe((tabId) => {
       this.activeTab = tabId;
       this.selectedTab = tabId;
+      // Persist the active tab
+      localStorage.setItem('activeTab', tabId);
     });
   }
 
@@ -140,11 +150,16 @@ export class HomeComponent implements OnInit {
 
     if (diff > this.scrollThreshold) {
       if (st > this.lastScrollTop) {
+        // Scrolling down - hide tab bar, preserve current active tab
         this.showTab = false;
-        this.selectedTab = this.activeTab;
+        // Don't change selectedTab, just keep current activeTab
       } else {
+        // Scrolling up - show tab bar, keep current active tab
         this.showTab = true;
-        this.activeTab = this.selectedTab;
+        // Ensure activeTab matches selectedTab without resetting
+        if (this.selectedTab && this.selectedTab !== this.activeTab) {
+          this.activeTab = this.selectedTab;
+        }
       }
       this.lastScrollTop = st <= 0 ? 0 : st;
     }
@@ -158,6 +173,9 @@ export class HomeComponent implements OnInit {
   onTabChange(tabId: string) {
     this.activeTab = tabId;
     this.selectedTab = tabId;
+    // Update navigation service and persist
+    this.navigationService.changeTab(tabId);
+    localStorage.setItem('activeTab', tabId);
   }
 
   onManualReportModalOpen() {

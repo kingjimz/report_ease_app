@@ -136,11 +136,37 @@ export class ReportsComponent implements OnDestroy {
   }
 
   loadReports() {
+    // Subscribe to aggregated data (updated by dashboard/calendar)
     this.api.aggregatedData$.subscribe((data) => {
-      if (data && data.length > 0) {
+      if (data && Array.isArray(data) && data.length > 0) {
         this.reports = data;
         this.calculatePagination();
         this.updatePaginatedReports();
+        this.loading = false;
+      }
+    });
+
+    // Also subscribe to raw reports and aggregate them to ensure data is always available
+    this.api.reports$.subscribe((reports) => {
+      if (reports && reports.length > 0) {
+        // Always aggregate reports to ensure data is available
+        const aggregatedReports = this.util.aggregateReportsByMonth(reports);
+        
+        // Update aggregated data in API service
+        this.api.updateAggregatedData(aggregatedReports);
+        
+        // Update local reports if not already set from aggregatedData$ subscription
+        if (!this.reports || this.reports.length === 0) {
+          this.reports = aggregatedReports;
+          this.calculatePagination();
+          this.updatePaginatedReports();
+        }
+        this.loading = false;
+      } else if (reports && reports.length === 0) {
+        // No reports available
+        this.reports = [];
+        this.paginatedReports = [];
+        this.loading = false;
       }
     });
   }
