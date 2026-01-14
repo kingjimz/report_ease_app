@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { PwaInstallPromptComponent } from './components/pwa-install-prompt/pwa-install-prompt.component';
 import { ThemeService } from './services/theme.service';
 import { NetworkService } from './_services/network.service';
+import { NotificationService } from './_services/notification.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -25,6 +26,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private api: ApiService,
     private themeService: ThemeService,
     private networkService: NetworkService,
+    private notificationService: NotificationService,
   ) {}
 
   ngOnInit() {
@@ -41,11 +43,16 @@ export class AppComponent implements OnInit, OnDestroy {
     );
     this.isOnline = this.networkService.isOnline;
 
+    // Initialize notifications
+    this.initializeNotifications();
+
     onAuthStateChanged(this.auth, (user) => {
       if (user) {
         this.router.navigateByUrl('/');
         // Load Bible studies (will use cache if offline)
         this.loadBibleStudies();
+        // Initialize notifications for logged-in user
+        this.initializeNotificationsForUser();
       } else {
         // Only redirect to login if online (offline users should stay on current page)
         if (this.networkService.isOnline) {
@@ -53,6 +60,56 @@ export class AppComponent implements OnInit, OnDestroy {
         }
       }
     });
+  }
+
+  /**
+   * Initialize notification system
+   */
+  private initializeNotifications() {
+    // Handle service worker notification clicks if using service worker notifications
+    if ('serviceWorker' in navigator) {
+      // Try to register notification service worker for handling notification clicks
+      // This will only work if Angular's service worker doesn't conflict
+      navigator.serviceWorker.getRegistration().then((registration) => {
+        if (registration) {
+          // Angular's service worker is registered, we'll use it for notifications
+          console.log('Using Angular service worker for notifications');
+        } else {
+          // No service worker registered, register our notification SW
+          navigator.serviceWorker.register('/notification-sw.js').catch((error) => {
+            console.log('Notification service worker registration failed:', error);
+          });
+        }
+      });
+
+      // Listen for service worker messages (for future use)
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'NOTIFICATION_CLICK') {
+          const action = event.data.action;
+          if (action === 'open' || !action) {
+            this.router.navigate(['/reports']);
+            window.focus();
+          }
+        }
+      });
+    }
+  }
+
+  /**
+   * Initialize notifications for logged-in user
+   */
+  private async initializeNotificationsForUser() {
+    // Check if notifications are enabled and permission is granted
+    if (this.notificationService.isNotificationEnabled()) {
+      // Permission might have been granted, check status
+      const permission = await this.notificationService.requestPermission();
+      if (permission) {
+        // Start checking for reports
+        setTimeout(() => {
+          this.notificationService.manualCheck();
+        }, 5000); // Wait 5 seconds for data to load
+      }
+    }
   }
 
   ngOnDestroy() {

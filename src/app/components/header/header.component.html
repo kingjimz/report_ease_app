@@ -241,6 +241,32 @@
         </div>
       </div>
 
+      <!-- Notification Test -->
+      <div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+        <div class="flex items-start justify-between">
+          <div class="flex-1 pr-4">
+            <div class="flex items-center space-x-2 mb-2">
+              <i class="bi bi-bell text-indigo-600 dark:text-indigo-400 text-lg"></i>
+              <h3 class="font-semibold text-gray-900 dark:text-white">Notifications</h3>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+              Send a test push now to confirm daily ministry reminders reach you.
+            </p>
+          </div>
+          <div class="flex items-center flex-shrink-0">
+            <button
+              (click)="triggerTestNotification()"
+              [disabled]="isTestingNotification"
+              class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-60"
+            >
+              <i class="bi bi-send me-2"></i>
+              <span *ngIf="!isTestingNotification">Send Test</span>
+              <span *ngIf="isTestingNotification">Sending...</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Pioneer Status Toggle -->
       <div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
         <div class="flex items-start justify-between">
