@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
+import { Component, HostListener, OnInit, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { AuthService } from '../_services/auth.service';
 import { Router } from '@angular/router';
 import { CalendarComponent } from '../components/calendar/calendar.component';
@@ -41,6 +41,7 @@ import { NavigationService } from '../_services/navigation.service';
 export class HomeComponent implements OnInit {
   @ViewChild(ReportsComponent) reportsComponent?: ReportsComponent;
   @ViewChild(DashboardComponent) dashboardComponent?: DashboardComponent;
+  @ViewChild(CalendarComponent) calendarComponent?: CalendarComponent;
   
   activeTab = 'dashboard';
   showTab = true;
@@ -49,6 +50,7 @@ export class HomeComponent implements OnInit {
   showOnboardingModal = false;
   showTutorial = false;
   isAnyModalOpen = false;
+  forceReportsVisible = false; // Flag to temporarily show reports component for modal
 
   // Manual report form fields
   reportDate = '';
@@ -74,6 +76,7 @@ export class HomeComponent implements OnInit {
     private tutorialService: TutorialService,
     private modalService: ModalService,
     private navigationService: NavigationService,
+    private cdr: ChangeDetectorRef,
   ) {
     // Set default date to today
     const today = new Date();
@@ -88,8 +91,17 @@ export class HomeComponent implements OnInit {
     this.checkOnboarding();
     
     // Subscribe to modal state to hide tab bar on mobile when modals are open
+    // Use setTimeout to defer the update to the next change detection cycle
+    // to avoid ExpressionChangedAfterItHasBeenCheckedError
     this.modalService.modalOpen$.subscribe((isOpen) => {
-      this.isAnyModalOpen = isOpen;
+      setTimeout(() => {
+        this.isAnyModalOpen = isOpen;
+        // If modal closes and we're not on reports tab, hide reports component again
+        if (!isOpen && this.activeTab !== 'reports' && this.forceReportsVisible) {
+          this.forceReportsVisible = false;
+        }
+        this.cdr.markForCheck();
+      }, 0);
     });
 
     // Load persisted tab from localStorage
@@ -176,6 +188,10 @@ export class HomeComponent implements OnInit {
   onTabChange(tabId: string) {
     this.activeTab = tabId;
     this.selectedTab = tabId;
+    // Reset forceReportsVisible if switching away from goals (unless modal is open)
+    if (tabId !== 'goals' && !this.isAnyModalOpen) {
+      this.forceReportsVisible = false;
+    }
     // Update navigation service and persist
     this.navigationService.changeTab(tabId);
     localStorage.setItem('activeTab', tabId);
@@ -188,19 +204,101 @@ export class HomeComponent implements OnInit {
   onAddReportModalOpen() {
     // Defer modal opening to next tick to avoid change detection error
     setTimeout(() => {
+      let modalOpened = false;
+      
       // Open the modal on the current tab without switching tabs
-      // Reports component is always in DOM (just hidden), so we can always use it
       if (this.activeTab === 'dashboard' && this.dashboardComponent) {
         // Use dashboard's own modal
         this.dashboardComponent.openAddReportModal();
-      } else if (this.reportsComponent) {
-        // Use reports component modal (available even when hidden)
-        this.reportsComponent.openAddReportModal();
-      } else {
-        // If reports component isn't loaded yet, wait a bit and try again
+        modalOpened = true;
+      } else if (this.activeTab === 'calendar') {
+        // Use calendar component's modal
+        if (this.calendarComponent) {
+          // Set today's date if no date is selected
+          if (!this.calendarComponent.selectedDate || !this.calendarComponent.reportDate) {
+            const today = new Date();
+            this.calendarComponent.selectedDate = today;
+            this.calendarComponent.reportDate = today.toISOString().split('T')[0];
+            this.calendarComponent.isDateLocked = false; // Allow date change when opened from + button
+          }
+          this.calendarComponent.openAddReportModal();
+          modalOpened = true;
+          // Trigger change detection to ensure modal renders
+          this.cdr.detectChanges();
+        } else {
+          // Calendar component not ready yet, wait and retry
+          setTimeout(() => {
+            if (this.calendarComponent) {
+              const today = new Date();
+              this.calendarComponent.selectedDate = today;
+              this.calendarComponent.reportDate = today.toISOString().split('T')[0];
+              this.calendarComponent.isDateLocked = false;
+              this.calendarComponent.openAddReportModal();
+              this.cdr.detectChanges();
+              modalOpened = true;
+            } else {
+              // Fallback: use reports component
+              console.warn('Calendar component not available, using reports component');
+              if (this.reportsComponent) {
+                this.reportsComponent.openAddReportModal();
+                modalOpened = true;
+                this.cdr.detectChanges();
+              }
+            }
+          }, 100);
+        }
+      } else if (this.activeTab === 'goals') {
+        // Use reports component modal
+        // Temporarily make reports component visible so modal can render
+        // (display:none prevents modals from rendering)
+        this.forceReportsVisible = true;
+        this.cdr.detectChanges();
+        
         setTimeout(() => {
           if (this.reportsComponent) {
             this.reportsComponent.openAddReportModal();
+            modalOpened = true;
+            this.cdr.detectChanges();
+            // Keep reports visible while modal is open
+            // It will be hidden again when modal closes (handled in closeAddReportModal or via subscription)
+          } else {
+            // Reports component not ready, revert visibility
+            this.forceReportsVisible = false;
+            if (this.modalService.isModalOpen()) {
+              this.modalService.closeModal();
+            }
+          }
+        }, 50);
+      } else if (this.reportsComponent) {
+        // Use reports component modal (available even when hidden) - fallback for other tabs
+        this.reportsComponent.openAddReportModal();
+        modalOpened = true;
+        this.cdr.detectChanges();
+      }
+      
+      // If modal still not opened, try fallback after a delay
+      if (!modalOpened) {
+        setTimeout(() => {
+          if (this.activeTab === 'calendar' && this.calendarComponent) {
+            const today = new Date();
+            this.calendarComponent.selectedDate = today;
+            this.calendarComponent.reportDate = today.toISOString().split('T')[0];
+            this.calendarComponent.isDateLocked = false;
+            this.calendarComponent.openAddReportModal();
+            this.cdr.detectChanges();
+          } else if (this.activeTab === 'goals' && this.reportsComponent) {
+            this.reportsComponent.openAddReportModal();
+            this.cdr.markForCheck();
+            this.cdr.detectChanges();
+            // Verify modal opened and handle scroll lock if needed
+            setTimeout(() => {
+              if (!this.reportsComponent?.showAddReportModal && this.modalService.isModalOpen()) {
+                this.modalService.closeModal();
+              }
+            }, 150);
+          } else if (this.reportsComponent) {
+            this.reportsComponent.openAddReportModal();
+            this.cdr.detectChanges();
           }
         }, 100);
       }

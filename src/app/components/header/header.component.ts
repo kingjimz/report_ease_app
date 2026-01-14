@@ -9,7 +9,6 @@ import { ModalService } from '../../_services/modal.service';
 import { ApiService } from '../../_services/api.service';
 import { UtilService } from '../../_services/util.service';
 import { NavigationService } from '../../_services/navigation.service';
-import { NotificationService } from '../../_services/notification.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -32,7 +31,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
   reports: any[] = [];
   showReportReminder = false;
   currentMonthName = '';
-  isTestingNotification = false;
   private bibleStudiesSubscription?: Subscription;
   private reportsSubscription?: Subscription;
 
@@ -44,7 +42,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private api: ApiService,
     private util: UtilService,
     private navigationService: NavigationService,
-    private notificationService: NotificationService,
   ) {
     this.authService.user$.subscribe((user) => {
       this.userData = user;
@@ -305,17 +302,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
     }
     if (this.reportsSubscription) {
       this.reportsSubscription.unsubscribe();
-    }
-  }
-
-  async triggerTestNotification() {
-    this.isTestingNotification = true;
-    try {
-      await this.notificationService.sendTestNotification();
-    } catch (error) {
-      console.error('Error sending test notification:', error);
-    } finally {
-      this.isTestingNotification = false;
     }
   }
 

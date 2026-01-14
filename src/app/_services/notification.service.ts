@@ -22,6 +22,7 @@ export class NotificationService {
   private notificationCheckInterval: any = null;
   private readonly NOTIFICATION_KEY = 'report_notification_enabled';
   private readonly LAST_CHECK_KEY = 'last_notification_check';
+  private readonly LAST_DAILY_MINISTRY_REMINDER_KEY = 'last_daily_ministry_reminder';
   private readonly NOTIFICATION_TIME_KEY = 'notification_time';
 
   constructor(private apiService: ApiService) {
@@ -123,15 +124,15 @@ export class NotificationService {
     // Check immediately on first run
     this.checkAndNotify();
 
-    // Schedule to check once per day at 9 AM
+    // Schedule to check once per day at 6 AM
     const now = new Date();
     const nextCheck = new Date();
-    nextCheck.setHours(9, 0, 0, 0); // 9 AM
+    nextCheck.setHours(6, 0, 0, 0); // 6 AM
     nextCheck.setMinutes(0);
     nextCheck.setSeconds(0);
     nextCheck.setMilliseconds(0);
     
-    // If it's already past 9 AM today, schedule for tomorrow
+    // If it's already past 6 AM today, schedule for tomorrow
     if (nextCheck <= now) {
       nextCheck.setDate(nextCheck.getDate() + 1);
     }
@@ -142,7 +143,7 @@ export class NotificationService {
     // Set initial timeout for first check
     setTimeout(() => {
       this.checkAndNotify();
-      // Then check once per day at 9 AM
+      // Then check once per day at 6 AM
       this.notificationCheckInterval = setInterval(() => {
         this.checkAndNotify();
       }, 24 * 60 * 60 * 1000); // 24 hours
@@ -171,25 +172,18 @@ export class NotificationService {
       return;
     }
 
-    // Check if we've already sent a notification today
-    const lastCheck = localStorage.getItem(this.LAST_CHECK_KEY);
-    if (lastCheck) {
-      const lastCheckDate = new Date(parseInt(lastCheck, 10));
-      const today = new Date();
-      
-      // Check if it's the same day
-      if (
-        lastCheckDate.getDate() === today.getDate() &&
-        lastCheckDate.getMonth() === today.getMonth() &&
-        lastCheckDate.getFullYear() === today.getFullYear()
-      ) {
-        return; // Already sent notification today
-      }
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    // Only send notifications at or after 6 AM
+    if (currentHour < 6) {
+      console.log('Too early for notifications. Waiting until 6 AM.');
+      return;
     }
 
     try {
       const hasReport = await this.checkCurrentMonthReport();
-      const now = new Date();
       const dayOfMonth = now.getDate();
       const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
       const daysRemaining = daysInMonth - dayOfMonth;
@@ -199,12 +193,43 @@ export class NotificationService {
       
       if (isLast3Days && !hasReport) {
         // Last 3 days of month and no report submitted - send report reminder
+        // Check if we've already sent a report reminder today
+        const lastCheck = localStorage.getItem(this.LAST_CHECK_KEY);
+        if (lastCheck) {
+          const lastCheckDate = new Date(parseInt(lastCheck, 10));
+          const today = new Date();
+          
+          // Check if it's the same day
+          if (
+            lastCheckDate.getDate() === today.getDate() &&
+            lastCheckDate.getMonth() === today.getMonth() &&
+            lastCheckDate.getFullYear() === today.getFullYear()
+          ) {
+            return; // Already sent report reminder today
+          }
+        }
         this.sendReportReminder();
         localStorage.setItem(this.LAST_CHECK_KEY, Date.now().toString());
       } else {
         // Every other day - send daily ministry reminder
+        // Check if we've already sent the daily ministry reminder today
+        const lastReminder = localStorage.getItem(this.LAST_DAILY_MINISTRY_REMINDER_KEY);
+        if (lastReminder) {
+          const lastReminderDate = new Date(parseInt(lastReminder, 10));
+          const today = new Date();
+          
+          // Check if it's the same day
+          if (
+            lastReminderDate.getDate() === today.getDate() &&
+            lastReminderDate.getMonth() === today.getMonth() &&
+            lastReminderDate.getFullYear() === today.getFullYear()
+          ) {
+            console.log('Daily ministry reminder already sent today');
+            return; // Already sent daily ministry reminder today
+          }
+        }
         this.sendDailyMinistryReminder();
-        localStorage.setItem(this.LAST_CHECK_KEY, Date.now().toString());
+        localStorage.setItem(this.LAST_DAILY_MINISTRY_REMINDER_KEY, Date.now().toString());
       }
     } catch (error) {
       console.error('Error checking notification status:', error);
@@ -281,8 +306,8 @@ export class NotificationService {
       return;
     }
 
-    const title = 'Join Ministry Today';
-    const body = 'Don\'t forget to join the ministry today! Your service is important.';
+    const title = 'Just a Friendly Reminder from FSTracker!';
+    const body = 'Don\'t forget to join the ministry. Your service is important!';
 
     // Use service worker if available, otherwise use regular notification
     if ('serviceWorker' in navigator) {
@@ -416,10 +441,10 @@ export class NotificationService {
 
   /**
    * Manually trigger a notification check (useful for testing)
+   * Note: This respects the "already shown today" logic and won't show
+   * notifications that have already been shown today
    */
   async manualCheck() {
-    // Clear the last check to force a notification
-    localStorage.removeItem(this.LAST_CHECK_KEY);
     await this.checkAndNotify();
   }
 
@@ -526,6 +551,6 @@ export class NotificationService {
     if (stored) {
       return JSON.parse(stored);
     }
-    return { hour: 9, minute: 0 }; // Default: 9:00 AM
+    return { hour: 6, minute: 0 }; // Default: 6:00 AM
   }
 }

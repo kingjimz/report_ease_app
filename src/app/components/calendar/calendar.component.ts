@@ -466,7 +466,14 @@ export class CalendarComponent implements OnInit, OnDestroy {
   
   // Add Report Modal Methods (matching dashboard)
   openAddReportModal() {
-    // Date is already set in onDayClick, and isDateLocked is set to true
+    // If no date is selected (opened from + button), set today's date
+    if (!this.selectedDate || !this.reportDate) {
+      const today = new Date();
+      this.selectedDate = today;
+      this.reportDate = today.toISOString().split('T')[0];
+      this.isDateLocked = false; // Allow date change when opened from + button
+    }
+    
     this.reportSuccess = false;
     this.reportAlertMessage = '';
     this.showAddReportModal = true;
