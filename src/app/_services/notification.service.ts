@@ -289,8 +289,8 @@ export class NotificationService {
       navigator.serviceWorker.ready.then((registration) => {
         const options: any = {
           body: body,
-          icon: '/favicon.ico',
-          badge: '/favicon.ico',
+          icon: '/assets/icons/fst-icon-192x192.png',
+          badge: '/assets/icons/fst-icon-192x192.png',
           tag: 'daily-ministry-reminder',
           requireInteraction: false,
           actions: [
@@ -342,8 +342,8 @@ export class NotificationService {
         // Use type assertion for service worker notification options which support actions
         const options: any = {
           body: body,
-          icon: '/favicon.ico',
-          badge: '/favicon.ico',
+          icon: '/assets/icons/fst-icon-192x192.png',
+          badge: '/assets/icons/fst-icon-192x192.png',
           tag: 'report-reminder',
           requireInteraction: false,
           actions: [
