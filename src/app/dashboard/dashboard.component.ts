@@ -561,6 +561,24 @@ export class DashboardComponent implements OnInit {
     this.reportMinutes = Math.max(0, (this.reportMinutes || 0) - 5);
   }
   
+  openDatePicker(event: Event) {
+    const input = event.target as HTMLInputElement;
+    // Use showPicker() if available (modern browsers)
+    if (input && typeof input.showPicker === 'function') {
+      try {
+        input.showPicker();
+      } catch (error) {
+        // Fallback: just focus the input, which will open the picker on most browsers
+        input.focus();
+        input.click();
+      }
+    } else {
+      // Fallback for older browsers
+      input.focus();
+      input.click();
+    }
+  }
+  
   async saveReport() {
     if (!this.reportDate) {
       this.reportSuccess = false;

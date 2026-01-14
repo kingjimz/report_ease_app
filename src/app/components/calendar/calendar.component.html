@@ -134,182 +134,199 @@
   </div>
 </div>
 
-<!--Modal-->
-<div
-  *ngIf="selectedDate"
-  class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-[10000]"
->
-  <div
-    class="modal-content p-4 rounded shadow-lg sm:w-full md:w-1/2 lg:w-1/3 xl:w-1/3 max-h-full overflow-auto"
-  >
-    <h3 class="text-lg font-medium mb-2 modal-title">
-      Report for {{ selectedDate | date: "fullDate" }}
-    </h3>
-    <form>
-      <div class="mb-4">
-        <label class="block text-sm font-medium form-label">Hours</label>
-        <div class="flex items-center space-x-6">
-          <!-- Hours -->
-          <div class="flex items-center space-x-2">
-            <button
-              type="button"
-              class="form-button px-2 py-1 rounded text-lg"
-              (click)="hours = Math.max(0, (+hours || 0) - 1)"
-            >
-              &#9664;
-            </button>
-            <input
-              type="text"
-              id="hours"
-              name="hours"
-              [(ngModel)]="hours"
-              class="form-input w-12 text-center px-2 py-1 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-xs"
-              readonly
-            />
-            <button
-              type="button"
-              class="form-button px-2 py-1 rounded text-lg"
-              (click)="hours = (+hours || 0) + 1"
-            >
-              &#9654;
-            </button>
-            <span class="ml-1 form-text">hrs</span>
+<!-- Add Report Modal (matching dashboard) -->
+<ng-container *ngIf="showAddReportModal">
+  <app-modal>
+    <div class="w-full">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center space-x-2 min-w-0 flex-1">
+          <div class="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex-shrink-0">
+            <i class="bi bi-calendar-plus text-white text-base"></i>
           </div>
-          <!-- Minutes -->
-          <div class="flex items-center space-x-2">
-            <button
-              type="button"
-              class="form-button px-2 py-1 rounded text-lg"
-              (click)="minutes = Math.max(0, (+minutes || 0) - 5)"
-            >
-              &#9664;
-            </button>
-            <input
-              type="text"
-              id="minutes"
-              name="minutes"
-              [(ngModel)]="minutes"
-              class="form-input w-12 text-center px-2 py-1 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-xs"
-              readonly
-            />
-            <button
-              type="button"
-              class="form-button px-2 py-1 rounded text-lg"
-              (click)="minutes = Math.min(55, (+minutes || 0) + 5)"
-            >
-              &#9654;
-            </button>
-            <span class="ml-1 form-text">min</span>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-base font-bold text-gray-900 dark:text-white truncate">
+              {{ hasExistingEvent ? 'Edit Report' : 'Add Report' }}
+            </h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+              {{ selectedDate | date: "fullDate" }}
+            </p>
           </div>
         </div>
-      </div>
-      <div class="mb-4" *ngIf="hasExistingEvent; else noEvent">
-        <label
-          for="is_joined_ministry"
-          class="block text-sm font-medium form-label"
-          >Did you participate in the ministry today?</label
-        >
-        <input
-          type="text"
-          id="is_joined_ministry"
-          name="is_joined_ministry"
-          [(ngModel)]="joined_ministry"
-          class="form-input mt-1 block w-full px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          readonly
-        />
-      </div>
-      <ng-template #noEvent>
-        <div class="mb-4">
-          <label
-            for="is_joined_ministry"
-            class="block text-sm font-medium form-label"
-            >Did you participate in the ministry today?</label
+        <div class="flex items-center gap-2">
+          <button
+            *ngIf="hasExistingEvent"
+            type="button"
+            (click)="openDeleteConfirmModal()"
+            class="flex items-center justify-center w-8 h-8 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors flex-shrink-0"
+            title="Delete Report"
           >
+            <i class="bi bi-trash text-xs"></i>
+          </button>
+          <button
+            (click)="closeAddReportModal()"
+            class="flex items-center justify-center w-8 h-8 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex-shrink-0"
+            title="Close"
+          >
+            <i class="bi bi-x-lg text-xs"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Report Form -->
+      <form (ngSubmit)="saveReportFromModal()" class="space-y-4">
+        <!-- Date Selection (Locked when opened from calendar) -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <i class="bi bi-calendar-event mr-1"></i>
+            Report Date *
+          </label>
+          <input
+            type="date"
+            [(ngModel)]="reportDate"
+            name="reportDate"
+            [readonly]="isDateLocked"
+            [disabled]="isDateLocked"
+            required
+            class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
+          />
+          <p *ngIf="isDateLocked" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <i class="bi bi-lock mr-1"></i>
+            Date is locked for this calendar entry
+          </p>
+        </div>
+
+        <!-- Hours and Minutes -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <i class="bi bi-clock mr-1"></i>
+            Time Spent *
+          </label>
+          <div class="grid grid-cols-2 gap-3">
+            <!-- Hours -->
+            <div>
+              <label class="text-xs text-gray-600 dark:text-gray-400 mb-1 block">Hours</label>
+              <div class="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  (click)="decrementHours()"
+                  class="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors flex-shrink-0"
+                >
+                  <i class="bi bi-dash-lg text-sm"></i>
+                </button>
+                <input
+                  type="number"
+                  [(ngModel)]="reportHours"
+                  name="reportHours"
+                  min="0"
+                  class="w-full min-w-0 text-center p-1.5 sm:p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base sm:text-lg font-bold bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                />
+                <button
+                  type="button"
+                  (click)="incrementHours()"
+                  class="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex-shrink-0"
+                >
+                  <i class="bi bi-plus-lg text-sm"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Minutes -->
+            <div>
+              <label class="text-xs text-gray-600 dark:text-gray-400 mb-1 block">Minutes</label>
+              <div class="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  (click)="decrementMinutes()"
+                  class="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors flex-shrink-0"
+                >
+                  <i class="bi bi-dash-lg text-sm"></i>
+                </button>
+                <input
+                  type="number"
+                  [(ngModel)]="reportMinutes"
+                  name="reportMinutes"
+                  min="0"
+                  max="55"
+                  step="5"
+                  class="w-full min-w-0 text-center p-1.5 sm:p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base sm:text-lg font-bold bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                />
+                <button
+                  type="button"
+                  (click)="incrementMinutes()"
+                  class="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex-shrink-0"
+                >
+                  <i class="bi bi-plus-lg text-sm"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ministry Participation -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <i class="bi bi-people mr-1"></i>
+            Did you participate in the ministry? *
+          </label>
           <select
-            id="is_joined_ministry"
-            name="is_joined_ministry"
-            [(ngModel)]="joined_ministry"
-            class="form-input mt-1 block w-full px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            [(ngModel)]="reportJoinedMinistry"
+            name="reportJoinedMinistry"
+            required
+            class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           >
             <option value="yes">Yes</option>
             <option value="no">No</option>
           </select>
         </div>
-      </ng-template>
 
-      <div class="mb-4">
-        <label for="note" class="block text-sm font-medium form-label"
-          >Notes <span>(Optional)</span></label
-        >
-        <textarea
-          id="note"
-          name="note"
-          [(ngModel)]="note"
-          rows="5"
-          class="form-input mt-1 block w-full px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-        >
-        </textarea>
-      </div>
+        <!-- Notes -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <i class="bi bi-sticky mr-1"></i>
+            Notes <span class="text-gray-500 dark:text-gray-400">(Optional)</span>
+          </label>
+          <textarea
+            [(ngModel)]="reportNotes"
+            name="reportNotes"
+            rows="3"
+            class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none"
+            placeholder="Add any notes about your ministry activity..."
+          ></textarea>
+        </div>
 
-      <div
-        *ngIf="noChangeDetected"
-        class="mb-4 p-2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700"
-      >
-        <p class="text-sm">
-          No modifications detected. The system will not commit any updates.
-        </p>
-      </div>
-      <div
-        *ngIf="!noChangeDetected"
-        class="mb-4 p-2 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700"
-      >
-        <p class="text-sm">Warning: Please verify your input carefully.</p>
-      </div>
-    </form>
+        <!-- Alert Messages -->
+        <app-alerts
+          *ngIf="reportAlertMessage"
+          [isSuccess]="reportSuccess"
+          [alertMessage]="reportAlertMessage"
+        ></app-alerts>
 
-    <div class="flex flex-wrap gap-2">
-      <ng-container *ngIf="hasExistingEvent; else noExistingEvent">
-        <button
-          class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition-colors"
-          (click)="updateReport()"
-          [disabled]="noChangeDetected"
-          [ngClass]="{
-            'opacity-50 cursor-not-allowed': noChangeDetected,
-          }"
-        >
-          Update
-        </button>
-        <button
-          class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-700 transition-colors"
-          (click)="openDeleteConfirmModal()"
-        >
-          <i class="bi bi-trash me-1"></i>
-          Delete
-        </button>
-      </ng-container>
-      <ng-template #noExistingEvent>
-        <button
-          class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition-colors"
-          (click)="saveReport()"
-          [disabled]="(!hours && !minutes) || !joined_ministry"
-          [ngClass]="{
-            'opacity-50 cursor-not-allowed':
-              (!hours && !minutes) || !joined_ministry,
-          }"
-        >
-          Save
-        </button>
-      </ng-template>
-
-      <button
-        (click)="closeModal()"
-        class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors ml-auto"
-      >
-        Close
-      </button>
+        <!-- Modal Footer -->
+        <div class="flex justify-end gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
+          <button
+            type="button"
+            (click)="closeAddReportModal()"
+            class="px-3 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium text-sm"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            [disabled]="isSubmittingReport || !reportDate || (!reportHours && !reportMinutes) || !reportJoinedMinistry"
+            class="px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span
+              *ngIf="isSubmittingReport"
+              class="animate-spin rounded-full h-4 w-4 border-t-2 border-white inline-block mr-2"
+            ></span>
+            {{ isSubmittingReport ? 'Saving...' : (hasExistingEvent ? 'Update Report' : 'Save Report') }}
+          </button>
+        </div>
+      </form>
     </div>
-  </div>
-</div>
+  </app-modal>
+</ng-container>
 
 <!-- Delete Confirmation Modal -->
 <div

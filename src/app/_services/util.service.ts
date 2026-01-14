@@ -394,11 +394,321 @@ export class UtilService {
     ctx.textBaseline = 'middle';
     ctx.fillText(`Generated on ${timestamp}`, centerX, footerY + 15);
 
-    // Download the Image with enhanced quality
+    // Return the image data URL for sharing or downloading
     const image = canvas.toDataURL('image/png', 1.0); // Maximum quality
+    
+    // Download the Image
     const link = document.createElement('a');
     link.href = image;
     link.download = `${isPioneer ? 'Pioneer' : 'Publisher'}-report-${report.month.replace(' ', '-')}.png`;
+    link.click();
+    
+    return image; // Return image data URL for sharing
+  }
+
+  async shareReport(report: any, isPioneer: boolean): Promise<void> {
+    // Load font and generate image
+    const loadFont = () => {
+      return new Promise((resolve) => {
+        if (
+          document.fonts &&
+          document.fonts.check &&
+          document.fonts.check('16px Poppins')
+        ) {
+          resolve(true);
+          return;
+        }
+
+        if (
+          !document.querySelector(
+            'link[href*="fonts.googleapis.com"][href*="Poppins"]',
+          )
+        ) {
+          const link = document.createElement('link');
+          link.href =
+            'https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap';
+          link.rel = 'stylesheet';
+          document.head.appendChild(link);
+        }
+
+        if (document.fonts && document.fonts.load) {
+          Promise.all([
+            document.fonts.load('400 16px Poppins'),
+            document.fonts.load('600 16px Poppins'),
+            document.fonts.load('700 16px Poppins'),
+          ])
+            .then(() => {
+              setTimeout(resolve, 100);
+            })
+            .catch(() => {
+              resolve(true);
+            });
+        } else {
+          setTimeout(resolve, 1000);
+        }
+      });
+    };
+
+    await loadFont();
+    
+    // Generate image data URL
+    const imageDataUrl = this.renderCanvasForShare(report, isPioneer);
+    
+    // Convert data URL to blob
+    const response = await fetch(imageDataUrl);
+    const blob = await response.blob();
+    const file = new File([blob], `${isPioneer ? 'Pioneer' : 'Publisher'}-report-${report.month.replace(' ', '-')}.png`, {
+      type: 'image/png',
+    });
+
+    // Check if Web Share API is available
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          title: `${isPioneer ? 'Pioneer' : 'Publisher'} Report - ${report.month}`,
+          text: `My ${isPioneer ? 'Pioneer' : 'Publisher'} Field Service Report for ${report.month}`,
+          files: [file],
+        });
+      } catch (error: any) {
+        // User cancelled or error occurred
+        if (error.name !== 'AbortError') {
+          console.error('Error sharing:', error);
+          // Fallback to download
+          this.downloadImageFromDataUrl(imageDataUrl, `${isPioneer ? 'Pioneer' : 'Publisher'}-report-${report.month.replace(' ', '-')}.png`);
+        }
+      }
+    } else {
+      // Fallback: copy to clipboard or download
+      try {
+        // Try to copy to clipboard (for images, this may not work in all browsers)
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': blob })
+        ]);
+        alert('Image copied to clipboard! You can paste it in your messenger or other apps.');
+      } catch (clipboardError) {
+        // If clipboard fails, just download
+        this.downloadImageFromDataUrl(imageDataUrl, `${isPioneer ? 'Pioneer' : 'Publisher'}-report-${report.month.replace(' ', '-')}.png`);
+      }
+    }
+  }
+
+  renderCanvasForShare(report: any, isPioneer: boolean): string {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) return '';
+
+    // High DPI scaling for better quality
+    const scale = window.devicePixelRatio || 2;
+    const width = 600;
+    const height = 400;
+
+    canvas.width = width * scale;
+    canvas.height = height * scale;
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+    ctx.scale(scale, scale);
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    // Create gradient background
+    const gradient = ctx.createLinearGradient(0, 0, 0, height);
+    gradient.addColorStop(0, '#667eea');
+    gradient.addColorStop(1, '#764ba2');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+
+    // Main content card
+    const cardMargin = 20;
+    const cardX = cardMargin;
+    const cardY = cardMargin;
+    const cardWidth = width - cardMargin * 2;
+    const cardHeight = height - cardMargin * 2;
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+    ctx.fillRect(cardX + 4, cardY + 4, cardWidth, cardHeight);
+
+    ctx.fillStyle = 'white';
+    ctx.fillRect(cardX, cardY, cardWidth, cardHeight);
+
+    // Header section
+    const headerHeight = 60;
+    const headerGradient = ctx.createLinearGradient(
+      0,
+      cardY,
+      0,
+      cardY + headerHeight,
+    );
+    headerGradient.addColorStop(0, '#4f46e5');
+    headerGradient.addColorStop(1, '#7c3aed');
+    ctx.fillStyle = headerGradient;
+    ctx.fillRect(cardX, cardY, cardWidth, headerHeight);
+
+    ctx.fillStyle = 'white';
+    ctx.font =
+      '700 24px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const centerX = width / 2;
+    ctx.fillText('Monthly Field Service Report', centerX, cardY + 38);
+
+    // Month badge
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    const badgeWidth = 200;
+    const badgeHeight = 25;
+    const badgeX = centerX - badgeWidth / 2;
+    const badgeY = cardY + headerHeight + 15;
+    ctx.fillRect(badgeX, badgeY, badgeWidth, badgeHeight);
+
+    ctx.fillStyle = '#4f46e5';
+    ctx.font =
+      '600 16px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(report.month, centerX, badgeY + 17);
+
+    const typeText = isPioneer
+      ? 'Pioneer Report Card'
+      : 'Publisher Report Card';
+    const typeBadgeY = badgeY + 35;
+    ctx.fillStyle = '#1e293b';
+    ctx.font =
+      '600 14px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(typeText, centerX, typeBadgeY + 14);
+
+    // Report statistics section
+    let yPosition = cardY + headerHeight + 85;
+    const leftMargin = cardX + 50;
+    const rightMargin = cardX + cardWidth - 50;
+
+    if (isPioneer) {
+      const stats = [
+        {
+          label: '⏱️ Hours',
+          value: report.hours !== undefined ? report.hours.toString() : 'N/A',
+        },
+        {
+          label: '📖 Bible Studies',
+          value: report.bibleStudies.toString(),
+        },
+        {
+          label: '🤝 Ministry Participation',
+          value: this.capitalizeFirstLetter(report.is_joined_ministry),
+        },
+      ];
+
+      stats.forEach((stat, index) => {
+        const statY = yPosition + index * 60;
+
+        ctx.fillStyle = '#475569';
+        ctx.font =
+          '400 18px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(stat.label, leftMargin, statY);
+
+        ctx.fillStyle = '#1e293b';
+        ctx.font =
+          '600 20px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(stat.value, rightMargin, statY);
+      });
+    } else {
+      let currentY = yPosition;
+
+      ctx.fillStyle = '#475569';
+      ctx.font =
+        '400 18px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('⏱️ Hours', leftMargin, currentY);
+
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      const lineStartX = rightMargin - 20;
+      ctx.moveTo(lineStartX, currentY);
+      ctx.lineTo(rightMargin, currentY);
+      ctx.stroke();
+
+      currentY += 60;
+
+      ctx.fillStyle = '#475569';
+      ctx.font =
+        '400 18px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('📖 Bible Studies', leftMargin, currentY);
+
+      ctx.fillStyle = '#1e293b';
+      ctx.font =
+        '600 20px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(report.bibleStudies.toString(), rightMargin, currentY);
+
+      currentY += 60;
+
+      ctx.fillStyle = '#475569';
+      ctx.font =
+        '400 18px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🤝 Ministry Participation', leftMargin, currentY);
+
+      ctx.fillStyle = '#1e293b';
+      ctx.font =
+        '600 20px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(
+        this.capitalizeFirstLetter(report.is_joined_ministry),
+        rightMargin,
+        currentY,
+      );
+    }
+
+    const footerY = cardY + cardHeight - 40;
+
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(leftMargin, footerY - 15);
+    ctx.lineTo(rightMargin, footerY - 15);
+    ctx.stroke();
+
+    ctx.fillStyle = '#64748b';
+    ctx.font =
+      '400 12px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Generated by Field Service Tracker', centerX, footerY);
+
+    const now = new Date();
+    const timestamp = now.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    ctx.fillStyle = '#94a3b8';
+    ctx.font =
+      '400 10px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`Generated on ${timestamp}`, centerX, footerY + 15);
+
+    return canvas.toDataURL('image/png', 1.0);
+  }
+
+  downloadImageFromDataUrl(dataUrl: string, filename: string): void {
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = filename;
     link.click();
   }
 }

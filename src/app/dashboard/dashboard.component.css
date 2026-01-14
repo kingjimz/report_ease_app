@@ -450,3 +450,25 @@
     0 0 15px rgba(59, 130, 246, 0.7),
     0 0 30px rgba(59, 130, 246, 0.4);
 }
+
+/* Remove native calendar icon from date input but keep it clickable */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  display: none;
+  -webkit-appearance: none;
+}
+
+input[type="date"]::-webkit-inner-spin-button,
+input[type="date"]::-webkit-clear-button {
+  display: none;
+  -webkit-appearance: none;
+}
+
+/* For Firefox */
+input[type="date"] {
+  -moz-appearance: textfield;
+}
+
+/* Ensure the entire input is clickable and opens date picker */
+input[type="date"] {
+  cursor: pointer;
+}

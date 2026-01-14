@@ -7,6 +7,7 @@ import { ModalComponent } from '../modal/modal.component';
 import { LoaderComponent } from '../loader/loader.component';
 import { AlertsComponent } from '../alerts/alerts.component';
 import { ModalService } from '../../_services/modal.service';
+import { SettingsService } from '../../_services/settings.service';
 
 @Component({
   selector: 'app-reports',
@@ -53,7 +54,7 @@ export class ReportsComponent implements OnDestroy {
 
   // Pagination properties
   currentPage = 1;
-  itemsPerPage = 3;
+  itemsPerPage = 2;
   totalPages = 0;
   showAllReports = false;
   
@@ -67,14 +68,22 @@ export class ReportsComponent implements OnDestroy {
     public api: ApiService,
     public util: UtilService,
     private modalService: ModalService,
+    private settingsService: SettingsService,
   ) {}
 
   ngOnInit() {
     this.loadReports();
     this.loadBibLeStudies();
+    this.loadUserSettings();
     setTimeout(() => {
       this.loading = false;
     }, 1000);
+  }
+
+  loadUserSettings() {
+    this.settingsService.settings$.subscribe(settings => {
+      this.isPioneer = settings.isPioneer;
+    });
   }
 
   async loadBibLeStudies() {
@@ -141,7 +150,7 @@ export class ReportsComponent implements OnDestroy {
     if (this.showAllReports) {
       this.itemsPerPage = this.reports.length;
     } else {
-      this.itemsPerPage = 3;
+      this.itemsPerPage = 2;
     }
     this.calculatePagination();
     this.updatePaginatedReports();
@@ -155,7 +164,7 @@ export class ReportsComponent implements OnDestroy {
     if (this.showAllBibleStudies) {
       return this.filteredBibleStudies;
     }
-    return this.filteredBibleStudies.slice(0, 3);
+    return this.filteredBibleStudies.slice(0, 2);
   }
   
   formatNameForMobile(name: string): string {
@@ -304,6 +313,22 @@ export class ReportsComponent implements OnDestroy {
     return String(schedule);
   }
 
+  isStudyOverdue(study: any): boolean {
+    if (!study.schedule) return false;
+
+    const scheduleDate = this.parseScheduleToDate(study.schedule);
+    if (!scheduleDate || isNaN(scheduleDate.getTime())) {
+      return false;
+    }
+
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    scheduleDate.setHours(0, 0, 0, 0);
+
+    // Check if scheduled date has passed
+    return scheduleDate < now;
+  }
+
   closeStudyDetails() {
     this.isSelected = false;
     this.studySelected = null;
@@ -427,18 +452,32 @@ export class ReportsComponent implements OnDestroy {
     this.isSuccess = false;
   }
 
-  downloadReport(report: any, isPioneer: boolean, index: number) {
+  downloadReport(report: any, index: number) {
     this.selectedReport = report;
     this.monthlyReportData = {
       month: `${report.month_name} ${report.year}`,
       bibleStudies: this.filterBibleStudies(this.bibleStudies).length,
       is_joined_ministry: report.is_joined_ministry,
-      hours: isPioneer ? report.total_hours : undefined,
+      hours: this.isPioneer ? report.total_hours : undefined,
       report_count: report.report_count,
     };
 
     this.dropdownOpen[index] = false;
-    this.util.generatePNG(this.monthlyReportData, isPioneer);
+    this.util.generatePNG(this.monthlyReportData, this.isPioneer);
+  }
+
+  async shareReport(report: any, index: number) {
+    this.selectedReport = report;
+    this.monthlyReportData = {
+      month: `${report.month_name} ${report.year}`,
+      bibleStudies: this.filterBibleStudies(this.bibleStudies).length,
+      is_joined_ministry: report.is_joined_ministry,
+      hours: this.isPioneer ? report.total_hours : undefined,
+      report_count: report.report_count,
+    };
+
+    this.dropdownOpen[index] = false;
+    await this.util.shareReport(this.monthlyReportData, this.isPioneer);
   }
 
   filterBibleStudies(studies: any[]): any[] {

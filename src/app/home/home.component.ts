@@ -17,6 +17,7 @@ import { SettingsService } from '../_services/settings.service';
 import { TutorialComponent } from '../components/tutorial/tutorial.component';
 import { TutorialService } from '../_services/tutorial.service';
 import { ModalService } from '../_services/modal.service';
+import { NavigationService } from '../_services/navigation.service';
 
 @Component({
   selector: 'app-home',
@@ -69,6 +70,7 @@ export class HomeComponent implements OnInit {
     private settingsService: SettingsService,
     private tutorialService: TutorialService,
     private modalService: ModalService,
+    private navigationService: NavigationService,
   ) {
     // Set default date to today
     const today = new Date();
@@ -85,6 +87,12 @@ export class HomeComponent implements OnInit {
     // Subscribe to modal state to hide tab bar on mobile when modals are open
     this.modalService.modalOpen$.subscribe((isOpen) => {
       this.isAnyModalOpen = isOpen;
+    });
+
+    // Subscribe to navigation service for tab changes
+    this.navigationService.tabChange$.subscribe((tabId) => {
+      this.activeTab = tabId;
+      this.selectedTab = tabId;
     });
   }
 

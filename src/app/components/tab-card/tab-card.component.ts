@@ -1,7 +1,9 @@
-import { Component, Output, EventEmitter, Input, OnInit } from '@angular/core';
+import { Component, Output, EventEmitter, Input, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { CommonModule } from '@angular/common';
 import { CalendarComponent } from '../calendar/calendar.component';
+import { NavigationService } from '../../_services/navigation.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -10,12 +12,13 @@ import { CalendarComponent } from '../calendar/calendar.component';
   styleUrls: ['./tab-card.component.css'],
   imports: [CommonModule],
 })
-export class TabCardComponent implements OnInit {
+export class TabCardComponent implements OnInit, OnChanges, OnDestroy {
   @Output() tabChange = new EventEmitter<string>();
   @Output() manualReportModalOpen = new EventEmitter<void>();
   @Input() selectedTab: string = 'dashboard';
 
   activeTab = 'dashboard';
+  private navigationSubscription?: Subscription;
 
   tabs = [
     {
@@ -44,9 +47,28 @@ export class TabCardComponent implements OnInit {
     },
   ];
 
+  constructor(private navigationService: NavigationService) {}
+
   ngOnInit(): void {
     if (this.selectedTab && this.selectedTab !== this.activeTab) {
       this.activeTab = this.selectedTab;
+    }
+    
+    // Subscribe to navigation service for immediate updates
+    this.navigationSubscription = this.navigationService.tabChange$.subscribe((tabId) => {
+      this.activeTab = tabId;
+    });
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['selectedTab'] && changes['selectedTab'].currentValue) {
+      this.activeTab = changes['selectedTab'].currentValue;
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.navigationSubscription) {
+      this.navigationSubscription.unsubscribe();
     }
   }
 

@@ -505,7 +505,8 @@
           </div>
           <div class="min-w-0 flex-1">
             <h3 class="text-base font-bold text-gray-900 dark:text-white truncate">Add Report</h3>
-            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">Create a ministry service report for a specific date</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate hidden sm:block">Create a ministry service report for a specific date</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate sm:hidden">Add a service report</p>
           </div>
         </div>
         <button
@@ -522,7 +523,6 @@
         <!-- Date Selection -->
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            <i class="bi bi-calendar-event mr-1"></i>
             Report Date *
           </label>
           <input
@@ -530,7 +530,9 @@
             [(ngModel)]="reportDate"
             name="reportDate"
             required
-            class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            (click)="openDatePicker($event)"
+            (focus)="openDatePicker($event)"
+            class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white cursor-pointer"
           />
         </div>
 
