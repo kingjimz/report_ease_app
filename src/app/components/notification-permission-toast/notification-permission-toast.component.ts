@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NotificationService } from '../../_services/notification.service';
+import { NotificationService, NotificationPermission } from '../../_services/notification.service';
 import { Auth, onAuthStateChanged } from '@angular/fire/auth';
 import { Subscription } from 'rxjs';
 
@@ -14,8 +14,7 @@ import { Subscription } from 'rxjs';
 export class NotificationPermissionToastComponent implements OnInit, OnDestroy {
   showPrompt = false;
   isRequesting = false;
-  showTestButtons = false;
-  isTesting = false;
+  isBlocked = false; // Track if permission is blocked
   private permissionSubscription?: Subscription;
 
   constructor(
@@ -24,53 +23,83 @@ export class NotificationPermissionToastComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    // Always attempt to show toast (even in dev, regardless of auth)
-    this.checkAndShowToast();
+    // Check permission immediately on component init (before subscription)
+    this.checkInitialPermission();
+    
+    // Subscribe to permission changes from service
+    this.permissionSubscription = this.notificationService.permission$.subscribe((permission) => {
+      this.updateToastVisibility(permission);
+    });
 
-    // Keep watching auth state in case the app expects it elsewhere
+    // Also watch auth state changes
     onAuthStateChanged(this.auth, () => {
-      // No gating on auth anymore; toast is controlled by permission + dismissal flag
-      this.checkAndShowToast();
+      // Re-check when auth state changes
+      setTimeout(() => {
+        this.checkInitialPermission();
+      }, 500);
     });
   }
 
-  private checkAndShowToast() {
-    // Check if toast was dismissed
-    const dismissed = localStorage.getItem('notification_toast_dismissed');
-    if (dismissed === 'true') {
-      return; // Don't show if dismissed
+  private checkInitialPermission() {
+    if (!('Notification' in window)) {
+      return;
     }
 
-    // Subscribe to permission changes
-    this.permissionSubscription = this.notificationService.permission$.subscribe((permission) => {
-      // Show toast if permission is default (not granted and not denied)
-      if (!permission.granted && !permission.denied) {
-        // Show after a short delay (3 seconds) to not be too intrusive
-        setTimeout(() => {
-          const stillDismissed = localStorage.getItem('notification_toast_dismissed');
-          if (stillDismissed !== 'true') {
-            this.showPrompt = true;
-          }
-        }, 3000);
-      } else {
-        this.showPrompt = false;
-        this.showTestButtons = permission.granted;
-      }
-    });
+    const permission = Notification.permission;
+    const permissionState: NotificationPermission = {
+      granted: permission === 'granted',
+      denied: permission === 'denied',
+      default: permission === 'default'
+    };
+    
+    this.updateToastVisibility(permissionState);
+  }
 
-    // Check initial permission status
-    if ('Notification' in window) {
-      const permission = Notification.permission;
-      if (permission === 'default') {
-        // Show after a short delay
+  private updateToastVisibility(permission: NotificationPermission) {
+    console.log('Notification permission status:', permission);
+    
+    // If permission is denied (blocked), always show the toast
+    if (permission.denied) {
+      console.log('Permission is denied (blocked), showing toast');
+      // Clear dismissal flag when permission is denied so toast can always show
+      localStorage.removeItem('notification_toast_dismissed');
+      this.isBlocked = true;
+      // Show immediately when blocked (shorter delay)
+      setTimeout(() => {
+        this.showPrompt = true;
+        console.log('Toast should now be visible (blocked)');
+      }, 500);
+      return;
+    }
+
+    // If permission is granted, hide prompt
+    if (permission.granted) {
+      console.log('Permission is granted, hiding prompt');
+      this.showPrompt = false;
+      this.isBlocked = false;
+      return;
+    }
+
+    // If permission is default (not yet requested)
+    if (permission.default) {
+      console.log('Permission is default, checking dismissal status');
+      this.isBlocked = false;
+      const dismissed = localStorage.getItem('notification_toast_dismissed');
+      
+      // Only show if not dismissed
+      if (dismissed !== 'true') {
+        console.log('Not dismissed, will show toast after delay');
+        // Show after a short delay (1.5 seconds) to not be too intrusive
         setTimeout(() => {
           const stillDismissed = localStorage.getItem('notification_toast_dismissed');
           if (stillDismissed !== 'true') {
             this.showPrompt = true;
+            console.log('Toast should now be visible (default)');
           }
-        }, 3000);
-      } else if (permission === 'granted') {
-        this.showTestButtons = true;
+        }, 1500);
+      } else {
+        console.log('Toast was dismissed, not showing');
+        this.showPrompt = false;
       }
     }
   }
@@ -82,14 +111,22 @@ export class NotificationPermissionToastComponent implements OnInit, OnDestroy {
   }
 
   async requestPermission() {
+    // If permission is blocked, we can't request it programmatically
+    // User needs to enable it in browser settings
+    if (this.isBlocked) {
+      // Show alert or message about enabling in browser settings
+      alert('Notifications are blocked. Please enable them in your browser settings:\n\nChrome/Edge: Settings > Privacy and security > Site settings > Notifications\n\nFirefox: Settings > Privacy & Security > Permissions > Notifications\n\nSafari: Preferences > Websites > Notifications');
+      return;
+    }
+    
     this.isRequesting = true;
     try {
       const granted = await this.notificationService.requestPermission();
       if (granted) {
         this.showPrompt = false;
+        this.isBlocked = false;
         // Clear dismissal flag since permission is now granted
         localStorage.removeItem('notification_toast_dismissed');
-        this.showTestButtons = true;
       }
     } catch (error) {
       console.error('Error requesting notification permission:', error);
@@ -98,18 +135,11 @@ export class NotificationPermissionToastComponent implements OnInit, OnDestroy {
     }
   }
 
-  async triggerTestNotification() {
-    this.isTesting = true;
-    try {
-      await this.notificationService.sendTestNotification();
-    } catch (error) {
-      console.error('Error sending test notification:', error);
-    } finally {
-      this.isTesting = false;
-    }
-  }
-
   dismissPrompt() {
+    // Don't allow dismissing if permission is blocked - user needs to see instructions
+    if (this.isBlocked) {
+      return;
+    }
     this.showPrompt = false;
     // Store dismissal in localStorage to not show again (until page refresh or permission changes)
     localStorage.setItem('notification_toast_dismissed', 'true');

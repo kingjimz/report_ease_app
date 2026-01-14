@@ -5,7 +5,12 @@
     </div>
     <div class="notification-toast-text">
       <p class="notification-toast-title">Enable Notifications</p>
-      <p class="notification-toast-message">Get daily reminders to join ministry plus end-of-month report alerts.</p>
+      <p class="notification-toast-message" *ngIf="!isBlocked">
+        Get daily reminders to join ministry plus end-of-month report alerts.
+      </p>
+      <p class="notification-toast-message" *ngIf="isBlocked">
+        Notifications are currently blocked. Please enable them in your browser settings to receive daily ministry reminders and report alerts.
+      </p>
     </div>
     <div class="notification-toast-actions">
       <button 
@@ -16,32 +21,12 @@
         <span *ngIf="!isRequesting">Enable</span>
         <span *ngIf="isRequesting">Enabling...</span>
       </button>
-      <button class="btn-close" (click)="dismissPrompt()" title="Dismiss">
-        <i class="bi bi-x-lg"></i>
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- Test notification button (visible when permission is granted) -->
-<div *ngIf="showTestButtons" class="notification-toast" style="bottom: 90px;">
-  <div class="notification-toast-content">
-    <div class="notification-toast-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-      <i class="bi bi-flask"></i>
-    </div>
-    <div class="notification-toast-text">
-      <p class="notification-toast-title">Test Notification</p>
-      <p class="notification-toast-message">Send a sample push now to confirm it shows.</p>
-    </div>
-    <div class="notification-toast-actions">
       <button 
-        class="btn-enable" 
-        (click)="triggerTestNotification()" 
-        [disabled]="isTesting"
-        style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);"
-        title="Send test notification">
-        <span *ngIf="!isTesting">Send Test</span>
-        <span *ngIf="isTesting">Sending...</span>
+        *ngIf="!isBlocked"
+        class="btn-close" 
+        (click)="dismissPrompt()" 
+        title="Dismiss">
+        <i class="bi bi-x-lg"></i>
       </button>
     </div>
   </div>
