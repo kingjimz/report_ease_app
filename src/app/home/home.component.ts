@@ -40,6 +40,7 @@ import { NavigationService } from '../_services/navigation.service';
 })
 export class HomeComponent implements OnInit {
   @ViewChild(ReportsComponent) reportsComponent?: ReportsComponent;
+  @ViewChild(DashboardComponent) dashboardComponent?: DashboardComponent;
   
   activeTab = 'dashboard';
   showTab = true;
@@ -185,26 +186,25 @@ export class HomeComponent implements OnInit {
   }
   
   onAddReportModalOpen() {
-    // If we're on the reports tab, open the modal directly
-    if (this.activeTab === 'reports' && this.reportsComponent) {
-      this.reportsComponent.openAddReportModal();
-    } else {
-      // Otherwise, switch to reports tab first, then open modal
-      this.onTabChange('reports');
-      // Use setTimeout to ensure the component is rendered before accessing it
-      setTimeout(() => {
-        if (this.reportsComponent) {
-          this.reportsComponent.openAddReportModal();
-        } else {
-          // If still not available, try again after a longer delay
-          setTimeout(() => {
-            if (this.reportsComponent) {
-              this.reportsComponent.openAddReportModal();
-            }
-          }, 200);
-        }
-      }, 100);
-    }
+    // Defer modal opening to next tick to avoid change detection error
+    setTimeout(() => {
+      // Open the modal on the current tab without switching tabs
+      // Reports component is always in DOM (just hidden), so we can always use it
+      if (this.activeTab === 'dashboard' && this.dashboardComponent) {
+        // Use dashboard's own modal
+        this.dashboardComponent.openAddReportModal();
+      } else if (this.reportsComponent) {
+        // Use reports component modal (available even when hidden)
+        this.reportsComponent.openAddReportModal();
+      } else {
+        // If reports component isn't loaded yet, wait a bit and try again
+        setTimeout(() => {
+          if (this.reportsComponent) {
+            this.reportsComponent.openAddReportModal();
+          }
+        }, 100);
+      }
+    }, 0);
   }
 
   closeManualReportModal() {

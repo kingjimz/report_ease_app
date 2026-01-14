@@ -466,7 +466,7 @@ export class NotificationService {
 
     if (useServiceWorker) {
       try {
-        // Set a shorter timeout for service worker (1 second) to fail fast in dev
+        // Use service worker for production (longer timeout for production)
         const swPromise = navigator.serviceWorker.ready.then((registration) => {
           const options: any = {
             body: body,
@@ -492,9 +492,9 @@ export class NotificationService {
           return registration.showNotification(title, options);
         });
 
-        // Wait for service worker with short timeout
+        // Wait for service worker with longer timeout for production (5 seconds)
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Service worker timeout')), 1000)
+          setTimeout(() => reject(new Error('Service worker timeout')), 5000)
         );
 
         await Promise.race([swPromise, timeoutPromise]);
@@ -502,11 +502,12 @@ export class NotificationService {
         return;
       } catch (error) {
         console.warn('Service worker notification failed, using regular notification:', error);
+        // Fall through to regular notification
       }
     }
 
-    // Use regular notification (works immediately in dev mode)
-    console.log('Using regular browser notification (works in dev mode)');
+    // Fallback to regular notification if service worker fails or isn't available
+    console.log('Using regular browser notification');
     this.showRegularNotification(title, body);
   }
 
