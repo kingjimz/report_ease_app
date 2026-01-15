@@ -69,19 +69,32 @@ export class AppComponent implements OnInit, OnDestroy {
   private initializeNotifications() {
     // Handle service worker notification clicks if using service worker notifications
     if ('serviceWorker' in navigator) {
+      // iOS compatibility: Add timeout to prevent blocking
+      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const timeout = isIOS ? 10000 : 5000; // Longer timeout for iOS
+      
       // Try to register notification service worker for handling notification clicks
       // This will only work if Angular's service worker doesn't conflict
-      navigator.serviceWorker.getRegistration().then((registration) => {
-        if (registration) {
-          // Angular's service worker is registered, we'll use it for notifications
-          console.log('Using Angular service worker for notifications');
-        } else {
-          // No service worker registered, register our notification SW
-          navigator.serviceWorker.register('/notification-sw.js').catch((error) => {
-            console.log('Notification service worker registration failed:', error);
-          });
-        }
-      });
+      const registrationPromise = navigator.serviceWorker.getRegistration();
+      const timeoutPromise = new Promise((resolve) => 
+        setTimeout(() => resolve(null), timeout)
+      );
+      
+      Promise.race([registrationPromise, timeoutPromise])
+        .then((registration: any) => {
+          if (registration) {
+            // Angular's service worker is registered, we'll use it for notifications
+            console.log('Using Angular service worker for notifications');
+          } else if (!isIOS) {
+            // No service worker registered, register our notification SW (skip on iOS to avoid conflicts)
+            navigator.serviceWorker.register('/notification-sw.js').catch((error) => {
+              console.log('Notification service worker registration failed:', error);
+            });
+          }
+        })
+        .catch((error) => {
+          console.warn('Service worker check failed (non-blocking):', error);
+        });
 
       // Listen for service worker messages (for future use)
       navigator.serviceWorker.addEventListener('message', (event) => {

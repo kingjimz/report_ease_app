@@ -23,6 +23,11 @@
               "src/favicon.ico",
               "src/manifest.webmanifest",
               {
+                "glob": "**/*",
+                "input": "public/icons",
+                "output": "/icons"
+              },
+              {
                 "glob": "notification-sw.js",
                 "input": "src",
                 "output": "/"
