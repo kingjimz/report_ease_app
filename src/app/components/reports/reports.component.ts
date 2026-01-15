@@ -142,11 +142,68 @@ export class ReportsComponent implements OnDestroy {
     // Filter by search query
     if (this.searchQuery.trim()) {
       const query = this.searchQuery.toLowerCase();
-      filtered = filtered.filter(study => 
-        study.bible_study?.toLowerCase().includes(query) ||
-        study.address?.toLowerCase().includes(query) ||
-        study.schedule?.toLowerCase().includes(query)
-      );
+      filtered = filtered.filter(study => {
+        // Check bible_study name
+        const bibleStudyMatch = study.bible_study?.toLowerCase().includes(query);
+        
+        // Check address
+        const addressMatch = study.address?.toLowerCase().includes(query);
+        
+        // Check schedule - handle Date objects, Firestore timestamps, and strings
+        let scheduleMatch = false;
+        if (study.schedule) {
+          try {
+            let scheduleStr = '';
+            // Handle Firestore timestamp
+            if (study.schedule.toDate && typeof study.schedule.toDate === 'function') {
+              scheduleStr = study.schedule.toDate().toLocaleString('en-US', {
+                weekday: 'short',
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+              }).toLowerCase();
+            }
+            // Handle Date object
+            else if (study.schedule instanceof Date) {
+              scheduleStr = study.schedule.toLocaleString('en-US', {
+                weekday: 'short',
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+              }).toLowerCase();
+            }
+            // Handle string
+            else if (typeof study.schedule === 'string') {
+              scheduleStr = study.schedule.toLowerCase();
+            }
+            // Handle Firestore timestamp with seconds
+            else if (study.schedule.seconds) {
+              const date = new Date(study.schedule.seconds * 1000);
+              scheduleStr = date.toLocaleString('en-US', {
+                weekday: 'short',
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+              }).toLowerCase();
+            }
+            scheduleMatch = scheduleStr.includes(query);
+          } catch (error) {
+            // If schedule conversion fails, just skip schedule matching
+            scheduleMatch = false;
+          }
+        }
+        
+        return bibleStudyMatch || addressMatch || scheduleMatch;
+      });
     }
     
     this.filteredBibleStudies = filtered;
