@@ -18,6 +18,27 @@ import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideAuth, getAuth } from '@angular/fire/auth';
 import { provideServiceWorker } from '@angular/service-worker';
 
+// Detect iOS devices - safe for SSR
+function isIOS(): boolean {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+    return false;
+  }
+  return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+// iOS Safari has known issues with delayed service worker registration that can block page load
+// Use immediate registration for iOS instead of waiting for app to be stable
+const isIOSDevice = typeof window !== 'undefined' && isIOS();
+const serviceWorkerConfig = isIOSDevice
+  ? {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerImmediately' as const, // Immediate registration prevents iOS hanging
+    }
+  : {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000' as const,
+    };
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
@@ -31,9 +52,6 @@ export const appConfig: ApplicationConfig = {
       }),
     ),
     provideAuth(() => getAuth()),
-    provideServiceWorker('ngsw-worker.js', {
-      enabled: !isDevMode(),
-      registrationStrategy: 'registerWhenStable:30000',
-    }),
+    provideServiceWorker('ngsw-worker.js', serviceWorkerConfig),
   ],
 };
