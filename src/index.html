@@ -39,55 +39,100 @@
       rel="stylesheet"
     />
   </head>
-  <body>
-    <app-root></app-root>
+  <body style="margin: 0; padding: 0; min-height: 100vh; background-color: #ffffff;">
+    <app-root>
+      <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background-color: #ffffff; color: #111827; font-family: 'Poppins', sans-serif;">
+        <div style="text-align: center; padding: 20px;">
+          <div style="font-size: 18px; margin-bottom: 10px;">Loading...</div>
+          <div style="font-size: 14px; color: #6b7280;">Please wait while the app initializes</div>
+        </div>
+      </div>
+    </app-root>
     <noscript
       >Please enable JavaScript to continue using this application.</noscript
     >
     <script>
       // iOS compatibility: Ensure app loads even if service worker fails
       // This prevents iOS Safari from getting stuck during service worker registration
-      if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
-        // Unregister any existing service workers that might be causing blank screen issues
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(function(registrations) {
-            for (var i = 0; i < registrations.length; i++) {
-              registrations[i].unregister().catch(function(err) {
-                console.warn('Failed to unregister service worker on iOS:', err);
-              });
-            }
-          }).catch(function(err) {
-            console.warn('Error getting service worker registrations on iOS:', err);
+      (function() {
+        var isIOS = navigator.userAgent.match(/iPhone|iPad|iPod/i);
+        
+        if (isIOS) {
+          // Unregister any existing service workers that might be causing blank screen issues
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+              for (var i = 0; i < registrations.length; i++) {
+                registrations[i].unregister().catch(function(err) {
+                  console.warn('Failed to unregister service worker on iOS:', err);
+                });
+              }
+            }).catch(function(err) {
+              console.warn('Error getting service worker registrations on iOS:', err);
+            });
+            
+            // Handle service worker errors gracefully on iOS
+            navigator.serviceWorker.addEventListener('error', function(event) {
+              console.warn('Service worker error on iOS:', event);
+              // Don't block app loading
+            });
+          }
+          
+          // Check if Angular has bootstrapped after page load
+          window.addEventListener('load', function() {
+            var checkInterval = setInterval(function() {
+              var appRoot = document.querySelector('app-root');
+              if (appRoot) {
+                // Check if Angular has rendered content (not just the loading div)
+                var hasContent = appRoot.children.length > 0 && 
+                                 appRoot.innerHTML.trim().length > 200; // More than just loading message
+                
+                if (hasContent) {
+                  clearInterval(checkInterval);
+                  console.log('App loaded successfully on iOS');
+                } else {
+                  // After 10 seconds, if still no content, try to reload
+                  setTimeout(function() {
+                    if (!hasContent) {
+                      console.warn('App may be stuck on iOS, attempting recovery...');
+                      // Try to force a re-render
+                      window.dispatchEvent(new Event('resize'));
+                      // If still stuck after 5 more seconds, reload
+                      setTimeout(function() {
+                        var stillStuck = document.querySelector('app-root') && 
+                                       document.querySelector('app-root').innerHTML.trim().length < 200;
+                        if (stillStuck) {
+                          console.warn('App still stuck, reloading page...');
+                          window.location.reload();
+                        }
+                      }, 5000);
+                    }
+                  }, 10000);
+                }
+              }
+            }, 1000);
+            
+            // Clear interval after 30 seconds max
+            setTimeout(function() {
+              clearInterval(checkInterval);
+            }, 30000);
           });
           
-          // Handle service worker errors gracefully on iOS
-          navigator.serviceWorker.addEventListener('error', function(event) {
-            console.warn('Service worker error on iOS:', event);
-            // Don't block app loading
+          // Prevent iOS from caching the page in a broken state
+          window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+              // Page was loaded from cache, force a reload to prevent blank screen
+              console.log('Page loaded from cache on iOS, reloading...');
+              window.location.reload();
+            }
+          });
+          
+          // Catch any unhandled errors that might prevent Angular from bootstrapping
+          window.addEventListener('error', function(event) {
+            console.error('JavaScript error on iOS:', event.error);
+            // Don't prevent default, let Angular handle it if possible
           });
         }
-        
-        // Add a timeout to ensure page doesn't hang
-        window.addEventListener('load', function() {
-          setTimeout(function() {
-            // Force render if app hasn't loaded
-            var appRoot = document.querySelector('app-root');
-            if (appRoot && !appRoot.innerHTML.trim()) {
-              console.warn('App may be stuck on iOS, attempting recovery...');
-              // Try to force a re-render by triggering a resize event
-              window.dispatchEvent(new Event('resize'));
-            }
-          }, 5000);
-        });
-        
-        // Prevent iOS from caching the page in a broken state
-        window.addEventListener('pageshow', function(event) {
-          if (event.persisted) {
-            // Page was loaded from cache, force a reload to prevent blank screen
-            window.location.reload();
-          }
-        });
-      }
+      })();
     </script>
   </body>
 </html>
