@@ -69,7 +69,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Scroll detection properties
   private lastScrollTop = 0;
-  private scrollThreshold = 10; // Reduced threshold for more responsive behavior
+  private scrollThreshold = 20; // Increased threshold to reduce sensitivity
   private boundScrollHandler?: (event: Event) => void;
   private scrollCheckInterval?: number;
 
@@ -150,11 +150,11 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
                                  document.documentElement.scrollTop || 
                                  document.body.scrollTop || 
                                  0;
-        if (currentScrollTop !== this.lastScrollTop) {
-          // Scroll position changed, trigger handler
+        if (Math.abs(currentScrollTop - this.lastScrollTop) > 5) {
+          // Scroll position changed significantly, trigger handler
           this.onWindowScroll(new Event('scroll'));
         }
-      }, 100); // Check every 100ms
+      }, 150); // Check every 150ms (reduced frequency)
     }
   }
 
@@ -181,8 +181,8 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     // Calculate scroll difference
     const scrollDiff = currentScrollTop - this.lastScrollTop;
 
-    // Only react to significant scroll movements (reduced threshold for better responsiveness)
-    if (Math.abs(scrollDiff) > 3) {
+    // Only react to significant scroll movements (increased threshold to reduce sensitivity)
+    if (Math.abs(scrollDiff) > 8) {
       if (scrollDiff > 0) {
         // Scrolling down - hide tab bar
         this.showTab = false;

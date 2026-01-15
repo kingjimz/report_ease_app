@@ -38,7 +38,7 @@ export class DashboardComponent implements OnInit {
   goals: any[] = [];
   randomizedGoals: any[] = [];
   
-  // Pioneer Year Progress (September to August)
+  // 600-Hour Goal (September to August)
   showPioneerSection = false;
   pioneerYearHours = 0;
   pioneerYearGoal = 600;

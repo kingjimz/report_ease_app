@@ -298,10 +298,10 @@
             <div class="flex-1 pr-3">
               <div class="flex items-center space-x-2 mb-1">
                 <i class="bi bi-trophy text-blue-600 dark:text-blue-400 text-base"></i>
-                <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Pioneer Year Progress</h3>
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-white">600-Hour Goal</h3>
               </div>
               <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-                Display 600-hour yearly goal tracker
+                Track your annual service year goal (Sep - Aug)
               </p>
             </div>
             <div class="flex items-center flex-shrink-0">
@@ -318,15 +318,49 @@
           </div>
         </div>
 
-        <!-- Info Box -->
-        <div class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-          <div class="flex items-start space-x-2">
-            <i class="bi bi-info-circle text-blue-600 dark:text-blue-400 text-sm mt-0.5 flex-shrink-0"></i>
-            <div>
-              <p class="text-xs text-blue-900 dark:text-blue-100 font-medium mb-1">Configuration Tips</p>
-              <p class="text-xs text-blue-800 dark:text-blue-200">
-                Changes take effect immediately. Enable Pioneer Year Progress to track ministry hours from September to August.
+        <!-- App Updates -->
+        <div class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+          <div class="flex items-start justify-between">
+            <div class="flex-1 pr-3">
+              <div class="flex items-center space-x-2 mb-1">
+                <i class="bi bi-arrow-clockwise text-green-600 dark:text-green-400 text-base"></i>
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-white">App Updates</h3>
+              </div>
+              <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                <span *ngIf="!isUpdateEnabled">
+                  Updates not available on this device
+                </span>
+                <span *ngIf="isUpdateEnabled && updateAvailable">
+                  New version available! Click to install.
+                </span>
+                <span *ngIf="isUpdateEnabled && !updateAvailable">
+                  Check for the latest features and improvements
+                </span>
               </p>
+            </div>
+            <div class="flex items-center flex-shrink-0">
+              <button
+                (click)="checkForUpdates()"
+                [disabled]="isCheckingUpdate || !isUpdateEnabled"
+                class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                [class.bg-green-600]="updateAvailable && !isCheckingUpdate"
+                [class.hover:bg-green-700]="updateAvailable && !isCheckingUpdate"
+                [class.text-white]="updateAvailable && !isCheckingUpdate"
+                [class.bg-gray-200]="!updateAvailable && !isCheckingUpdate"
+                [class.dark:bg-gray-600]="!updateAvailable && !isCheckingUpdate"
+                [class.text-gray-700]="!updateAvailable && !isCheckingUpdate"
+                [class.dark:text-gray-300]="!updateAvailable && !isCheckingUpdate"
+                [class.hover:bg-gray-300]="!updateAvailable && !isCheckingUpdate"
+                [class.dark:hover:bg-gray-500]="!updateAvailable && !isCheckingUpdate"
+                title="Check for updates"
+              >
+                <span *ngIf="isCheckingUpdate" class="flex items-center">
+                  <span class="animate-spin rounded-full h-3 w-3 border-t-2 border-current mr-1.5"></span>
+                  Checking...
+                </span>
+                <span *ngIf="!isCheckingUpdate && updateAvailable">Install Update</span>
+                <span *ngIf="!isCheckingUpdate && !updateAvailable">Check</span>
+              </button>
             </div>
           </div>
         </div>

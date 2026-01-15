@@ -1,14 +1,15 @@
 import { Injectable } from '@angular/core';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
-import { filter, interval, fromEvent } from 'rxjs';
+import { filter, interval, fromEvent, BehaviorSubject, Observable } from 'rxjs';
 import { isDevMode } from '@angular/core';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SwUpdateService {
-  private readonly CHECK_INTERVAL = 6 * 60 * 60 * 1000; // Check every 6 hours
+  private readonly CHECK_INTERVAL = 60 * 60 * 1000; // Check every 1 hour (more frequent for production)
   private updateAvailable = false;
+  private updateAvailableSubject = new BehaviorSubject<boolean>(false);
 
   constructor(private swUpdate: SwUpdate) {
     // Only initialize if service worker is enabled
@@ -47,9 +48,10 @@ export class SwUpdateService {
       .pipe(
         filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY')
       )
-      .subscribe(() => {
-        console.log('New version available');
+      .subscribe((event) => {
+        console.log('New version available', event);
         this.updateAvailable = true;
+        this.updateAvailableSubject.next(true);
       });
 
     // Listen for update activation
@@ -73,6 +75,12 @@ export class SwUpdateService {
     try {
       const updateAvailable = await this.swUpdate.checkForUpdate();
       console.log('Update check result:', updateAvailable);
+      
+      // Also check if update is already available
+      if (this.updateAvailable) {
+        return true;
+      }
+      
       return updateAvailable;
     } catch (error) {
       console.error('Error checking for updates:', error);
@@ -109,10 +117,17 @@ export class SwUpdateService {
   /**
    * Get observable for update availability
    */
-  get updateAvailable$() {
+  get updateAvailable$(): Observable<VersionReadyEvent> {
     return this.swUpdate.versionUpdates.pipe(
       filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY')
     );
+  }
+
+  /**
+   * Get observable for update availability status (boolean)
+   */
+  get updateAvailableStatus$(): Observable<boolean> {
+    return this.updateAvailableSubject.asObservable();
   }
 
   /**

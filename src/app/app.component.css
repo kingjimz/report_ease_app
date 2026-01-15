@@ -4,6 +4,12 @@
   margin-top: 50px;
 }
 
+:host {
+  display: block;
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+}
+
 .offline-banner {
   position: fixed;
   top: 0;

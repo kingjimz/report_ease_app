@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../_services/auth.service';
 import { SettingsService } from '../../_services/settings.service';
 import { ThemeService } from '../../services/theme.service';
+import { SwUpdateService } from '../../_services/sw-update.service';
 import { ModalService } from '../../_services/modal.service';
 import { ApiService } from '../../_services/api.service';
 import { UtilService } from '../../_services/util.service';
@@ -43,12 +44,18 @@ export class HeaderComponent implements OnInit, OnDestroy {
   // Theme settings
   isDarkMode = false;
   private themeSubscription?: Subscription;
+  
+  // Update settings
+  isCheckingUpdate = false;
+  updateAvailable = false;
+  isUpdateEnabled = false;
 
   constructor(
     private authService: AuthService,
     private router: Router,
     private settingsService: SettingsService,
     private themeService: ThemeService,
+    private swUpdateService: SwUpdateService,
     private modalService: ModalService,
     private api: ApiService,
     private util: UtilService,
@@ -66,6 +73,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.loadReports();
     this.checkReportReminder();
     this.updateNotificationStatus();
+    this.checkUpdateStatus();
     
     // Subscribe to theme changes
     this.themeSubscription = this.themeService.darkMode$.subscribe(isDark => {
@@ -83,6 +91,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
       }
       this.updateNotificationStatus();
     });
+    
+    // Subscribe to update availability
+    if (this.swUpdateService.isEnabled()) {
+      this.swUpdateService.updateAvailable$.subscribe(() => {
+        this.updateAvailable = true;
+      });
+    }
   }
 
   updateNotificationStatus() {
@@ -409,6 +424,70 @@ export class HeaderComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.showSuccessMessage = false;
     }, 3000);
+  }
+
+  checkUpdateStatus() {
+    this.isUpdateEnabled = this.swUpdateService.isEnabled();
+    this.updateAvailable = this.swUpdateService.isUpdateAvailable();
+  }
+
+  async checkForUpdates() {
+    if (!this.isUpdateEnabled) {
+      this.showSuccessMessage = true;
+      this.successMessage = 'Updates are not available on this device';
+      setTimeout(() => {
+        this.showSuccessMessage = false;
+      }, 3000);
+      return;
+    }
+
+    this.isCheckingUpdate = true;
+    try {
+      const hasUpdate = await this.swUpdateService.checkForUpdates();
+      this.updateAvailable = hasUpdate || this.swUpdateService.isUpdateAvailable();
+      
+      this.showSuccessMessage = true;
+      if (this.updateAvailable) {
+        this.successMessage = 'Update available! The app will reload to install it.';
+        // Automatically activate update if available
+        setTimeout(async () => {
+          await this.installUpdate();
+        }, 1500);
+      } else {
+        this.successMessage = 'You are using the latest version';
+      }
+      
+      setTimeout(() => {
+        this.showSuccessMessage = false;
+      }, 3000);
+    } catch (error) {
+      console.error('Error checking for updates:', error);
+      this.showSuccessMessage = true;
+      this.successMessage = 'Failed to check for updates. Please try again later.';
+      setTimeout(() => {
+        this.showSuccessMessage = false;
+      }, 3000);
+    } finally {
+      this.isCheckingUpdate = false;
+    }
+  }
+
+  async installUpdate() {
+    if (!this.updateAvailable) {
+      return;
+    }
+
+    try {
+      await this.swUpdateService.activateUpdate();
+      // Page will reload automatically after activation
+    } catch (error) {
+      console.error('Error installing update:', error);
+      this.showSuccessMessage = true;
+      this.successMessage = 'Failed to install update. Please refresh the page manually.';
+      setTimeout(() => {
+        this.showSuccessMessage = false;
+      }, 3000);
+    }
   }
 
   ngOnDestroy(): void {
