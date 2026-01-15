@@ -327,15 +327,7 @@
                 <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Software Update</h3>
               </div>
               <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-                <span *ngIf="!isUpdateEnabled">
-                  Updates not available on this device
-                </span>
-                <span *ngIf="isUpdateEnabled && updateAvailable">
-                  New version available! Click to install.
-                </span>
-                <span *ngIf="isUpdateEnabled && !updateAvailable">
-                  Check for the latest features and improvements (works on iOS & Android)
-                </span>
+                App Version: {{ currentAppVersion }}
               </p>
             </div>
             <div class="flex items-center flex-shrink-0">

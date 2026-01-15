@@ -14,6 +14,34 @@ export class VersionService {
   constructor() {
     // Get current version from localStorage or default
     this.currentVersion = this.getCurrentVersion();
+    
+    // If version is default, try to fetch from version.json
+    if (this.currentVersion === '1.0.0') {
+      this.loadVersionFromFile();
+    }
+  }
+
+  /**
+   * Load version from version.json file
+   */
+  private async loadVersionFromFile(): Promise<void> {
+    try {
+      const response = await fetch(this.VERSION_URL + '?t=' + Date.now(), {
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const version = data.version || data.appVersion || '1.0.0';
+        this.setCurrentVersion(version);
+        console.log('Version loaded from version.json in service:', version);
+      }
+    } catch (error) {
+      console.error('Error loading version from version.json in service:', error);
+    }
   }
 
   /**
@@ -58,6 +86,7 @@ export class VersionService {
         // Versions match - update stored version to ensure it's in sync
         this.setCurrentVersion(serverVersion);
         // Clear the update available flag since we're on the latest version
+        // This ensures the button state resets correctly after iOS update install
         if (this.updateAvailableSubject.value) {
           console.log('Versions match - clearing update flag. Current version:', serverVersion);
           this.updateAvailableSubject.next(false);
@@ -98,6 +127,13 @@ export class VersionService {
    */
   isUpdateAvailable(): boolean {
     return this.updateAvailableSubject.value;
+  }
+
+  /**
+   * Get current app version (public method)
+   */
+  getCurrentAppVersion(): string {
+    return this.currentVersion;
   }
 
   /**

@@ -161,6 +161,8 @@ export class SwUpdateService {
           const newVersion = data.version || data.appVersion || '1.0.0';
           // Update the stored version to the new version
           this.versionService.setCurrentVersion(newVersion);
+          // Immediately check version to ensure flag is cleared (versions should match now)
+          await this.versionService.checkVersion();
           // Clear the update available flag
           this.updateAvailable = false;
           this.updateAvailableSubject.next(false);

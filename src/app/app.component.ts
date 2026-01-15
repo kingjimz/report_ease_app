@@ -72,33 +72,48 @@ export class AppComponent implements OnInit, OnDestroy {
   /**
    * Initialize version checking for iOS devices
    */
-  private initializeVersionChecking() {
+  private async initializeVersionChecking() {
+    // Fetch version from version.json first
+    await this.loadVersionFromFile();
+    
     // Detect iOS
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
     
     if (isIOS) {
-      // Set current version (you can update this during build or from package.json)
-      const currentVersion = this.getAppVersion();
-      this.versionService.setCurrentVersion(currentVersion);
-      
       // Initialize version checking for iOS
       this.versionService.initializeVersionChecking();
+      const currentVersion = this.versionService.getCurrentAppVersion();
       console.log('iOS version checking initialized. Current version:', currentVersion);
     }
   }
 
   /**
-   * Get app version (can be set during build or from environment)
+   * Load version from version.json file
    */
-  private getAppVersion(): string {
-    // Try to get from meta tag or environment
-    const metaVersion = document.querySelector('meta[name="app-version"]')?.getAttribute('content');
-    if (metaVersion) {
-      return metaVersion;
+  private async loadVersionFromFile(): Promise<void> {
+    try {
+      const response = await fetch('/version.json?t=' + Date.now(), {
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const version = data.version || data.appVersion || '1.0.0';
+        this.versionService.setCurrentVersion(version);
+        console.log('Version loaded from version.json:', version);
+      } else {
+        // Fallback to default if fetch fails
+        console.warn('Failed to load version.json, using default');
+        this.versionService.setCurrentVersion('1.0.0');
+      }
+    } catch (error) {
+      console.error('Error loading version from version.json:', error);
+      // Fallback to default if fetch fails
+      this.versionService.setCurrentVersion('1.0.0');
     }
-    
-    // Default version - should be updated during build
-    return '1.0.0';
   }
 
   /**

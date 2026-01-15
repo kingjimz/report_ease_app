@@ -11,6 +11,7 @@ import { ApiService } from '../../_services/api.service';
 import { UtilService } from '../../_services/util.service';
 import { NavigationService } from '../../_services/navigation.service';
 import { NotificationService } from '../../_services/notification.service';
+import { VersionService } from '../../_services/version.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -49,6 +50,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   isCheckingUpdate = false;
   updateAvailable = false;
   isUpdateEnabled = false;
+  currentAppVersion = '1.0.0';
 
   constructor(
     private authService: AuthService,
@@ -61,6 +63,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private util: UtilService,
     private navigationService: NavigationService,
     private notificationService: NotificationService,
+    private versionService: VersionService,
   ) {
     this.authService.user$.subscribe((user) => {
       this.userData = user;
@@ -431,9 +434,46 @@ export class HeaderComponent implements OnInit, OnDestroy {
     }, 3000);
   }
 
-  checkUpdateStatus() {
+  async checkUpdateStatus() {
     this.isUpdateEnabled = this.swUpdateService.isEnabled();
-    this.updateAvailable = this.swUpdateService.isUpdateAvailable();
+    
+    // For iOS, check version to ensure state is accurate after reload
+    if (this.swUpdateService.isIOSDevice()) {
+      // Wait for version check to complete to get accurate update status
+      const hasUpdate = await this.swUpdateService.checkForUpdates();
+      this.updateAvailable = hasUpdate;
+    } else {
+      this.updateAvailable = this.swUpdateService.isUpdateAvailable();
+    }
+    
+    // Update app version display
+    this.updateAppVersion();
+  }
+
+  async updateAppVersion() {
+    // Fetch version from version.json to ensure we have the latest
+    try {
+      const response = await fetch('/version.json?t=' + Date.now(), {
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const version = data.version || data.appVersion || '1.0.0';
+        this.currentAppVersion = version;
+        // Also update the version service
+        this.versionService.setCurrentVersion(version);
+      } else {
+        // Fallback to version service value
+        this.currentAppVersion = this.versionService.getCurrentAppVersion();
+      }
+    } catch (error) {
+      // Fallback to version service value
+      this.currentAppVersion = this.versionService.getCurrentAppVersion();
+    }
   }
 
   async checkForUpdates() {
