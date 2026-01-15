@@ -3,7 +3,17 @@
 .tab-card-container {
   background-color: var(--card-bg);
   border-color: var(--border-color);
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  transform: translateY(0);
+  will-change: transform;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.tab-card-container.tab-hidden {
+  transform: translateY(100%) !important;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .dark .bg-white {

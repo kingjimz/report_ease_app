@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef, AfterViewInit } from '@angular/core';
 import { AuthService } from '../_services/auth.service';
 import { Router } from '@angular/router';
 import { CalendarComponent } from '../components/calendar/calendar.component';
@@ -38,7 +38,7 @@ import { NavigationService } from '../_services/navigation.service';
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild(ReportsComponent) reportsComponent?: ReportsComponent;
   @ViewChild(DashboardComponent) dashboardComponent?: DashboardComponent;
   @ViewChild(CalendarComponent) calendarComponent?: CalendarComponent;
@@ -67,6 +67,12 @@ export class HomeComponent implements OnInit {
   // Onboarding modal
   onboardingPioneerChoice: boolean | null = null;
 
+  // Scroll detection properties
+  private lastScrollTop = 0;
+  private scrollThreshold = 10; // Reduced threshold for more responsive behavior
+  private boundScrollHandler?: (event: Event) => void;
+  private scrollCheckInterval?: number;
+
   constructor(
     private auth: AuthService,
     private route: Router,
@@ -89,6 +95,9 @@ export class HomeComponent implements OnInit {
   ngOnInit() {
     // Check if onboarding has been completed
     this.checkOnboarding();
+    
+    // Initialize scroll position
+    this.lastScrollTop = window.pageYOffset || document.documentElement.scrollTop;
     
     // Subscribe to modal state to hide tab bar on mobile when modals are open
     // Use setTimeout to defer the update to the next change detection cycle
@@ -119,6 +128,74 @@ export class HomeComponent implements OnInit {
       // Persist the active tab
       localStorage.setItem('activeTab', tabId);
     });
+
+  }
+
+  ngAfterViewInit() {
+    // Attach scroll listener directly to window after view is initialized
+    if (typeof window !== 'undefined') {
+      this.boundScrollHandler = this.onWindowScroll.bind(this);
+      window.addEventListener('scroll', this.boundScrollHandler, { passive: true });
+      // Also try document scroll
+      document.addEventListener('scroll', this.boundScrollHandler, { passive: true });
+      
+      // Also try listening on document.documentElement and body
+      document.documentElement.addEventListener('scroll', this.boundScrollHandler, { passive: true });
+      document.body.addEventListener('scroll', this.boundScrollHandler, { passive: true });
+      
+      // Fallback: Check scroll position periodically in case events don't fire
+      // This will catch scroll even if events don't fire
+      this.scrollCheckInterval = window.setInterval(() => {
+        const currentScrollTop = window.pageYOffset || 
+                                 document.documentElement.scrollTop || 
+                                 document.body.scrollTop || 
+                                 0;
+        if (currentScrollTop !== this.lastScrollTop) {
+          // Scroll position changed, trigger handler
+          this.onWindowScroll(new Event('scroll'));
+        }
+      }, 100); // Check every 100ms
+    }
+  }
+
+  onWindowScroll(event: Event) {
+    // Don't hide tab if modal is open
+    if (this.isAnyModalOpen) {
+      this.showTab = true;
+      return;
+    }
+
+    // Get scroll position from multiple sources to ensure compatibility
+    const currentScrollTop = window.pageYOffset || 
+                             document.documentElement.scrollTop || 
+                             document.body.scrollTop || 
+                             0;
+    
+    // Always show tab at the top of the page
+    if (currentScrollTop <= this.scrollThreshold) {
+      this.showTab = true;
+      this.lastScrollTop = currentScrollTop;
+      return;
+    }
+
+    // Calculate scroll difference
+    const scrollDiff = currentScrollTop - this.lastScrollTop;
+
+    // Only react to significant scroll movements (reduced threshold for better responsiveness)
+    if (Math.abs(scrollDiff) > 3) {
+      if (scrollDiff > 0) {
+        // Scrolling down - hide tab bar
+        this.showTab = false;
+      } else {
+        // Scrolling up - show tab bar
+        this.showTab = true;
+        // Ensure activeTab matches selectedTab without resetting
+        if (this.selectedTab && this.selectedTab !== this.activeTab) {
+          this.activeTab = this.selectedTab;
+        }
+      }
+      this.lastScrollTop = currentScrollTop;
+    }
   }
 
   checkOnboarding() {
@@ -153,31 +230,6 @@ export class HomeComponent implements OnInit {
 
   filterBibleStudies(studies: any[]): any[] {
     return studies.filter((study) => study.type !== 'rv');
-  }
-
-  private lastScrollTop = 0;
-  private scrollThreshold = 40;
-
-  @HostListener('window:scroll', [])
-  onWindowScroll() {
-    const st = window.pageYOffset || document.documentElement.scrollTop;
-    const diff = Math.abs(st - this.lastScrollTop);
-
-    if (diff > this.scrollThreshold) {
-      if (st > this.lastScrollTop) {
-        // Scrolling down - hide tab bar, preserve current active tab
-        this.showTab = false;
-        // Don't change selectedTab, just keep current activeTab
-      } else {
-        // Scrolling up - show tab bar, keep current active tab
-        this.showTab = true;
-        // Ensure activeTab matches selectedTab without resetting
-        if (this.selectedTab && this.selectedTab !== this.activeTab) {
-          this.activeTab = this.selectedTab;
-        }
-      }
-      this.lastScrollTop = st <= 0 ? 0 : st;
-    }
   }
 
   logout() {
@@ -238,7 +290,6 @@ export class HomeComponent implements OnInit {
               modalOpened = true;
             } else {
               // Fallback: use reports component
-              console.warn('Calendar component not available, using reports component');
               if (this.reportsComponent) {
                 this.reportsComponent.openAddReportModal();
                 modalOpened = true;
@@ -411,5 +462,20 @@ export class HomeComponent implements OnInit {
 
   onTutorialSkip() {
     this.showTutorial = false;
+  }
+
+  ngOnDestroy() {
+    // Clean up scroll listeners
+    if (typeof window !== 'undefined' && this.boundScrollHandler) {
+      window.removeEventListener('scroll', this.boundScrollHandler);
+      document.removeEventListener('scroll', this.boundScrollHandler);
+      document.documentElement.removeEventListener('scroll', this.boundScrollHandler);
+      document.body.removeEventListener('scroll', this.boundScrollHandler);
+    }
+    
+    // Clear interval if it exists
+    if (this.scrollCheckInterval) {
+      clearInterval(this.scrollCheckInterval);
+    }
   }
 }

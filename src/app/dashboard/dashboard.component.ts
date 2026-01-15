@@ -396,13 +396,6 @@ export class DashboardComponent implements OnInit {
     const serviceYearStart = new Date(serviceYearStartYear, 8, 1, 0, 0, 0); // September 1st, 00:00:00
     const serviceYearEnd = new Date(serviceYearStartYear + 1, 8, 0, 23, 59, 59); // August 31st, 23:59:59
 
-    console.log('Service Year Range:', {
-      start: serviceYearStart.toISOString(),
-      end: serviceYearEnd.toISOString(),
-      currentMonth: currentMonth,
-      serviceYearStartYear: serviceYearStartYear
-    });
-
     // Filter reports within the service year
     const serviceYearReports = this.allReports.filter(report => {
       if (!report.report_date) return false;
@@ -425,21 +418,10 @@ export class DashboardComponent implements OnInit {
       return isInRange;
     });
 
-    console.log('Total reports:', this.allReports.length);
-    console.log('Service year reports:', serviceYearReports.length);
-    console.log('Sample report dates:', this.allReports.slice(0, 5).map(r => {
-      if (!r.report_date) return 'NO DATE';
-      if (r.report_date.toDate) return r.report_date.toDate();
-      if (r.report_date.seconds) return new Date(r.report_date.seconds * 1000);
-      return r.report_date;
-    }));
-
     // Calculate total hours
     this.pioneerYearHours = serviceYearReports.reduce((total, report) => {
       return total + (report.hours || 0);
     }, 0);
-
-    console.log('Pioneer year hours:', this.pioneerYearHours);
 
     // Calculate remaining hours and progress
     this.hoursRemaining = Math.max(0, this.pioneerYearGoal - this.pioneerYearHours);

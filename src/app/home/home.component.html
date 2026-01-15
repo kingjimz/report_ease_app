@@ -21,9 +21,8 @@
 <!-- Fixed bottom tab card -->
 <div
   class="tab-card-container fixed bottom-0 left-0 w-full z-50 border-t shadow-md"
-  [class.hidden]="isAnyModalOpen"
+  [class.tab-hidden]="!showTab && !isAnyModalOpen"
   [class.md:block]="true"
-  *ngIf="showTab"
 >
   <app-tab-card
     (tabChange)="onTabChange($event)"
