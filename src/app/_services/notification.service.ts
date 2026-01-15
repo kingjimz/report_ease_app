@@ -26,8 +26,13 @@ export class NotificationService {
   private readonly NOTIFICATION_TIME_KEY = 'notification_time';
 
   constructor(private apiService: ApiService) {
-    this.checkPermissionStatus();
-    this.initializeNotifications();
+    // Only initialize if Notification API is available (not available on all iOS versions)
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      this.checkPermissionStatus();
+      this.initializeNotifications();
+    } else {
+      console.warn('Notification API not available in this browser/environment');
+    }
   }
 
   /**
@@ -109,6 +114,11 @@ export class NotificationService {
    * Initialize notifications if permission is granted
    */
   private initializeNotifications() {
+    // Check if Notification API is available before accessing it
+    if (!('Notification' in window)) {
+      return;
+    }
+    
     if (Notification.permission === 'granted' && this.isNotificationEnabled()) {
       this.scheduleNotificationCheck();
     }
@@ -374,6 +384,18 @@ export class NotificationService {
    * Show regular browser notification (fallback)
    */
   private showRegularNotification(title: string, body: string) {
+    // Check if Notification API is available
+    if (!('Notification' in window)) {
+      console.warn('Notification API not available, cannot show notification');
+      return;
+    }
+    
+    // Check if permission is granted
+    if (Notification.permission !== 'granted') {
+      console.warn('Notification permission not granted, cannot show notification');
+      return;
+    }
+    
     try {
       console.log('Creating regular notification:', { title, body });
       const notification = new Notification(title, {
