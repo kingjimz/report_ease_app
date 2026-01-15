@@ -48,24 +48,45 @@
       // iOS compatibility: Ensure app loads even if service worker fails
       // This prevents iOS Safari from getting stuck during service worker registration
       if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
+        // Unregister any existing service workers that might be causing blank screen issues
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for (var i = 0; i < registrations.length; i++) {
+              registrations[i].unregister().catch(function(err) {
+                console.warn('Failed to unregister service worker on iOS:', err);
+              });
+            }
+          }).catch(function(err) {
+            console.warn('Error getting service worker registrations on iOS:', err);
+          });
+          
+          // Handle service worker errors gracefully on iOS
+          navigator.serviceWorker.addEventListener('error', function(event) {
+            console.warn('Service worker error on iOS:', event);
+            // Don't block app loading
+          });
+        }
+        
         // Add a timeout to ensure page doesn't hang
         window.addEventListener('load', function() {
           setTimeout(function() {
             // Force render if app hasn't loaded
             var appRoot = document.querySelector('app-root');
             if (appRoot && !appRoot.innerHTML.trim()) {
-              console.warn('App may be stuck, attempting recovery...');
+              console.warn('App may be stuck on iOS, attempting recovery...');
+              // Try to force a re-render by triggering a resize event
+              window.dispatchEvent(new Event('resize'));
             }
           }, 5000);
         });
         
-        // Handle service worker errors gracefully on iOS
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.addEventListener('error', function(event) {
-            console.warn('Service worker error on iOS:', event);
-            // Don't block app loading
-          });
-        }
+        // Prevent iOS from caching the page in a broken state
+        window.addEventListener('pageshow', function(event) {
+          if (event.persisted) {
+            // Page was loaded from cache, force a reload to prevent blank screen
+            window.location.reload();
+          }
+        });
       }
     </script>
   </body>

@@ -26,13 +26,13 @@ function isIOS(): boolean {
   return /iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
-// iOS Safari has known issues with delayed service worker registration that can block page load
-// Use immediate registration for iOS instead of waiting for app to be stable
+// iOS Safari has known issues with service workers that can cause blank screens
+// Disable service worker on iOS to prevent app from hanging or showing blank screen
 const isIOSDevice = typeof window !== 'undefined' && isIOS();
 const serviceWorkerConfig = isIOSDevice
   ? {
-      enabled: !isDevMode(),
-      registrationStrategy: 'registerImmediately' as const, // Immediate registration prevents iOS hanging
+      enabled: false, // Disable service worker on iOS to prevent blank screen issues
+      registrationStrategy: 'registerImmediately' as const,
     }
   : {
       enabled: !isDevMode(),
