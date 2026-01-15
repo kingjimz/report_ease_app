@@ -3,7 +3,10 @@
 >
   <div
     class="modal-container p-4 sm:p-6 shadow-md rounded-xl border transition duration-300 hover:shadow-2xl mt-3 relative w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto overflow-x-hidden"
+    style="box-sizing: border-box;"
   >
-    <ng-content></ng-content>
+    <div class="w-full min-w-0" style="box-sizing: border-box;">
+      <ng-content></ng-content>
+    </div>
   </div>
 </div>

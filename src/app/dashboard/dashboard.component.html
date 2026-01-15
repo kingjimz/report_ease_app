@@ -513,7 +513,7 @@
       <!-- Report Form -->
       <form (ngSubmit)="saveReport()" class="space-y-4">
         <!-- Date Selection -->
-        <div>
+        <div class="w-full min-w-0">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
             Report Date *
           </label>
@@ -524,7 +524,8 @@
             required
             (click)="openDatePicker($event)"
             (focus)="openDatePicker($event)"
-            class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white cursor-pointer"
+            class="w-full min-w-0 p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white cursor-pointer box-border"
+            style="box-sizing: border-box; max-width: 100%;"
           />
         </div>
 
