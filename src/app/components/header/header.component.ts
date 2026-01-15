@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../_services/auth.service';
 import { SettingsService } from '../../_services/settings.service';
-import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
+import { ThemeService } from '../../services/theme.service';
 import { ModalService } from '../../_services/modal.service';
 import { ApiService } from '../../_services/api.service';
 import { UtilService } from '../../_services/util.service';
@@ -15,7 +15,7 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, FormsModule, ThemeToggleComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
 })
@@ -39,11 +39,16 @@ export class HeaderComponent implements OnInit, OnDestroy {
   notificationsEnabled = false;
   notificationPermission = 'default';
   isRequestingPermission = false;
+  
+  // Theme settings
+  isDarkMode = false;
+  private themeSubscription?: Subscription;
 
   constructor(
     private authService: AuthService,
     private router: Router,
     private settingsService: SettingsService,
+    private themeService: ThemeService,
     private modalService: ModalService,
     private api: ApiService,
     private util: UtilService,
@@ -61,6 +66,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.loadReports();
     this.checkReportReminder();
     this.updateNotificationStatus();
+    
+    // Subscribe to theme changes
+    this.themeSubscription = this.themeService.darkMode$.subscribe(isDark => {
+      this.isDarkMode = isDark;
+    });
     
     // Subscribe to permission changes
     this.notificationService.permission$.subscribe(permission => {
@@ -378,6 +388,29 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.modalService.closeModal();
   }
 
+  togglePioneerStatus() {
+    this.settingsService.setIsPioneer(this.isPioneer);
+    this.showSuccessMessage = true;
+    this.successMessage = `Pioneer status ${this.isPioneer ? 'enabled' : 'disabled'}. Dashboard updated!`;
+    
+    setTimeout(() => {
+      this.showSuccessMessage = false;
+    }, 3000);
+  }
+
+  toggleTheme() {
+    // Get the current state before toggling
+    const wasDark = this.isDarkMode;
+    this.themeService.toggleTheme();
+    // The new state is the opposite of the old state
+    this.showSuccessMessage = true;
+    this.successMessage = `Theme switched to ${!wasDark ? 'dark' : 'light'} mode`;
+    
+    setTimeout(() => {
+      this.showSuccessMessage = false;
+    }, 3000);
+  }
+
   ngOnDestroy(): void {
     if (this.showConfigureModal) {
       this.modalService.closeModal();
@@ -388,15 +421,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     if (this.reportsSubscription) {
       this.reportsSubscription.unsubscribe();
     }
-  }
-
-  togglePioneerStatus() {
-    this.settingsService.setIsPioneer(this.isPioneer);
-    this.showSuccessMessage = true;
-    this.successMessage = `Pioneer status ${this.isPioneer ? 'enabled' : 'disabled'}. Dashboard updated!`;
-    
-    setTimeout(() => {
-      this.showSuccessMessage = false;
-    }, 3000);
+    if (this.themeSubscription) {
+      this.themeSubscription.unsubscribe();
+    }
   }
 }

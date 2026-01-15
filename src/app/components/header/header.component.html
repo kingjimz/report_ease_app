@@ -238,7 +238,15 @@
               </p>
             </div>
             <div class="flex items-center flex-shrink-0">
-              <app-theme-toggle></app-theme-toggle>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  [checked]="isDarkMode"
+                  (change)="toggleTheme()"
+                  class="sr-only peer"
+                />
+                <div class="w-11 h-6 bg-gray-300 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-gradient-to-r peer-checked:from-purple-600 peer-checked:to-indigo-600"></div>
+              </label>
             </div>
           </div>
         </div>
