@@ -9,6 +9,7 @@ import { AppUpdateToastComponent } from './components/app-update-toast/app-updat
 import { ThemeService } from './services/theme.service';
 import { NetworkService } from './_services/network.service';
 import { NotificationService } from './_services/notification.service';
+import { VersionService } from './_services/version.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -29,9 +30,13 @@ export class AppComponent implements OnInit, OnDestroy {
     private themeService: ThemeService,
     private networkService: NetworkService,
     private notificationService: NotificationService,
+    private versionService: VersionService,
   ) {}
 
   ngOnInit() {
+    // Initialize version checking (for iOS support)
+    this.initializeVersionChecking();
+    
     // Subscribe to network status
     this.networkSubscription = this.networkService.onlineStatus$.subscribe(
       (isOnline) => {
@@ -62,6 +67,38 @@ export class AppComponent implements OnInit, OnDestroy {
         }
       }
     });
+  }
+
+  /**
+   * Initialize version checking for iOS devices
+   */
+  private initializeVersionChecking() {
+    // Detect iOS
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    
+    if (isIOS) {
+      // Set current version (you can update this during build or from package.json)
+      const currentVersion = this.getAppVersion();
+      this.versionService.setCurrentVersion(currentVersion);
+      
+      // Initialize version checking for iOS
+      this.versionService.initializeVersionChecking();
+      console.log('iOS version checking initialized. Current version:', currentVersion);
+    }
+  }
+
+  /**
+   * Get app version (can be set during build or from environment)
+   */
+  private getAppVersion(): string {
+    // Try to get from meta tag or environment
+    const metaVersion = document.querySelector('meta[name="app-version"]')?.getAttribute('content');
+    if (metaVersion) {
+      return metaVersion;
+    }
+    
+    // Default version - should be updated during build
+    return '1.0.0';
   }
 
   /**

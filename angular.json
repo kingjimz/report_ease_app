@@ -38,6 +38,11 @@
                 "output": "/"
               },
               {
+                "glob": "version.json",
+                "input": "public",
+                "output": "/"
+              },
+              {
                 "glob": "netlify.toml",
                 "input": ".",
                 "output": "/"
