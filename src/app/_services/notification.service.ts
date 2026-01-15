@@ -306,7 +306,7 @@ export class NotificationService {
       return;
     }
 
-    const title = 'Just a Friendly Reminder from FSTracker!';
+    const title = 'FSTracker Reminder!';
     const body = 'Don\'t forget to join the ministry. Your service is important!';
 
     // Use service worker if available, otherwise use regular notification
@@ -318,19 +318,6 @@ export class NotificationService {
           badge: '/assets/icons/fst-icon-192x192.png',
           tag: 'daily-ministry-reminder',
           requireInteraction: false,
-          actions: [
-            {
-              action: 'open',
-              title: 'View Reports'
-            },
-            {
-              action: 'dismiss',
-              title: 'Dismiss'
-            }
-          ],
-          data: {
-            url: '/reports'
-          }
         };
         registration.showNotification(title, options);
       }).catch((error) => {
@@ -358,7 +345,7 @@ export class NotificationService {
     const dayOfMonth = now.getDate();
     const daysRemaining = daysInMonth - dayOfMonth;
 
-    const title = 'Report Reminder';
+    const title = 'FSTracker Reminder!';
     const body = `Don't forget to submit your ${monthName} ${year} report! Only ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} left in the month.`;
 
     // Use service worker if available, otherwise use regular notification
@@ -371,19 +358,6 @@ export class NotificationService {
           badge: '/assets/icons/fst-icon-192x192.png',
           tag: 'report-reminder',
           requireInteraction: false,
-          actions: [
-            {
-              action: 'open',
-              title: 'Submit Report'
-            },
-            {
-              action: 'dismiss',
-              title: 'Dismiss'
-            }
-          ],
-          data: {
-            url: '/reports'
-          }
         };
         registration.showNotification(title, options);
       }).catch((error) => {

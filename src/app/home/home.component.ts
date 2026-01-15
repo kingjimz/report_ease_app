@@ -249,12 +249,13 @@ export class HomeComponent implements OnInit {
         }
       } else if (this.activeTab === 'goals') {
         // Use reports component modal
-        // Temporarily make reports component visible so modal can render
-        // (display:none prevents modals from rendering)
+        // Make reports component visible first, then open modal immediately
+        // Use requestAnimationFrame to ensure smooth transition
         this.forceReportsVisible = true;
         this.cdr.detectChanges();
         
-        setTimeout(() => {
+        // Open modal in next animation frame for smooth transition
+        requestAnimationFrame(() => {
           if (this.reportsComponent) {
             this.reportsComponent.openAddReportModal();
             modalOpened = true;
@@ -262,13 +263,11 @@ export class HomeComponent implements OnInit {
             // Keep reports visible while modal is open
             // It will be hidden again when modal closes (handled in closeAddReportModal or via subscription)
           } else {
-            // Reports component not ready, revert visibility
+            // Component not ready, revert visibility
             this.forceReportsVisible = false;
-            if (this.modalService.isModalOpen()) {
-              this.modalService.closeModal();
-            }
+            this.cdr.detectChanges();
           }
-        }, 50);
+        });
       } else if (this.reportsComponent) {
         // Use reports component modal (available even when hidden) - fallback for other tabs
         this.reportsComponent.openAddReportModal();

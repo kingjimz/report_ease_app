@@ -9,7 +9,8 @@
     <div *ngIf="activeTab === 'calendar'" class="space-y-4">
       <app-calendar></app-calendar>
     </div>
-    <div [class.hidden]="activeTab !== 'reports' && !forceReportsVisible" class="space-y-4">
+    <div [class.hidden]="activeTab !== 'reports' && !forceReportsVisible" 
+         class="space-y-4">
       <app-reports></app-reports>
     </div>
     <div *ngIf="activeTab === 'goals'" class="space-y-4">

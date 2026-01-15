@@ -9,6 +9,7 @@ import { ModalService } from '../../_services/modal.service';
 import { ApiService } from '../../_services/api.service';
 import { UtilService } from '../../_services/util.service';
 import { NavigationService } from '../../_services/navigation.service';
+import { NotificationService } from '../../_services/notification.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -33,6 +34,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
   currentMonthName = '';
   private bibleStudiesSubscription?: Subscription;
   private reportsSubscription?: Subscription;
+  
+  // Notification settings
+  notificationsEnabled = false;
+  notificationPermission = 'default';
+  isRequestingPermission = false;
 
   constructor(
     private authService: AuthService,
@@ -42,6 +48,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private api: ApiService,
     private util: UtilService,
     private navigationService: NavigationService,
+    private notificationService: NotificationService,
   ) {
     this.authService.user$.subscribe((user) => {
       this.userData = user;
@@ -53,6 +60,84 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.loadBibleStudies();
     this.loadReports();
     this.checkReportReminder();
+    this.updateNotificationStatus();
+    
+    // Subscribe to permission changes
+    this.notificationService.permission$.subscribe(permission => {
+      if (permission.granted) {
+        this.notificationPermission = 'granted';
+      } else if (permission.denied) {
+        this.notificationPermission = 'denied';
+      } else {
+        this.notificationPermission = 'default';
+      }
+      this.updateNotificationStatus();
+    });
+  }
+
+  updateNotificationStatus() {
+    this.notificationsEnabled = this.notificationService.isNotificationEnabled();
+    if ('Notification' in window) {
+      this.notificationPermission = Notification.permission;
+    }
+  }
+
+  async toggleNotifications() {
+    if (this.notificationsEnabled) {
+      // Disable notifications
+      this.notificationService.disableNotifications();
+      this.notificationsEnabled = false;
+      this.showSuccessMessage = true;
+      this.successMessage = 'Notifications disabled';
+      setTimeout(() => {
+        this.showSuccessMessage = false;
+      }, 3000);
+    } else {
+      // Enable notifications - check permission first
+      if (!('Notification' in window)) {
+        alert('This browser does not support notifications');
+        return;
+      }
+
+      if (Notification.permission === 'denied') {
+        alert('Notifications are blocked. Please enable them in your browser settings:\n\nChrome/Edge: Settings > Privacy and security > Site settings > Notifications\n\nFirefox: Settings > Privacy & Security > Permissions > Notifications\n\nSafari: Preferences > Websites > Notifications');
+        return;
+      }
+
+      if (Notification.permission === 'default') {
+        // Request permission
+        this.isRequestingPermission = true;
+        try {
+          const granted = await this.notificationService.requestPermission();
+          if (granted) {
+            this.notificationsEnabled = true;
+            this.notificationPermission = 'granted';
+            this.showSuccessMessage = true;
+            this.successMessage = 'Notifications enabled!';
+            setTimeout(() => {
+              this.showSuccessMessage = false;
+            }, 3000);
+          } else {
+            this.notificationsEnabled = false;
+            this.notificationPermission = Notification.permission;
+          }
+        } catch (error) {
+          console.error('Error requesting notification permission:', error);
+          this.notificationsEnabled = false;
+        } finally {
+          this.isRequestingPermission = false;
+        }
+      } else if (Notification.permission === 'granted') {
+        // Permission already granted, just enable
+        this.notificationService.enableNotifications();
+        this.notificationsEnabled = true;
+        this.showSuccessMessage = true;
+        this.successMessage = 'Notifications enabled!';
+        setTimeout(() => {
+          this.showSuccessMessage = false;
+        }, 3000);
+      }
+    }
   }
 
   loadSettings() {
