@@ -49,10 +49,8 @@ export class SwUpdateService {
     
     // Subscribe to version updates
     this.versionSubscription = this.versionService.updateAvailable$.subscribe((hasUpdate) => {
-      if (hasUpdate) {
-        this.updateAvailable = true;
-        this.updateAvailableSubject.next(true);
-      }
+      this.updateAvailable = hasUpdate;
+      this.updateAvailableSubject.next(hasUpdate);
     });
 
     // Check for updates when app comes back online
@@ -147,8 +145,32 @@ export class SwUpdateService {
    * Activate the update (reload the app with new version)
    */
   async activateUpdate(): Promise<boolean> {
-    // For iOS, just reload the page
+    // For iOS, fetch the new version and update localStorage before reloading
     if (this.isIOS && !this.swUpdate.isEnabled) {
+      try {
+        // Fetch the new version to update localStorage before reload
+        const response = await fetch('/version.json?t=' + Date.now(), {
+          cache: 'no-cache',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const newVersion = data.version || data.appVersion || '1.0.0';
+          // Update the stored version to the new version
+          this.versionService.setCurrentVersion(newVersion);
+          // Clear the update available flag
+          this.updateAvailable = false;
+          this.updateAvailableSubject.next(false);
+          console.log('iOS: Updated stored version to', newVersion, 'before reload');
+        }
+      } catch (error) {
+        console.error('Error fetching version before reload:', error);
+        // Continue with reload even if version fetch fails
+      }
+      
       this.versionService.reloadApp();
       return true;
     }

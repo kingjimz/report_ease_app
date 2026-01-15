@@ -97,6 +97,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.swUpdateService.updateAvailable$.subscribe(() => {
         this.updateAvailable = true;
       });
+      
+      // Also subscribe to update status changes (for iOS version service)
+      this.swUpdateService.updateAvailableStatus$.subscribe((hasUpdate) => {
+        this.updateAvailable = hasUpdate;
+      });
     }
   }
 
@@ -478,6 +483,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     }
 
     try {
+      // Clear the update available flag before activating (will be set again if still needed after reload)
+      this.updateAvailable = false;
       await this.swUpdateService.activateUpdate();
       // Page will reload automatically after activation
     } catch (error) {

@@ -54,6 +54,14 @@ export class VersionService {
         console.log('New version detected:', serverVersion, 'Current:', this.currentVersion);
         this.updateAvailableSubject.next(true);
         return true;
+      } else {
+        // Versions match - update stored version to ensure it's in sync
+        this.setCurrentVersion(serverVersion);
+        // Clear the update available flag since we're on the latest version
+        if (this.updateAvailableSubject.value) {
+          console.log('Versions match - clearing update flag. Current version:', serverVersion);
+          this.updateAvailableSubject.next(false);
+        }
       }
       
       return false;
