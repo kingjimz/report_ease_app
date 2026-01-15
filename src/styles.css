@@ -49,11 +49,25 @@ html, body {
   overflow-x: hidden;
 }
 
+html {
+  background-color: var(--bg-primary);
+}
+
 body {
   font-family: "Poppins", sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   transition: background-color 0.3s ease, color 0.3s ease;
+  min-height: 100vh;
+}
+
+/* Ensure dark mode applies to body */
+.dark body {
+  background-color: var(--bg-primary) !important;
+}
+
+.dark html {
+  background-color: var(--bg-primary) !important;
 }
 
 /* iOS Safari specific fixes */
