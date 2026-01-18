@@ -1,6 +1,6 @@
 {
   "name": "Field Service Tracker",
-  "short_name": "fstracker",
+  "short_name": "FSTracker",
   "theme_color": "#1976d2",
   "background_color": "#fafafa",
   "display": "standalone",
