@@ -139,6 +139,12 @@ export class InstallComponent implements OnInit, OnDestroy {
           }, 1000);
         } else {
           this.installError = 'Installation prompt is not available. Please try refreshing the page or use the manual installation method.';
+          this.isInstalling = false;
+        }
+      }
+    } catch (error) {
+      console.error('Installation error:', error);
+      this.installError = 'An error occurred during installation. Please try again or use the manual installation method.';
       this.isInstalling = false;
     }
   }
@@ -146,11 +152,4 @@ export class InstallComponent implements OnInit, OnDestroy {
   navigateToLogin() {
     this.router.navigate(['/login']);
   }
-} catch (error) {
-      console.error('Installation error:', error);
-      this.installError = 'An error occurred during installation. Please try again or use the manual installation method.';
-      this.isInstalling = false;
-    }
-  }
-
 }
