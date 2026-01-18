@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, fromEvent } from 'rxjs';
-import { take } from 'rxjs/operators';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -24,15 +23,15 @@ export class PwaService {
       return;
     }
 
-    // Listen for the beforeinstallprompt event
-    fromEvent(window, 'beforeinstallprompt')
-      .pipe(take(1))
-      .subscribe((event: any) => {
-        event.preventDefault();
-        this.promptEvent = event;
-        // Check if we should show the prompt today
-        this.checkAndShowPrompt();
-      });
+    // Listen for the beforeinstallprompt event (don't use take(1) so we can capture it anytime)
+    window.addEventListener('beforeinstallprompt', (event: any) => {
+      event.preventDefault();
+      this.promptEvent = event;
+      // Make prompt available immediately for install page
+      this.installPromptSubject.next(true);
+      // Also check if we should show the auto-prompt
+      this.checkAndShowPrompt();
+    });
 
     // Listen for successful app installation
     window.addEventListener('appinstalled', () => {
@@ -122,6 +121,22 @@ export class PwaService {
     // Mark as dismissed (will show again after 24 hours)
     localStorage.setItem(this.PROMPT_DISMISSED_KEY, 'true');
     localStorage.setItem(this.LAST_PROMPT_KEY, Date.now().toString());
+  }
+
+  /**
+   * Check if installation is available
+   * Useful for install pages to check if they can trigger installation
+   */
+  isInstallAvailable(): boolean {
+    return this.promptEvent !== null;
+  }
+
+  /**
+   * Get the prompt event if available
+   * This allows install pages to use the prompt directly
+   */
+  getPromptEvent(): any {
+    return this.promptEvent;
   }
 }
 

@@ -54,6 +54,17 @@ export class AppComponent implements OnInit, OnDestroy {
     this.initializeNotifications();
 
     onAuthStateChanged(this.auth, (user) => {
+      // Don't redirect if user is on the install page
+      const currentUrl = this.router.url;
+      if (currentUrl === '/install') {
+        // Still load data if user is logged in, but don't redirect
+        if (user) {
+          this.loadBibleStudies();
+          this.initializeNotificationsForUser();
+        }
+        return;
+      }
+
       if (user) {
         this.router.navigateByUrl('/');
         // Load Bible studies (will use cache if offline)
