@@ -35,10 +35,10 @@
         </div>
       </div>
       <button
-        (click)="goHome()"
+        (click)="navigateToLogin()"
         class="mt-4 w-full sm:w-auto px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition duration-200"
       >
-        Go to App
+        Go to Login
       </button>
     </div>
 
@@ -129,50 +129,85 @@
       </div>
 
       <!-- iOS Installation Instructions -->
-      <div *ngIf="isIOS" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-        <div class="flex items-start mb-4">
-          <div class="flex-shrink-0">
-            <div class="w-12 h-12 bg-gradient-to-br from-gray-500 to-gray-600 rounded-lg flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="text-white">
+      <div *ngIf="isIOS" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8 border border-gray-200 dark:border-gray-700">
+        <div class="mb-6">
+          <div class="flex items-center mb-4">
+            <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-gray-500 to-gray-600 rounded-2xl flex items-center justify-center shadow-lg mr-4">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" class="text-white">
                 <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.96-3.24-1.44-1.78-.72-2.66-1.1-2.66-2.1 0-.5.17-.9.5-1.2.33-.3.75-.45 1.25-.45.5 0 1.05.15 1.65.45.6.3 1.2.6 1.8.9.6.3 1.2.6 1.8.9.6.3 1.15.45 1.65.45.5 0 .92-.15 1.25-.45.33-.3.5-.7.5-1.2 0-1-.88-1.38-2.66-2.1-1.16-.48-2.15-.94-3.24-1.44-1.03-.48-2.1-.55-3.08.4-.98.95-.88 2.05-.4 3.08.5 1.09.96 2.08 1.44 3.24.72 1.78 1.1 2.66 2.1 2.66.5 0 .9-.17 1.2-.5.3-.33.45-.75.45-1.25 0-.5-.15-1.05-.45-1.65-.3-.6-.6-1.2-.9-1.8-.3-.6-.6-1.2-.9-1.8-.3-.6-.45-1.15-.45-1.65 0-.5.15-.92.5-1.25.33-.33.7-.5 1.2-.5 1 0 1.38.88 2.1 2.66.48 1.16.94 2.15 1.44 3.24.48 1.03.55 2.1-.4 3.08z"/>
               </svg>
             </div>
-          </div>
-          <div class="ml-4 flex-1">
-            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              Install on iPhone/iPad
-            </h3>
-            <p class="text-gray-600 dark:text-gray-400 mb-4">
-              iOS requires manual installation through Safari. Follow these simple steps:
-            </p>
-            <div class="space-y-4 text-gray-600 dark:text-gray-400 mb-6">
-              <div class="flex items-start bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
-                <span class="flex-shrink-0 w-8 h-8 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-full flex items-center justify-center text-sm font-bold mr-4 mt-0.5">1</span>
-                <div>
-                  <p class="font-semibold text-gray-900 dark:text-white mb-1">Tap the Share Button</p>
-                  <p>Look for the <strong>Share</strong> icon <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block ml-1"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg> at the bottom center of your Safari browser</p>
-                </div>
-              </div>
-              <div class="flex items-start bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
-                <span class="flex-shrink-0 w-8 h-8 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-full flex items-center justify-center text-sm font-bold mr-4 mt-0.5">2</span>
-                <div>
-                  <p class="font-semibold text-gray-900 dark:text-white mb-1">Select "Add to Home Screen"</p>
-                  <p>Scroll down in the share menu and tap <strong>"Add to Home Screen"</strong></p>
-                </div>
-              </div>
-              <div class="flex items-start bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
-                <span class="flex-shrink-0 w-8 h-8 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-full flex items-center justify-center text-sm font-bold mr-4 mt-0.5">3</span>
-                <div>
-                  <p class="font-semibold text-gray-900 dark:text-white mb-1">Confirm Installation</p>
-                  <p>Tap <strong>"Add"</strong> in the top right corner to complete the installation</p>
-                </div>
-              </div>
-            </div>
-            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-              <p class="text-sm text-blue-800 dark:text-blue-300">
-                <strong>Note:</strong> Make sure you're using Safari browser. This feature is not available in Chrome or other browsers on iOS.
+            <div>
+              <h3 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                Install on iPhone/iPad
+              </h3>
+              <p class="text-sm sm:text-base text-gray-500 dark:text-gray-400">
+                Add to your home screen in Safari
               </p>
             </div>
+          </div>
+        </div>
+
+        <div class="space-y-4 mb-6">
+          <div class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700/50 dark:to-gray-700/30 p-5 sm:p-6 rounded-xl border border-gray-200 dark:border-gray-600">
+            <div class="flex items-start">
+              <div class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-md mr-4">
+                1
+              </div>
+              <div class="flex-1 min-w-0">
+                <h4 class="font-bold text-lg sm:text-xl text-gray-900 dark:text-white mb-2">Tap the Share Button</h4>
+                <p class="text-gray-700 dark:text-gray-300 text-sm sm:text-base leading-relaxed">
+                  Look for the <strong class="text-gray-900 dark:text-white">Share</strong> icon 
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block ml-1 text-gray-600 dark:text-gray-400">
+                    <circle cx="18" cy="5" r="3"></circle>
+                    <circle cx="6" cy="12" r="3"></circle>
+                    <circle cx="18" cy="19" r="3"></circle>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                  </svg> 
+                  at the bottom center of your Safari browser
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700/50 dark:to-gray-700/30 p-5 sm:p-6 rounded-xl border border-gray-200 dark:border-gray-600">
+            <div class="flex items-start">
+              <div class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-md mr-4">
+                2
+              </div>
+              <div class="flex-1 min-w-0">
+                <h4 class="font-bold text-lg sm:text-xl text-gray-900 dark:text-white mb-2">Select "Add to Home Screen"</h4>
+                <p class="text-gray-700 dark:text-gray-300 text-sm sm:text-base leading-relaxed">
+                  Scroll down in the share menu and tap <strong class="text-gray-900 dark:text-white">"Add to Home Screen"</strong>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700/50 dark:to-gray-700/30 p-5 sm:p-6 rounded-xl border border-gray-200 dark:border-gray-600">
+            <div class="flex items-start">
+              <div class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-md mr-4">
+                3
+              </div>
+              <div class="flex-1 min-w-0">
+                <h4 class="font-bold text-lg sm:text-xl text-gray-900 dark:text-white mb-2">Confirm Installation</h4>
+                <p class="text-gray-700 dark:text-gray-300 text-sm sm:text-base leading-relaxed">
+                  Tap <strong class="text-gray-900 dark:text-white">"Add"</strong> in the top right corner to complete the installation
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 dark:border-blue-400 rounded-lg p-4 sm:p-5">
+          <div class="flex items-start">
+            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+            </svg>
+            <p class="text-sm sm:text-base text-blue-800 dark:text-blue-300 leading-relaxed">
+              <strong>Important:</strong> Make sure you're using <strong>Safari browser</strong>. This feature is not available in Chrome or other browsers on iOS.
+            </p>
           </div>
         </div>
       </div>
@@ -211,7 +246,7 @@
 
       <!-- Android Direct Install Button -->
       <div *ngIf="isAndroid && canInstall" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-        <div class="flex flex-col items-center text-center mb-6">
+        <div class="flex flex-col items-center text-center">
           <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" class="text-white">
               <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.96-3.24-1.44-1.78-.72-2.66-1.1-2.66-2.1 0-.5.17-.9.5-1.2.33-.3.75-.45 1.25-.45.5 0 1.05.15 1.65.45.6.3 1.2.6 1.8.9.6.3 1.2.6 1.8.9.6.3 1.15.45 1.65.45.5 0 .92-.15 1.25-.45.33-.3.5-.7.5-1.2 0-1-.88-1.38-2.66-2.1-1.16-.48-2.15-.94-3.24-1.44-1.03-.48-2.1-.55-3.08.4-.98.95-.88 2.05-.4 3.08.5 1.09.96 2.08 1.44 3.24.72 1.78 1.1 2.66 2.1 2.66.5 0 .9-.17 1.2-.5.3-.33.45-.75.45-1.25 0-.5-.15-1.05-.45-1.65-.3-.6-.6-1.2-.9-1.8-.3-.6-.6-1.2-.9-1.8-.3-.6-.45-1.15-.45-1.65 0-.5.15-.92.5-1.25.33-.33.7-.5 1.2-.5 1 0 1.38.88 2.1 2.66.48 1.16.94 2.15 1.44 3.24.48 1.03.55 2.1-.4 3.08z"/>
@@ -221,12 +256,12 @@
             Install on Android
           </h3>
           <p class="text-gray-600 dark:text-gray-400 mb-6 max-w-md">
-            Click the button below to automatically install the app on your Android device. The installation prompt will appear.
+            Tap the button below to install the app on your Android device. The installation prompt will appear automatically.
           </p>
           <button
             (click)="installApp()"
             [disabled]="isInstalling"
-            class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-lg rounded-xl hover:from-green-600 hover:to-emerald-700 transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            class="w-full px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-lg rounded-xl hover:from-green-600 hover:to-emerald-700 transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
             <span class="flex items-center justify-center gap-2">
               <svg *ngIf="!isInstalling" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -252,16 +287,6 @@
           </p>
         </div>
       </div>
-    </div>
-
-    <!-- Footer Actions -->
-    <div class="mt-8 text-center">
-      <button
-        (click)="goHome()"
-        class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium transition duration-200"
-      >
-        ← Back to App
-      </button>
     </div>
   </div>
 </div>

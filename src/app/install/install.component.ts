@@ -121,9 +121,9 @@ export class InstallComponent implements OnInit, OnDestroy {
           console.log('User accepted the install prompt');
           this.canInstall = false;
           this.deferredPrompt = null;
-          // Redirect to home after installation
+          // Redirect to login after installation
           setTimeout(() => {
-            this.router.navigate(['/']);
+            this.router.navigate(['/login']);
           }, 1000);
         } else {
           console.log('User dismissed the install prompt');
@@ -133,23 +133,24 @@ export class InstallComponent implements OnInit, OnDestroy {
         // Fallback to PWA service
         const installed = await this.pwaService.installPwa();
         if (installed) {
-          // Redirect to home after installation
+          // Redirect to login after installation
           setTimeout(() => {
-            this.router.navigate(['/']);
+            this.router.navigate(['/login']);
           }, 1000);
         } else {
           this.installError = 'Installation prompt is not available. Please try refreshing the page or use the manual installation method.';
-          this.isInstalling = false;
-        }
-      }
-    } catch (error) {
+      this.isInstalling = false;
+    }
+  }
+
+  navigateToLogin() {
+    this.router.navigate(['/login']);
+  }
+} catch (error) {
       console.error('Installation error:', error);
       this.installError = 'An error occurred during installation. Please try again or use the manual installation method.';
       this.isInstalling = false;
     }
   }
 
-  goHome() {
-    this.router.navigate(['/']);
-  }
 }
