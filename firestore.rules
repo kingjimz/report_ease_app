@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user owns the resource
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Users collection - users can only read/write their own data
+    match /users/{userId} {
+      // Allow users to read/write their own user document
+      allow read, write: if isOwner(userId);
+      
+      // Reports subcollection
+      match /reports/{reportId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Bible Studies subcollection
+      match /bibleStudies/{studyId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Goals subcollection
+      match /goals/{goalId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+  }
+}

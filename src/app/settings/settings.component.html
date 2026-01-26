@@ -67,7 +67,7 @@
       </button>
     </div>
 
-    <form class="space-y-5" (ngSubmit)="onSubmit()">
+    <form #goalForm="ngForm" class="space-y-5" (ngSubmit)="onSubmit()">
       <div>
         <label
           for="goalTitle"
@@ -147,7 +147,10 @@
         </button>
         <button
           type="submit"
-          class="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl"
+          [disabled]="!isFormValid()"
+          [class.opacity-50]="!isFormValid()"
+          [class.cursor-not-allowed]="!isFormValid()"
+          class="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl disabled:hover:shadow-lg"
         >
           {{ goalSelected ? "Update Goal" : "Add Goal" }}
         </button>

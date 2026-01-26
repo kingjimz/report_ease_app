@@ -6,7 +6,9 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "firebase:deploy-rules": "firebase deploy --only firestore:rules",
+    "firebase:deploy-rules:prod": "firebase deploy --only firestore:rules --project reportease-app"
   },
   "private": true,
   "dependencies": {

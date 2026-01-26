@@ -211,6 +211,14 @@ export class SettingsComponent implements OnDestroy {
     this.goalSelected = null;
   }
 
+  isFormValid(): boolean {
+    return !!(
+      this.goal_title?.trim() &&
+      this.goal_description?.trim() &&
+      this.category?.trim()
+    );
+  }
+
   formatTargetDate(dateString: string): string {
     if (!dateString) return '';
     const date = new Date(dateString);

@@ -1,24 +1,16 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from 'firebase/app';
-import { getAnalytics } from 'firebase/analytics';
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// DEVELOPMENT/STAGING Firebase configuration
+// This configuration is used when running in development mode (ng serve)
+// IMPORTANT: This file is automatically replaced with environment.prod.ts during production builds
 export const environment = {
   production: false,
   firebase: {
-    apiKey: 'AIzaSyAOZ6R5siNGVKJp76i8uQunU9mojsKvU64',
-    authDomain: 'reportease-app.firebaseapp.com',
-    projectId: 'reportease-app',
-    storageBucket: 'reportease-app.firebasestorage.app',
-    messagingSenderId: '540320774976',
-    appId: '1:540320774976:web:6be3679164b40d903dd8a5',
-    measurementId: 'G-LGQ0WPDNRV',
+    // STAGING Firebase credentials - replace with your staging project credentials
+    apiKey: "AIzaSyB_XXSfOcZqiiVA5ztITluzEt4ZJWfhZ60",
+    authDomain: "reportease-staging.firebaseapp.com",
+    projectId: "reportease-staging",
+    storageBucket: "reportease-staging.firebasestorage.app",
+    messagingSenderId: "316108715414",
+    appId: "1:316108715414:web:51256df4ba4c780ec9d9b7",
+    measurementId: "G-VXJ4CTG99G" // Optional
   },
 };
-
-// Initialize Firebase
-//const app = initializeApp(firebase);
-//const analytics = getAnalytics(app);

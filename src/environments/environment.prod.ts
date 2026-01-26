@@ -1,14 +1,10 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from 'firebase/app';
-import { getAnalytics } from 'firebase/analytics';
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// PRODUCTION Firebase configuration
+// This configuration is used when building for production (ng build --configuration=production)
+// This file replaces environment.ts during production builds (configured in angular.json)
 export const environment = {
   production: true,
   firebase: {
+    // PRODUCTION Firebase credentials
     apiKey: 'AIzaSyAOZ6R5siNGVKJp76i8uQunU9mojsKvU64',
     authDomain: 'reportease-app.firebaseapp.com',
     projectId: 'reportease-app',
@@ -18,7 +14,3 @@ export const environment = {
     measurementId: 'G-LGQ0WPDNRV',
   },
 };
-
-// Initialize Firebase
-//const app = initializeApp(firebase);
-//const analytics = getAnalytics(app);
