@@ -4,7 +4,7 @@
   </div>
 
   <ng-template #contentLoaded>
-    <div class="container mx-auto px-2 py-2 sm:py-2 md:py-8">
+    <div class="container mx-auto px-2 py-2 sm:py-2 md:py-8 mb-12 sm:mb-12 md:mb-2 lg:mb-2 xl:mb-2">
       <!-- Header Section -->
       <div *ngIf="reports && reports.length > 0" class="mb-4 sm:mb-6 md:mb-8">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
@@ -15,25 +15,38 @@
             </p>
           </div>
           
-          <!-- Quick Stats Bar -->
-          <div class="flex items-center gap-8 text-center lg:text-left">
-            <div class="flex flex-col">
-              <span class="text-2xl font-bold text-blue-600">{{ reports.length }}</span>
-              <span class="text-sm text-gray-500">Total Reports</span>
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <!-- Quick Stats Bar -->
+            <div class="flex items-center gap-8 text-center lg:text-left">
+              <div class="flex flex-col">
+                <span class="text-2xl font-bold text-blue-600">{{ reports.length }}</span>
+                <span class="text-sm text-gray-500">Total Reports</span>
+              </div>
+              <div class="flex flex-col">
+                <span class="text-2xl font-bold text-emerald-600">{{ numberOfBibleStudies }}</span>
+                <span class="text-sm text-gray-500">Bible Studies</span>
+              </div>
+              <div class="flex flex-col">
+                <span class="text-2xl font-bold text-amber-600">{{ numberOfReturnVisits }}</span>
+                <span class="text-sm text-gray-500">Return Visits</span>
+              </div>
             </div>
-            <div class="flex flex-col">
-              <span class="text-2xl font-bold text-emerald-600">{{ numberOfBibleStudies }}</span>
-              <span class="text-sm text-gray-500">Bible Studies</span>
-            </div>
-            <div class="flex flex-col">
-              <span class="text-2xl font-bold text-amber-600">{{ numberOfReturnVisits }}</span>
-              <span class="text-sm text-gray-500">Return Visits</span>
+            
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+              <button
+                (click)="openGenerateReportModal()"
+                class="flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all shadow-sm hover:shadow-md font-medium text-sm w-full sm:w-auto"
+              >
+                <i class="bi bi-file-earmark-pdf"></i>
+                <span>Generate Report</span>
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Reports Library Section -->
+      <!-- Ministry Reports Section -->
       <div *ngIf="reports && reports.length > 0" class="mb-8">
         <!-- Section Header with Search -->
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
@@ -41,7 +54,7 @@
             <div>
               <h2 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center mb-2">
                 <i class="bi bi-journal-text text-blue-600 dark:text-blue-400 mr-3"></i>
-                Reports Library
+                Ministry Reports
               </h2>
               <p class="text-sm text-gray-600 dark:text-gray-400">
                 Browse and download your monthly ministry reports
@@ -61,7 +74,7 @@
         </div>
         
         <!-- Reports Grid View -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         
           <!-- Report Cards -->
           <div 
@@ -76,7 +89,7 @@
               <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
                   <div class="w-12 h-12 bg-white bg-opacity-20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                    <i class="bi bi-calendar-month text-white text-xl"></i>
+                    <i class="bi bi-calendar text-white text-xl"></i>
                   </div>
                   <div>
                     <h3 class="text-lg font-bold text-white">{{ report.month_name }} {{ report.year }}</h3>
@@ -103,17 +116,17 @@
                     <div class="py-1">
                       <button
                         class="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                        (click)="downloadReport(report, true, i)"
+                        (click)="downloadReport(report, i)"
                       >
-                        <i class="bi bi-award text-amber-500 mr-2"></i>
-                        Pioneer Report
+                        <i class="bi bi-download text-blue-500 mr-2"></i>
+                        Download Report
                       </button>
                       <button
                         class="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                        (click)="downloadReport(report, false, i)"
+                        (click)="shareReport(report, i)"
                       >
-                        <i class="bi bi-person text-blue-500 mr-2"></i>
-                        Publisher Report
+                        <i class="bi bi-share-fill text-green-500 mr-2"></i>
+                        Share Report
                       </button>
                     </div>
                   </div>
@@ -276,6 +289,17 @@
             Your ministry reports will appear here once you start submitting them.
           </p>
           
+          <!-- Action Buttons for Empty State -->
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8 w-full">
+            <button
+              (click)="openGenerateReportModal()"
+              class="flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all shadow-sm hover:shadow-md font-medium w-full sm:w-auto"
+            >
+              <i class="bi bi-file-earmark-pdf"></i>
+              <span>Generate Report</span>
+            </button>
+          </div>
+          
           <!-- Getting Started Guide -->
           <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm text-left">
             <h4 class="font-semibold text-gray-900 mb-4 text-center">Getting Started</h4>
@@ -304,7 +328,7 @@
       </div>
     </div>
 
-    <!-- Bible Studies Library Section -->
+    <!-- Bible Studies Section -->
     <div class="container mx-auto px-2 pb-8">
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <!-- Section Header -->
@@ -313,7 +337,7 @@
             <div>
               <h2 class="text-2xl font-bold text-white flex items-center mb-1">
                 <i class="bi bi-book mr-3"></i>
-                Bible Studies Library
+                Bible Studies
               </h2>
               <p class="text-sm text-emerald-100">
                 Manage your spiritual conversations and return visits
@@ -398,7 +422,7 @@
         <!-- Studies Content -->
         <div *ngIf="filteredBibleStudies && filteredBibleStudies.length > 0; else noStudiesState">
           <!-- Show All Button for Bible Studies -->
-          <div *ngIf="filteredBibleStudies.length > 3" class="px-6 pt-6 pb-2">
+          <div *ngIf="filteredBibleStudies.length > 2" class="px-6 pt-6 pb-2">
             <button
               (click)="toggleShowAllBibleStudies()"
                 class="flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-all text-base font-medium text-gray-700 dark:text-gray-300"
@@ -409,7 +433,7 @@
           </div>
           
           <!-- Studies Grid -->
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-6">
             <div 
               *ngFor="let study of getDisplayedBibleStudies(); let i = index" 
               class="group relative bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg hover:border-emerald-300 dark:hover:border-emerald-600 transition-all duration-300 cursor-pointer"
@@ -417,9 +441,15 @@
             >
               <!-- Card Header -->
               <div 
-                class="px-5 py-4 border-b-2"
+                class="px-5 py-4 border-b-2 relative"
                 [ngClass]="study.type === 'bs' ? 'bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border-emerald-200 dark:border-emerald-800' : 'bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-amber-200 dark:border-amber-800'"
               >
+                <!-- Overdue Indicator -->
+                <div 
+                  *ngIf="isStudyOverdue(study)"
+                  class="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-gray-800 shadow-sm animate-pulse"
+                  title="Study is overdue"
+                ></div>
                 <div class="flex items-center justify-between mb-3">
                   <div 
                     class="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"
@@ -708,7 +738,7 @@
     <!-- Add Study Modal -->
     <ng-container *ngIf="showStudyModal">
       <app-modal>
-        <div class="max-w-2xl mx-auto">
+        <div class="w-full">
           <!-- Modal Header -->
           <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
             <div class="flex items-center space-x-3">
@@ -738,7 +768,7 @@
                 Basic Information
               </h4>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                <div class="min-w-0 w-full">
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     <i class="bi bi-person mr-1"></i>
                     Name *
@@ -748,11 +778,12 @@
                     [(ngModel)]="bible_study"
                     name="bible_study"
                     required
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
+                    class="w-full min-w-0 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
+                    style="box-sizing: border-box; width: 100%;"
                     placeholder="Enter person's name"
                   />
                 </div>
-                <div>
+                <div class="min-w-0 w-full">
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     <i class="bi bi-tag mr-1"></i>
                     Type *
@@ -761,7 +792,8 @@
                     [(ngModel)]="type"
                     name="type"
                     required
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
+                    class="w-full min-w-0 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
+                    style="box-sizing: border-box; width: 100%;"
                   >
                     <option value="rv">Return Visit</option>
                     <option value="bs">Bible Study</option>
@@ -777,7 +809,7 @@
                 Location & Next Schedule
               </h4>
               <div class="space-y-4">
-                <div>
+                <div class="min-w-0 w-full">
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     <i class="bi bi-geo-alt mr-1"></i>
                     Address *
@@ -787,11 +819,12 @@
                     name="address"
                     required
                     rows="2"
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm resize-none"
+                    class="w-full min-w-0 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm resize-none"
+                    style="box-sizing: border-box; width: 100%;"
                     placeholder="Enter the address"
                   ></textarea>
                 </div>
-                <div>
+                <div class="min-w-0 w-full">
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     <i class="bi bi-clock mr-1"></i>
                     Next Schedule *
@@ -801,7 +834,8 @@
                     [(ngModel)]="schedule"
                     name="schedule"
                     required
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
+                    class="w-full min-w-0 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
+                    style="box-sizing: border-box; width: 100%; max-width: 100%;"
                   />
                 </div>
               </div>
@@ -813,7 +847,7 @@
                 <i class="bi bi-journal-text text-emerald-600 mr-2"></i>
                 Study Details
               </h4>
-              <div>
+              <div class="min-w-0 w-full">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   <i class="bi bi-book mr-1"></i>
                   Next Lesson/Topic *
@@ -823,7 +857,8 @@
                   name="next_lesson"
                   required
                   rows="3"
-                  class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm resize-none"
+                  class="w-full min-w-0 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm resize-none"
+                  style="box-sizing: border-box; width: 100%;"
                   placeholder="Enter the next lesson or topic to discuss"
                 ></textarea>
               </div>
@@ -862,3 +897,334 @@
     </ng-container>
   </ng-template>
 </div>
+
+<!-- Add Report Modal -->
+<ng-container *ngIf="showAddReportModal">
+  <app-modal>
+    <div class="w-full">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center space-x-2 min-w-0 flex-1">
+          <div class="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex-shrink-0">
+            <i class="bi bi-calendar-plus text-white text-base"></i>
+          </div>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-base font-bold text-gray-900 dark:text-white truncate">Add Report</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate hidden sm:block">Create a ministry service report</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate sm:hidden">Add a service report</p>
+          </div>
+        </div>
+        <button
+          (click)="closeAddReportModal()"
+          class="flex items-center justify-center w-8 h-8 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex-shrink-0 ml-2"
+          title="Close"
+        >
+          <i class="bi bi-x-lg text-xs"></i>
+        </button>
+      </div>
+
+      <!-- Report Form -->
+      <form (ngSubmit)="saveReport()" class="space-y-4">
+        <!-- Date Selection -->
+        <div class="w-full min-w-0">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            Report Date *
+          </label>
+          <input
+            type="date"
+            [(ngModel)]="reportDate"
+            name="reportDate"
+            required
+            (click)="openDatePicker($event)"
+            (focus)="openDatePicker($event)"
+            class="w-full min-w-0 p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white cursor-pointer box-border"
+            style="box-sizing: border-box; max-width: 100%;"
+          />
+        </div>
+
+        <!-- Hours and Minutes -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <i class="bi bi-clock mr-1"></i>
+            Time Spent *
+          </label>
+          <div class="grid grid-cols-2 gap-3">
+            <!-- Hours -->
+            <div>
+              <label class="text-xs text-gray-600 dark:text-gray-400 mb-1 block">Hours</label>
+              <div class="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  (click)="decrementHours()"
+                  class="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors flex-shrink-0"
+                >
+                  <i class="bi bi-dash-lg text-sm"></i>
+                </button>
+                <input
+                  type="number"
+                  [(ngModel)]="reportHours"
+                  name="reportHours"
+                  min="0"
+                  class="w-full min-w-0 text-center p-1.5 sm:p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base sm:text-lg font-bold bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                />
+                <button
+                  type="button"
+                  (click)="incrementHours()"
+                  class="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex-shrink-0"
+                >
+                  <i class="bi bi-plus-lg text-sm"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Minutes -->
+            <div>
+              <label class="text-xs text-gray-600 dark:text-gray-400 mb-1 block">Minutes</label>
+              <div class="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  (click)="decrementMinutes()"
+                  class="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors flex-shrink-0"
+                >
+                  <i class="bi bi-dash-lg text-sm"></i>
+                </button>
+                <input
+                  type="number"
+                  [(ngModel)]="reportMinutes"
+                  name="reportMinutes"
+                  min="0"
+                  max="55"
+                  step="5"
+                  class="w-full min-w-0 text-center p-1.5 sm:p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base sm:text-lg font-bold bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                />
+                <button
+                  type="button"
+                  (click)="incrementMinutes()"
+                  class="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex-shrink-0"
+                >
+                  <i class="bi bi-plus-lg text-sm"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ministry Participation -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <i class="bi bi-people mr-1"></i>
+            Did you participate in the ministry? *
+          </label>
+          <select
+            [(ngModel)]="reportJoinedMinistry"
+            name="reportJoinedMinistry"
+            required
+            class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          >
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+
+        <!-- Notes -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <i class="bi bi-sticky mr-1"></i>
+            Notes <span class="text-gray-500 dark:text-gray-400">(Optional)</span>
+          </label>
+          <textarea
+            [(ngModel)]="reportNotes"
+            name="reportNotes"
+            rows="3"
+            class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none"
+            placeholder="Add any notes about your ministry activity..."
+          ></textarea>
+        </div>
+
+        <!-- Alert Messages -->
+        <app-alerts
+          *ngIf="reportAlertMessage"
+          [isSuccess]="reportSuccess"
+          [alertMessage]="reportAlertMessage"
+        ></app-alerts>
+
+        <!-- Modal Footer -->
+        <div class="flex justify-end gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
+          <button
+            type="button"
+            (click)="closeAddReportModal()"
+            class="px-3 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium text-sm"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            [disabled]="isSubmittingReport || !reportDate || (!reportHours && !reportMinutes) || !reportJoinedMinistry"
+            class="px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span
+              *ngIf="isSubmittingReport"
+              class="animate-spin rounded-full h-4 w-4 border-t-2 border-white inline-block mr-2"
+            ></span>
+            {{ isSubmittingReport ? 'Saving...' : 'Save Report' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </app-modal>
+</ng-container>
+
+<!-- Generate Report Modal -->
+<ng-container *ngIf="showGenerateReportModal">
+  <app-modal>
+    <div class="w-full">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center space-x-2 min-w-0 flex-1">
+          <div class="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex-shrink-0">
+            <i class="bi bi-clipboard-plus text-white text-base"></i>
+          </div>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-base font-bold text-gray-900 dark:text-white truncate">Generate Report Manually</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">Create a ministry service report for a specific date</p>
+          </div>
+        </div>
+        <button
+          (click)="closeGenerateReportModal()"
+          class="flex items-center justify-center w-8 h-8 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex-shrink-0 ml-2"
+          title="Close"
+        >
+          <i class="bi bi-x-lg text-xs"></i>
+        </button>
+      </div>
+
+      <!-- Report Form -->
+      <form (ngSubmit)="generateManualReport()" class="space-y-4">
+        <!-- Date Selection -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            Report Date *
+          </label>
+          <input
+            type="date"
+            [(ngModel)]="generateReportDate"
+            name="generateReportDate"
+            required
+            (click)="openDatePicker($event)"
+            (focus)="openDatePicker($event)"
+            class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white cursor-pointer box-border"
+            style="box-sizing: border-box; width: 100%; max-width: 100%;"
+          />
+        </div>
+
+        <!-- Hours -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <i class="bi bi-clock mr-1"></i>
+            Hours *
+          </label>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              (click)="decrementGenerateHours()"
+              class="flex items-center justify-center w-10 h-10 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors flex-shrink-0"
+            >
+              <i class="bi bi-dash-lg text-base"></i>
+            </button>
+            <input
+              type="number"
+              [(ngModel)]="generateReportHours"
+              name="generateReportHours"
+              min="0"
+              class="flex-1 min-w-0 text-center p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-lg font-bold bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            />
+            <button
+              type="button"
+              (click)="incrementGenerateHours()"
+              class="flex items-center justify-center w-10 h-10 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors flex-shrink-0"
+            >
+              <i class="bi bi-plus-lg text-base"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Bible Studies -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <i class="bi bi-book mr-1"></i>
+            Bible Studies
+          </label>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              (click)="decrementGenerateBibleStudies()"
+              class="flex items-center justify-center w-10 h-10 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors flex-shrink-0"
+            >
+              <i class="bi bi-dash-lg text-base"></i>
+            </button>
+            <input
+              type="number"
+              [(ngModel)]="generateReportBibleStudies"
+              name="generateReportBibleStudies"
+              min="0"
+              class="flex-1 min-w-0 text-center p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-lg font-bold bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            />
+            <button
+              type="button"
+              (click)="incrementGenerateBibleStudies()"
+              class="flex items-center justify-center w-10 h-10 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors flex-shrink-0"
+            >
+              <i class="bi bi-plus-lg text-base"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Ministry Participation -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <i class="bi bi-people mr-1"></i>
+            Did you participate in the ministry today? *
+          </label>
+          <select
+            [(ngModel)]="generateReportJoinedMinistry"
+            name="generateReportJoinedMinistry"
+            required
+            class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          >
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+
+        <!-- Alert Messages -->
+        <app-alerts
+          *ngIf="generateReportAlertMessage"
+          [isSuccess]="generateReportSuccess"
+          [alertMessage]="generateReportAlertMessage"
+        ></app-alerts>
+
+        <!-- Modal Footer -->
+        <div class="flex justify-end gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
+          <button
+            type="button"
+            (click)="closeGenerateReportModal()"
+            class="px-3 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium text-sm"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            [disabled]="isGeneratingReport || !generateReportDate || !generateReportHours || !generateReportJoinedMinistry"
+            class="px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all shadow-sm hover:shadow-md font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span
+              *ngIf="isGeneratingReport"
+              class="animate-spin rounded-full h-4 w-4 border-t-2 border-white inline-block mr-2"
+            ></span>
+            {{ isGeneratingReport ? 'Generating...' : 'Generate Report' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </app-modal>
+</ng-container>

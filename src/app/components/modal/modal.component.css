@@ -4,6 +4,7 @@
   background-color: var(--card-bg);
   border-color: var(--border-color);
   transition: all 0.3s ease;
+  box-sizing: border-box;
 }
 
 .modal-container:hover {
@@ -13,4 +14,43 @@
 /* Ensure modal content inherits proper colors */
 :host ::ng-deep .modal-container * {
   transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+/* Prevent horizontal scroll */
+:host ::ng-deep .modal-container {
+  overflow-x: hidden;
+}
+
+:host ::ng-deep .modal-container input,
+:host ::ng-deep .modal-container textarea,
+:host ::ng-deep .modal-container select {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Fix iOS date input overflow issue */
+:host ::ng-deep .modal-container input[type="date"],
+:host ::ng-deep .modal-container input[type="datetime-local"],
+:host ::ng-deep .modal-container input[type="time"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+}
+
+/* Ensure form containers don't overflow */
+:host ::ng-deep .modal-container form {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* Ensure all form elements are constrained */
+:host ::ng-deep .modal-container form > * {
+  max-width: 100%;
+  box-sizing: border-box;
 }

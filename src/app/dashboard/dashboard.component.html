@@ -1,5 +1,5 @@
 <div class="min-h-screen">
-  <div class="container py-2 sm:py-2 md:py-4 px-2">
+  <div class="container py-2 sm:py-2 md:py-4 px-2 mb-12 sm:mb-12 md:mb-2 lg:mb-2 xl:mb-2">
     <!-- Header Section -->
     <div class="mb-4 sm:mb-6 md:mb-8">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -10,14 +10,6 @@
           </p>
         </div>
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
-          <!-- Quick Action: Add Report -->
-          <button
-            (click)="openAddReportModal()"
-            class="add-report-button flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md font-medium text-sm w-full sm:w-auto"
-          >
-            <i class="bi bi-plus-circle"></i>
-            <span>Add Report</span>
-          </button>
           <div class="text-right hidden md:block">
             <p class="text-xs text-gray-500 dark:text-gray-400">Last updated</p>
             <p class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ getCurrentDate() }}</p>
@@ -26,7 +18,7 @@
       </div>
     </div>
 
-    <!-- Pioneer Year Progress Section -->
+    <!-- 600-Hour Goal Section -->
     <div *ngIf="showPioneerSection" class="mb-4 sm:mb-6 md:mb-8 px-0">
       <div class="pioneer-year-card bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         <!-- Header -->
@@ -38,22 +30,9 @@
                   <i class="bi bi-trophy text-white text-xl sm:text-2xl md:text-3xl"></i>
                 </div>
                 <div class="flex-1">
-                  <h2 class="text-base sm:text-xl md:text-2xl font-bold text-white mb-0.5 sm:mb-1">Pioneer Year Progress</h2>
+                  <h2 class="text-base sm:text-xl md:text-2xl font-bold text-white mb-0.5 sm:mb-1">Annual Service Goal</h2>
                   <p class="text-white text-opacity-90 text-xs sm:text-sm md:text-base">{{ serviceYearStart }} - {{ serviceYearEnd }}</p>
                 </div>
-              </div>
-              <div class="flex items-center gap-3">
-                <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg sm:rounded-xl px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4">
-                  <p class="text-white text-opacity-80 text-xs font-medium mb-0.5 sm:mb-1">Yearly Goal</p>
-                  <p class="text-xl sm:text-2xl md:text-3xl font-bold text-white">{{ pioneerYearGoal }} hrs</p>
-                </div>
-                <button
-                  (click)="toggleHidePioneerSection()"
-                  class="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm rounded-lg transition-all"
-                  [title]="isPioneer ? 'Hide Pioneer Year Progress' : 'Show Pioneer Year Progress'"
-                >
-                  <i [class]="isPioneer ? 'bi bi-eye-slash text-white text-lg sm:text-xl' : 'bi bi-eye text-white text-lg sm:text-xl'"></i>
-                </button>
               </div>
             </div>
           </div>
@@ -62,7 +41,23 @@
         <!-- Progress Content -->
         <div class="p-4 sm:p-6 md:p-8">
           <!-- Main Progress Stats -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
+            <!-- Yearly Goal Card -->
+            <div class="stat-box bg-indigo-50 dark:bg-gray-800 rounded-lg sm:rounded-xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700">
+              <div class="flex items-center justify-between mb-2 sm:mb-3">
+                <span class="text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Yearly Goal</span>
+                <div class="w-8 h-8 sm:w-10 sm:h-10 bg-indigo-100 dark:bg-indigo-900/40 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <i class="bi bi-trophy text-indigo-600 dark:text-indigo-400 text-lg sm:text-xl"></i>
+                </div>
+              </div>
+              <p class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">{{ pioneerYearGoal }}</p>
+              <div class="flex items-center text-xs sm:text-sm">
+                <span class="font-medium text-indigo-600 dark:text-indigo-400">
+                  hours target
+                </span>
+              </div>
+            </div>
+
             <!-- Hours Completed -->
             <div class="stat-box bg-blue-50 dark:bg-gray-800 rounded-lg sm:rounded-xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700">
               <div class="flex items-center justify-between mb-2 sm:mb-3">
@@ -505,7 +500,8 @@
           </div>
           <div class="min-w-0 flex-1">
             <h3 class="text-base font-bold text-gray-900 dark:text-white truncate">Add Report</h3>
-            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">Create a ministry service report for a specific date</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate hidden sm:block">Create a ministry service report for a specific date</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate sm:hidden">Add a service report</p>
           </div>
         </div>
         <button
@@ -520,9 +516,8 @@
       <!-- Report Form -->
       <form (ngSubmit)="saveReport()" class="space-y-4">
         <!-- Date Selection -->
-        <div>
+        <div class="w-full min-w-0">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            <i class="bi bi-calendar-event mr-1"></i>
             Report Date *
           </label>
           <input
@@ -530,7 +525,10 @@
             [(ngModel)]="reportDate"
             name="reportDate"
             required
-            class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            (click)="openDatePicker($event)"
+            (focus)="openDatePicker($event)"
+            class="w-full min-w-0 p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white cursor-pointer box-border"
+            style="box-sizing: border-box; max-width: 100%;"
           />
         </div>
 

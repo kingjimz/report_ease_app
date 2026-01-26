@@ -2,6 +2,10 @@
   background-color: var(--card-bg);
   box-shadow: 0 4px 6px -1px var(--shadow);
   transition: background-color 0.3s ease;
+  overscroll-behavior: none;
+  position: sticky;
+  top: 0;
+  z-index: 9999;
 }
 
 .header-text {

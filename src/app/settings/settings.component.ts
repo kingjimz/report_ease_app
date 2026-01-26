@@ -13,7 +13,6 @@ import { ModalService } from '../_services/modal.service';
   styleUrl: './settings.component.css',
 })
 export class SettingsComponent implements OnDestroy {
-  target_date = '';
   category = '';
   goal_title = '';
   goal_description = '';
@@ -42,7 +41,6 @@ export class SettingsComponent implements OnDestroy {
     } else {
       this.api
         .addGoal({
-          target_date: this.target_date,
           category: this.category,
           goal_title: this.goal_title,
           goal_description: this.goal_description,
@@ -84,10 +82,8 @@ export class SettingsComponent implements OnDestroy {
   closeDeleteConfirm() {
     this.showDeleteConfirm = false;
     this.goalToDelete = null;
-    // Only close modal service if goal modal is also closed
-    if (!this.showGoalModal) {
-      this.modalService.closeModal();
-    }
+    // Always close the delete confirmation modal
+    this.modalService.closeModal();
   }
 
   deleteGoal(goal: any) {
@@ -150,9 +146,6 @@ export class SettingsComponent implements OnDestroy {
   }
 
   editGoal(goal: any) {
-    this.target_date = goal.target_date
-      ? new Date(goal.target_date).toISOString().slice(0, 10)
-      : '';
     this.category = goal.category || '';
     this.goal_title = goal.goal_title || '';
     this.goal_description = goal.goal_description || '';
@@ -169,7 +162,6 @@ export class SettingsComponent implements OnDestroy {
     this.api
       .updateGoal({
         id: this.goalSelected.id,
-        target_date: this.target_date,
         category: this.category,
         goal_title: this.goal_title,
         goal_description: this.goal_description,
@@ -197,14 +189,11 @@ export class SettingsComponent implements OnDestroy {
     this.showGoalModal = false;
     this.goalSelected = null;
     this.resetForm();
-    // Only close modal service if delete confirm is also closed
-    if (!this.showDeleteConfirm) {
-      this.modalService.closeModal();
-    }
+    // Always close the goal modal
+    this.modalService.closeModal();
   }
 
   resetForm() {
-    this.target_date = '';
     this.category = '';
     this.goal_title = '';
     this.goal_description = '';

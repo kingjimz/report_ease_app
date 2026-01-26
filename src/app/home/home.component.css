@@ -1,9 +1,71 @@
 /* Home Component Dark Mode Support */
 
+:host {
+  display: block;
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+}
+
+/* Grid-based layout for proper centering and equal margins */
+.home-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  width: 100%;
+  padding: 0 0.5rem; /* px-2 */
+}
+
+@media (min-width: 640px) {
+  .home-container {
+    padding: 0 0.5rem; /* sm:px-2 */
+  }
+}
+
+@media (min-width: 768px) {
+  .home-container {
+    grid-template-columns: 1.5rem 1fr 1.5rem; /* Equal margins on both sides */
+    padding: 0;
+  }
+  
+  .home-content {
+    grid-column: 2;
+    width: 100%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .home-container {
+    grid-template-columns: 1fr;
+    max-width: 66.666667%; /* lg:w-2/3 */
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0;
+  }
+  
+  .home-content {
+    grid-column: 1;
+  }
+}
+
+@media (min-width: 1280px) {
+  .home-container {
+    max-width: 66.666667%; /* xl:w-2/3 */
+  }
+}
+
 .tab-card-container {
   background-color: var(--card-bg);
   border-color: var(--border-color);
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  transform: translateY(0);
+  will-change: transform;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.tab-card-container.tab-hidden {
+  transform: translateY(100%) !important;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .dark .bg-white {

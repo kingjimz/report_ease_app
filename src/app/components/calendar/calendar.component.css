@@ -136,3 +136,19 @@
     font-size: 10px;
   }
 }
+
+/* Fix iOS date input overflow in modals */
+:host ::ng-deep input[type="date"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Ensure form containers don't overflow */
+:host ::ng-deep form {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}

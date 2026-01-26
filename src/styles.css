@@ -41,11 +41,48 @@
   --button-secondary-hover: #4b5563;
 }
 
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+}
+
+html {
+  background-color: var(--bg-primary);
+}
+
 body {
   font-family: "Poppins", sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   transition: background-color 0.3s ease, color 0.3s ease;
+  min-height: 100vh;
+}
+
+/* Ensure dark mode applies to body */
+.dark body {
+  background-color: var(--bg-primary) !important;
+}
+
+.dark html {
+  background-color: var(--bg-primary) !important;
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  app-root {
+    display: block;
+    min-height: 100vh;
+  }
 }
 
 /* Dark mode utility classes */
@@ -111,4 +148,40 @@ body {
 .dark input::placeholder,
 .dark textarea::placeholder {
   color: var(--text-tertiary) !important;
+}
+
+/* Hide scrollbars but keep scrolling functionality */
+/* Apply to all elements */
+* {
+  /* Firefox */
+  scrollbar-width: none !important;
+  /* IE and Edge */
+  -ms-overflow-style: none !important;
+}
+
+/* Webkit browsers (Chrome, Safari, Edge) - hide scrollbar for all elements */
+*::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+/* Ensure scrolling still works on html and body */
+html, body {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
 }

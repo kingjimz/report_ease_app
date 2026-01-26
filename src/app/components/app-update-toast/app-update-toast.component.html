@@ -1,0 +1,29 @@
+<div *ngIf="showPrompt" class="update-toast">
+  <div class="update-toast-content">
+    <div class="update-toast-icon">
+      <i class="bi bi-arrow-clockwise"></i>
+    </div>
+    <div class="update-toast-text">
+      <p class="update-toast-title">Update Available</p>
+      <p class="update-toast-message">
+        A new version of the app is available. Update now to get the latest features and improvements.
+      </p>
+    </div>
+    <div class="update-toast-actions">
+      <button 
+        class="btn-update" 
+        (click)="updateApp()" 
+        [disabled]="isUpdating"
+        title="Update Now">
+        <span *ngIf="!isUpdating">Update</span>
+        <span *ngIf="isUpdating">Updating...</span>
+      </button>
+      <button 
+        class="btn-close" 
+        (click)="dismissPrompt()" 
+        title="Dismiss">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+  </div>
+</div>

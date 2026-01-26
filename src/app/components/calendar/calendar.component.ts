@@ -5,6 +5,9 @@ import { ApiService } from '../../_services/api.service';
 import { UtilService } from '../../_services/util.service';
 import { LoaderComponent } from '../loader/loader.component';
 import { ModalService } from '../../_services/modal.service';
+import { ModalComponent } from '../modal/modal.component';
+import { AlertsComponent } from '../alerts/alerts.component';
+import { Subscription } from 'rxjs';
 
 interface CalendarDay {
   date: Date;
@@ -28,7 +31,7 @@ interface CalendarEvent {
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoaderComponent],
+  imports: [CommonModule, FormsModule, LoaderComponent, ModalComponent, AlertsComponent],
   templateUrl: './calendar.component.html',
   styleUrls: ['./calendar.component.css'],
 })
@@ -58,6 +61,20 @@ export class CalendarComponent implements OnInit, OnDestroy {
   public Math = Math;
   showDeleteConfirmModal = false;
   isDeleting = false;
+  private reportsSubscription?: Subscription;
+  
+  // Add Report Modal properties (matching dashboard)
+  showAddReportModal: boolean = false;
+  reportDate: string = '';
+  reportHours: number = 0;
+  reportMinutes: number = 0;
+  reportJoinedMinistry: string = 'yes';
+  reportNotes: string = '';
+  isSubmittingReport: boolean = false;
+  reportSuccess: boolean = false;
+  reportAlertMessage: string = '';
+  isDateLocked: boolean = false; // Flag to lock date when opened from calendar
+
   constructor(
     private api: ApiService,
     private util: UtilService,
@@ -68,12 +85,23 @@ export class CalendarComponent implements OnInit, OnDestroy {
     this.generateCalendar();
     this.generateWeekDays();
     this.loadReports();
+    
+    // Subscribe to reports$ for immediate updates when reports are added offline
+    this.reportsSubscription = this.api.reports$.subscribe((reports) => {
+      if (reports && reports.length > 0) {
+        this.updateEventsFromReports(reports);
+      }
+    });
   }
 
   ngOnDestroy(): void {
     // Clean up modal state if component is destroyed with modals open
-    if (this.selectedDate || this.showDeleteConfirmModal) {
+    if (this.selectedDate || this.showDeleteConfirmModal || this.showAddReportModal) {
       this.modalService.closeModal();
+    }
+    // Clean up subscription
+    if (this.reportsSubscription) {
+      this.reportsSubscription.unsubscribe();
     }
   }
 
@@ -214,25 +242,47 @@ export class CalendarComponent implements OnInit, OnDestroy {
       const data = await this.api.getReports();
       this.reports = this.util.aggregateReportsByMonth(data);
       this.api.updateAggregatedData(this.reports);
-
-      this.events = data.map((report: any) => {
-        return {
-          title: report.hours + ' Hours',
-          start: new Date(report.report_date.seconds * 1000),
-          color: { primary: '#008000', secondary: '#90EE90' },
-          meta: {
-            hours: report.hours || 0,
-            minutes: report.minutes || 0,
-            report_id: report.id,
-            notes: report.notes,
-            joined_ministry: report.is_joined_ministry,
-          },
-        };
-      });
+      this.updateEventsFromReports(data);
     } catch (error) {
       console.error('Error fetching reports:', error);
     }
     this.isLoading = false;
+  }
+
+  private updateEventsFromReports(reports: any[]) {
+    this.events = reports.map((report: any) => {
+      // Handle different date formats: Firestore timestamp, Date object, or temp ID
+      let reportDate: Date;
+      if (report.report_date?.seconds) {
+        // Firestore timestamp
+        reportDate = new Date(report.report_date.seconds * 1000);
+      } else if (report.report_date?.toDate) {
+        // Firestore timestamp with toDate method
+        reportDate = report.report_date.toDate();
+      } else if (report.report_date instanceof Date) {
+        // Date object
+        reportDate = report.report_date;
+      } else if (typeof report.report_date === 'string') {
+        // String date
+        reportDate = new Date(report.report_date);
+      } else {
+        // Fallback to current date if invalid
+        reportDate = new Date();
+      }
+
+      return {
+        title: (report.hours || 0) + ' Hours',
+        start: reportDate,
+        color: { primary: '#008000', secondary: '#90EE90' },
+        meta: {
+          hours: report.hours || 0,
+          minutes: report.minutes || 0,
+          report_id: report.id,
+          notes: report.notes || '',
+          joined_ministry: report.is_joined_ministry || '',
+        },
+      };
+    });
   }
 
   async saveReport() {
@@ -316,15 +366,14 @@ export class CalendarComponent implements OnInit, OnDestroy {
       return;
     }
     this.showDeleteConfirmModal = true;
+    // Open another modal layer (delete confirmation on top of main modal)
     this.modalService.openModal();
   }
 
   closeDeleteConfirmModal() {
     this.showDeleteConfirmModal = false;
-    // Only close modal service if the main modal is also closed
-    if (!this.selectedDate) {
-      this.modalService.closeModal();
-    }
+    // Close the delete confirmation modal (main modal remains open)
+    this.modalService.closeModal();
   }
 
   async confirmDeleteReport() {
@@ -337,13 +386,15 @@ export class CalendarComponent implements OnInit, OnDestroy {
     try {
       await this.api.deleteReport(this.report_id);
       this.showDeleteConfirmModal = false;
-      this.selectedDate = null;
-      this.modalService.closeModal();
+      // Close both modals: delete confirmation modal and main modal
+      this.modalService.closeModal(); // Close delete confirmation modal
+      this.closeAddReportModal(); // Close main modal (this also resets selectedDate)
       await this.loadReports();
       this.reInitializeVariables();
     } catch (error) {
       console.error('Error deleting report:', error);
-      alert('Error deleting report. Please try again.');
+      this.reportSuccess = false;
+      this.reportAlertMessage = 'Error deleting report. Please try again.';
     } finally {
       this.isDeleting = false;
     }
@@ -367,30 +418,158 @@ export class CalendarComponent implements OnInit, OnDestroy {
 
   onDayClick(day: CalendarDay) {
     this.selectedDate = new Date(day.date);
-    this.modalService.openModal();
+    // Lock the date when opened from calendar
+    this.isDateLocked = true;
+    
+    // Format date for input (YYYY-MM-DD)
+    const dateStr = this.selectedDate.toISOString().split('T')[0];
+    this.reportDate = dateStr;
+    
     const existingEvent = this.events.find(
       (e) => e.start.toDateString() === this.selectedDate?.toDateString(),
     );
     this.hasExistingEvent = existingEvent ? true : false;
 
     if (existingEvent) {
+      this.reportHours = existingEvent.meta.hours || 0;
+      this.reportMinutes = existingEvent.meta.minutes || 0;
+      this.report_id = existingEvent.meta.report_id;
+      this.reportJoinedMinistry = existingEvent.meta.joined_ministry || 'yes';
+      this.reportNotes = existingEvent.meta.notes || '';
+      
+      // Also set old variables for backward compatibility if needed
       this.hours = existingEvent.meta.hours || 0;
       this.minutes = existingEvent.meta.minutes || 0;
-      this.report_id = existingEvent.meta.report_id;
-      this.selectedDate = existingEvent.start;
       this.joined_ministry = this.util.capitalizeFirstLetter(
         existingEvent.meta.joined_ministry,
       );
       this.note = existingEvent.meta.notes;
     } else {
+      // Reset to defaults for new report
+      this.reportHours = 0;
+      this.reportMinutes = 0;
+      this.reportJoinedMinistry = 'yes';
+      this.reportNotes = '';
+      this.report_id = '';
       this.reInitializeVariables();
     }
+    
+    // Open the modal
+    this.openAddReportModal();
   }
 
   closeModal() {
     this.selectedDate = null;
     this.noChangeDetected = false;
     this.modalService.closeModal();
+  }
+  
+  // Add Report Modal Methods (matching dashboard)
+  openAddReportModal() {
+    // If no date is selected (opened from + button), set today's date
+    if (!this.selectedDate || !this.reportDate) {
+      const today = new Date();
+      this.selectedDate = today;
+      this.reportDate = today.toISOString().split('T')[0];
+      this.isDateLocked = false; // Allow date change when opened from + button
+    }
+    
+    this.reportSuccess = false;
+    this.reportAlertMessage = '';
+    this.showAddReportModal = true;
+  }
+  
+  closeAddReportModal() {
+    this.showAddReportModal = false;
+    this.selectedDate = null;
+    this.isDateLocked = false;
+    this.reportDate = '';
+    this.reportHours = 0;
+    this.reportMinutes = 0;
+    this.reportJoinedMinistry = 'yes';
+    this.reportNotes = '';
+    this.reportSuccess = false;
+    this.reportAlertMessage = '';
+    this.report_id = '';
+    this.hasExistingEvent = false;
+  }
+  
+  incrementHours() {
+    this.reportHours = (this.reportHours || 0) + 1;
+  }
+  
+  decrementHours() {
+    this.reportHours = Math.max(0, (this.reportHours || 0) - 1);
+  }
+  
+  incrementMinutes() {
+    this.reportMinutes = Math.min(55, (this.reportMinutes || 0) + 5);
+  }
+  
+  decrementMinutes() {
+    this.reportMinutes = Math.max(0, (this.reportMinutes || 0) - 5);
+  }
+  
+  async saveReportFromModal() {
+    if (!this.reportDate || !this.selectedDate) {
+      this.reportSuccess = false;
+      this.reportAlertMessage = 'Please select a date for the report.';
+      return;
+    }
+    
+    if (!this.reportHours && !this.reportMinutes) {
+      this.reportSuccess = false;
+      this.reportAlertMessage = 'Please enter at least some hours or minutes.';
+      return;
+    }
+    
+    if (!this.reportJoinedMinistry) {
+      this.reportSuccess = false;
+      this.reportAlertMessage = 'Please indicate if you participated in the ministry.';
+      return;
+    }
+    
+    this.isSubmittingReport = true;
+    
+    try {
+      // Use selectedDate which is already a Date object
+      const report: any = {
+        hours: this.reportHours || 0,
+        minutes: this.reportMinutes || 0,
+        is_joined_ministry: this.reportJoinedMinistry,
+        notes: this.reportNotes || '',
+        report_date: this.selectedDate,
+        created_at: new Date(),
+        updated_at: new Date(),
+      };
+      
+      if (this.hasExistingEvent && this.report_id) {
+        // Update existing report
+        report.id = this.report_id;
+        await this.api.updateReport(report);
+        this.reportSuccess = true;
+        this.reportAlertMessage = 'Report updated successfully!';
+      } else {
+        // Create new report
+        await this.api.createReport(report);
+        this.reportSuccess = true;
+        this.reportAlertMessage = 'Report added successfully! It will appear on your calendar.';
+      }
+      
+      // Reload reports to update calendar
+      await this.loadReports();
+      
+      // Close modal after 1.5 seconds
+      setTimeout(() => {
+        this.closeAddReportModal();
+      }, 1500);
+    } catch (error) {
+      console.error('Error saving report:', error);
+      this.reportSuccess = false;
+      this.reportAlertMessage = 'Error saving report. Please try again.';
+    } finally {
+      this.isSubmittingReport = false;
+    }
   }
 
   reInitializeVariables() {

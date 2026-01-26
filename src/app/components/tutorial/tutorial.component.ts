@@ -26,7 +26,7 @@ export class TutorialComponent implements OnInit, OnChanges, OnDestroy {
   currentStep: number = 0;
   steps: TutorialStep[] = [
     {
-      title: 'Welcome to Report Ease!',
+      title: 'Welcome to Field Service Tracker!',
       description:
         'This app helps you track your ministry service hours, reports, and goals. Let\'s take a quick tour of the main features.',
       icon: 'bi bi-house-fill',

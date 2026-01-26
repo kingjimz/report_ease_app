@@ -242,10 +242,7 @@
   transition: width 0.5s ease;
 }
 
-/* Pioneer Year Progress Card */
-.pioneer-year-card {
-  /* No animations */
-}
+/* 600-Hour Goal Card - Styles applied via Tailwind classes in template */
 
 .pioneer-header {
   position: relative;
@@ -449,4 +446,43 @@
   box-shadow: 
     0 0 15px rgba(59, 130, 246, 0.7),
     0 0 30px rgba(59, 130, 246, 0.4);
+}
+
+/* Remove native calendar icon from date input but keep it clickable */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  display: none;
+  -webkit-appearance: none;
+}
+
+input[type="date"]::-webkit-inner-spin-button,
+input[type="date"]::-webkit-clear-button {
+  display: none;
+  -webkit-appearance: none;
+}
+
+/* For Firefox */
+input[type="date"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Ensure the entire input is clickable and opens date picker */
+input[type="date"] {
+  cursor: pointer;
+}
+
+/* Fix iOS date input overflow in modals */
+:host ::ng-deep input[type="date"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Ensure form containers don't overflow */
+:host ::ng-deep form {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }

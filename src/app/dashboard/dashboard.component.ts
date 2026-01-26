@@ -38,7 +38,7 @@ export class DashboardComponent implements OnInit {
   goals: any[] = [];
   randomizedGoals: any[] = [];
   
-  // Pioneer Year Progress (September to August)
+  // 600-Hour Goal (September to August)
   showPioneerSection = false;
   pioneerYearHours = 0;
   pioneerYearGoal = 600;
@@ -79,11 +79,63 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.calculateServiceYear();
+    this.loadUserSettings();
+    
+    // Subscribe to real-time data streams (works offline with Firestore cache)
+    this.subscribeToDataStreams();
+    
+    // Also try to load initial data (will use cache if offline)
     this.loadReports();
     this.loadBibLeStudies();
     this.loadGoals();
-    this.calculateServiceYear();
-    this.loadUserSettings();
+  }
+  
+  subscribeToDataStreams() {
+    // Subscribe to reports stream (updates in real-time, works offline)
+    this.api.reports$.subscribe((reports) => {
+      if (reports && reports.length >= 0) {
+        this.allReports = reports;
+        this.reports = this.util.aggregateReportsByMonth(reports);
+        this.api.updateAggregatedData(this.reports);
+        this.monthlyHours =
+          this.reports.length > 0 ? this.reports[0].total_hours || 0 : 0;
+        this.prevMonthHours =
+          this.reports.length > 1 ? this.reports[1].total_hours || 0 : 0;
+        this.calculatePioneerYearHours();
+        this.calculateWeeklyHours();
+        this.calculateMonthlyGoal();
+        this.generateRecommendation();
+        this.loading = false;
+      }
+    });
+    
+    // Subscribe to bible studies stream
+    this.api.bibleStudies$.subscribe((studies) => {
+      if (studies && studies.length >= 0) {
+        this.bibleStudies = studies;
+        // Don't call updateBibleStudies here - it would create an infinite loop
+        // The data is already coming from the subject
+        this.numberOfBibleStudies = this.bibleStudies.filter(
+          (study) => study.type === 'bs',
+        ).length;
+        this.numberOfReturnVisits = this.bibleStudies.filter(
+          (study) => study.type === 'rv',
+        ).length;
+        this.loading = false;
+      }
+    });
+    
+    // Subscribe to goals stream
+    this.api.goals$.subscribe((goals) => {
+      if (goals && goals.length >= 0) {
+        this.goals = goals;
+        this.randomizeGoals(this.goals);
+        // Don't call notifyGoalChange here - it would create an infinite loop
+        // The data is already coming from the subject
+        this.loading = false;
+      }
+    });
   }
   
   calculateWeeklyHours() {
@@ -237,27 +289,30 @@ export class DashboardComponent implements OnInit {
   }
 
   async loadBibLeStudies() {
-    await this.api
-      .getBibleStudies()
-      .then((data) => {
+    try {
+      const data = await this.api.getBibleStudies();
+      if (data) {
         this.bibleStudies = data;
-        this.api.updateBibleStudies(data);
+        // Don't call updateBibleStudies here - the real-time listener will handle updates
+        // Calling it would create a loop since we're also subscribed to bibleStudies$
         this.numberOfBibleStudies = this.bibleStudies.filter(
           (study) => study.type === 'bs',
         ).length;
         this.numberOfReturnVisits = this.bibleStudies.filter(
           (study) => study.type === 'rv',
         ).length;
-      })
-      .catch((error) => {
-        console.error('Error fetching Bible studies:', error);
-      });
+      }
+      this.loading = false;
+    } catch (error) {
+      console.error('Error fetching Bible studies:', error);
+      this.loading = false; // Still set loading to false even on error
+    }
   }
 
   async loadReports() {
-    await this.api
-      .getReports()
-      .then((data) => {
+    try {
+      const data = await this.api.getReports();
+      if (data) {
         this.allReports = data;
         this.reports = data;
         this.reports = this.util.aggregateReportsByMonth(data);
@@ -270,23 +325,28 @@ export class DashboardComponent implements OnInit {
         this.calculateWeeklyHours();
         this.calculateMonthlyGoal();
         this.generateRecommendation();
-      })
-      .catch((error) => {
-        console.error('Error fetching reports:', error);
-      });
+      }
+      this.loading = false;
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+      this.loading = false; // Still set loading to false even on error
+    }
   }
 
-  loadGoals() {
-    this.api
-      .getGoals()
-      .then((goals) => {
+  async loadGoals() {
+    try {
+      const goals = await this.api.getGoals();
+      if (goals) {
         this.goals = goals;
         this.randomizeGoals(this.goals);
-        this.api.notifyGoalChange(goals);
-      })
-      .catch((error) => {
-        console.error('Error loading goals:', error);
-      });
+        // Don't call notifyGoalChange here - the real-time listener will handle updates
+        // Calling it could create a loop since we're also subscribed to goals$
+      }
+      this.loading = false;
+    } catch (error) {
+      console.error('Error loading goals:', error);
+      this.loading = false; // Still set loading to false even on error
+    }
   }
 
   shuffle(array: any[]) {
@@ -336,13 +396,6 @@ export class DashboardComponent implements OnInit {
     const serviceYearStart = new Date(serviceYearStartYear, 8, 1, 0, 0, 0); // September 1st, 00:00:00
     const serviceYearEnd = new Date(serviceYearStartYear + 1, 8, 0, 23, 59, 59); // August 31st, 23:59:59
 
-    console.log('Service Year Range:', {
-      start: serviceYearStart.toISOString(),
-      end: serviceYearEnd.toISOString(),
-      currentMonth: currentMonth,
-      serviceYearStartYear: serviceYearStartYear
-    });
-
     // Filter reports within the service year
     const serviceYearReports = this.allReports.filter(report => {
       if (!report.report_date) return false;
@@ -365,21 +418,10 @@ export class DashboardComponent implements OnInit {
       return isInRange;
     });
 
-    console.log('Total reports:', this.allReports.length);
-    console.log('Service year reports:', serviceYearReports.length);
-    console.log('Sample report dates:', this.allReports.slice(0, 5).map(r => {
-      if (!r.report_date) return 'NO DATE';
-      if (r.report_date.toDate) return r.report_date.toDate();
-      if (r.report_date.seconds) return new Date(r.report_date.seconds * 1000);
-      return r.report_date;
-    }));
-
     // Calculate total hours
     this.pioneerYearHours = serviceYearReports.reduce((total, report) => {
       return total + (report.hours || 0);
     }, 0);
-
-    console.log('Pioneer year hours:', this.pioneerYearHours);
 
     // Calculate remaining hours and progress
     this.hoursRemaining = Math.max(0, this.pioneerYearGoal - this.pioneerYearHours);
@@ -499,6 +541,24 @@ export class DashboardComponent implements OnInit {
   
   decrementMinutes() {
     this.reportMinutes = Math.max(0, (this.reportMinutes || 0) - 5);
+  }
+  
+  openDatePicker(event: Event) {
+    const input = event.target as HTMLInputElement;
+    // Use showPicker() if available (modern browsers)
+    if (input && typeof input.showPicker === 'function') {
+      try {
+        input.showPicker();
+      } catch (error) {
+        // Fallback: just focus the input, which will open the picker on most browsers
+        input.focus();
+        input.click();
+      }
+    } else {
+      // Fallback for older browsers
+      input.focus();
+      input.click();
+    }
   }
   
   async saveReport() {
