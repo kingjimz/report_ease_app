@@ -39,6 +39,12 @@ function getFirebaseApp() {
   return firebaseAppInstance;
 }
 
+// Service Worker configuration
+const serviceWorkerConfig = {
+  enabled: !isDevMode(),
+  registrationStrategy: 'registerWhenStable:30000',
+};
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
