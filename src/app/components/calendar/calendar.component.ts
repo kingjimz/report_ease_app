@@ -416,14 +416,21 @@ export class CalendarComponent implements OnInit, OnDestroy {
     return day.date.toISOString();
   }
 
+  /** Format a Date as YYYY-MM-DD in local time (avoids UTC off-by-one in date inputs). */
+  private formatDateLocal(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
   onDayClick(day: CalendarDay) {
     this.selectedDate = new Date(day.date);
     // Lock the date when opened from calendar
     this.isDateLocked = true;
     
-    // Format date for input (YYYY-MM-DD)
-    const dateStr = this.selectedDate.toISOString().split('T')[0];
-    this.reportDate = dateStr;
+    // Format date for input (YYYY-MM-DD) in local time to avoid timezone off-by-one
+    this.reportDate = this.formatDateLocal(this.selectedDate);
     
     const existingEvent = this.events.find(
       (e) => e.start.toDateString() === this.selectedDate?.toDateString(),
@@ -470,7 +477,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
     if (!this.selectedDate || !this.reportDate) {
       const today = new Date();
       this.selectedDate = today;
-      this.reportDate = today.toISOString().split('T')[0];
+      this.reportDate = this.formatDateLocal(today);
       this.isDateLocked = false; // Allow date change when opened from + button
     }
     
