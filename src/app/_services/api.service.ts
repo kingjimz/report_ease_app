@@ -756,31 +756,24 @@ export class ApiService {
         'reports',
       );
 
-      // 🔹 Try server first, fallback to cache
+      // Prefer in-memory data kept current by the real-time listener (no reads).
+      const currentReports = this.reportSignal();
+      if (currentReports && currentReports.length > 0) {
+        return currentReports;
+      }
+
+      // Otherwise read from the local Firestore cache (the active onSnapshot
+      // listener keeps it fresh). A server round-trip on every navigation was
+      // billing a full collection read each time and is unnecessary here.
+      const mapReports = (querySnapshot: any) =>
+        querySnapshot.docs.map((doc: any) => {
+          const data = doc.data();
+          return { id: doc.id, ...data, report_date: data['report_date'] || null };
+        });
       try {
-        const querySnapshot = await getDocsFromServer(reportsCollection);
-        const reportsData = querySnapshot.docs.map((doc) => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            ...data,
-            // Keep original Firestore timestamp format for charts
-            report_date: data['report_date'] || null,
-          };
-        });
-        return reportsData;
-      } catch (serverError) {
-        console.warn('Server fetch failed, trying cache:', serverError);
-        const querySnapshot = await getDocsFromCache(reportsCollection);
-        const reportsData = querySnapshot.docs.map((doc) => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            ...data,
-            report_date: data['report_date'] || null,
-          };
-        });
-        return reportsData;
+        return mapReports(await getDocsFromCache(reportsCollection));
+      } catch (cacheError) {
+        return mapReports(await getDocsFromServer(reportsCollection));
       }
     } catch (error) {
       console.error('Error getting reports:', error);
@@ -834,20 +827,19 @@ export class ApiService {
         'bibleStudies',
       );
 
-      // Try server first, fallback to cache
+      // Prefer in-memory data kept current by the real-time listener (no reads).
+      const currentStudies = this.bibleStudySignal();
+      if (currentStudies && currentStudies.length > 0) {
+        return currentStudies;
+      }
+
+      // Otherwise read from the local cache; the listener keeps it fresh.
+      const mapStudies = (querySnapshot: any) =>
+        querySnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
       try {
-        const querySnapshot = await getDocsFromServer(bibleStudiesCollection);
-        return querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-      } catch (serverError) {
-        console.warn('Server fetch failed, trying cache:', serverError);
-        const querySnapshot = await getDocsFromCache(bibleStudiesCollection);
-        return querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        return mapStudies(await getDocsFromCache(bibleStudiesCollection));
+      } catch (cacheError) {
+        return mapStudies(await getDocsFromServer(bibleStudiesCollection));
       }
     } catch (error) {
       console.error('Error getting studies:', error);
@@ -901,20 +893,19 @@ export class ApiService {
         'goals',
       );
 
-      // Try server first, fallback to cache
+      // Prefer in-memory data kept current by the real-time listener (no reads).
+      const currentGoals = this.goalsSignal();
+      if (currentGoals && currentGoals.length > 0) {
+        return currentGoals;
+      }
+
+      // Otherwise read from the local cache; the listener keeps it fresh.
+      const mapGoals = (querySnapshot: any) =>
+        querySnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
       try {
-        const querySnapshot = await getDocsFromServer(goalsCollection);
-        return querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-      } catch (serverError) {
-        console.warn('Server fetch failed, trying cache:', serverError);
-        const querySnapshot = await getDocsFromCache(goalsCollection);
-        return querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        return mapGoals(await getDocsFromCache(goalsCollection));
+      } catch (cacheError) {
+        return mapGoals(await getDocsFromServer(goalsCollection));
       }
     } catch (error) {
       console.error('Error getting goals:', error);
