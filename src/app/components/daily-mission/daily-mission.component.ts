@@ -240,8 +240,43 @@ export class DailyMissionComponent implements OnInit, OnDestroy {
         step: m.step,
         checklist: m.checklist.map((text, i) => ({ id: `${key}-s${i}`, text })),
         link: this.buildLink(m.chapter, m.verseNum),
+        appLink: this.buildAppLink(m.chapter, m.verseNum),
       };
     });
+  }
+
+  // JW Library deep link. `bible` code is book(2) + chapter(3) + verse(3); Matthew = 40.
+  private buildAppLink(chapter: number, verse: number): string {
+    const pad = (n: number) => String(n).padStart(3, '0');
+    const code = `40${pad(chapter)}${pad(verse)}`;
+    return `jwlibrary:///finder?srcid=jwlshare&wtlocale=E&prefer=lang&pub=nwtsty&bible=${code}`;
+  }
+
+  // Open the verse in the JW Library app if installed; otherwise fall back to
+  // the jw.org website. We try the app deep link and, if the page is still
+  // visible shortly after (app didn't take over), open the website.
+  openVerse(verse?: Verse | null) {
+    if (!verse) return;
+    let switchedToApp = false;
+    const onHide = () => {
+      if (document.hidden) switchedToApp = true;
+    };
+    document.addEventListener('visibilitychange', onHide);
+
+    const start = Date.now();
+    try {
+      window.location.href = verse.appLink;
+    } catch {
+      // Scheme not supported; fall through to the website below.
+    }
+
+    setTimeout(() => {
+      document.removeEventListener('visibilitychange', onHide);
+      // If the app opened, the tab was hidden; otherwise open the website.
+      if (!switchedToApp && !document.hidden && Date.now() - start < 2500) {
+        window.open(verse.link, '_blank', 'noopener');
+      }
+    }, 1200);
   }
 
   // Deterministically rotate through the verses, one per calendar day.

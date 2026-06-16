@@ -14,7 +14,8 @@ export interface Verse {
   label: string; // short action summary of the practice
   step: string; // one-line description of the practice
   checklist: ChecklistItem[]; // concrete steps to pass the day
-  link: string; // jw.org study bible deep link
+  link: string; // jw.org study bible web link (fallback)
+  appLink: string; // JW Library app deep link (opens the app if installed)
 }
 
 export interface PracticeSummary {
@@ -110,6 +111,7 @@ export class MissionService {
       step: m.step,
       checklist: m.checklist.map((text, i) => ({ id: `${key}-s${i}`, text })),
       link: this.buildLink(m.chapter, m.verseNum),
+      appLink: this.buildAppLink(m.chapter, m.verseNum),
     };
   });
 
@@ -117,10 +119,17 @@ export class MissionService {
 
   constructor(private util: UtilService) {}
 
-  // jw.org study bible deep link. Anchor format: v + book(40) + chapter(3) + verse(3).
+  // jw.org study bible web link. Anchor format: v + book(40) + chapter(3) + verse(3).
   private buildLink(chapter: number, verse: number): string {
     const pad = (n: number) => String(n).padStart(3, '0');
     return `https://www.jw.org/en/library/bible/study-bible/books/matthew/${chapter}/#v40${pad(chapter)}${pad(verse)}`;
+  }
+
+  // JW Library deep link. `bible` code is book(2) + chapter(3) + verse(3); Matthew = 40.
+  private buildAppLink(chapter: number, verse: number): string {
+    const pad = (n: number) => String(n).padStart(3, '0');
+    const code = `40${pad(chapter)}${pad(verse)}`;
+    return `jwlibrary:///finder?srcid=jwlshare&wtlocale=E&prefer=lang&pub=nwtsty&bible=${code}`;
   }
 
   // Zero-based index into the verse list for a date. Modulo wraps endlessly so
