@@ -30,6 +30,11 @@ service cloud.firestore {
       match /goals/{goalId} {
         allow read, write: if isOwner(userId);
       }
+
+      // Mission Completions subcollection (daily self-assessment records)
+      match /missionCompletions/{completionId} {
+        allow read, write: if isOwner(userId);
+      }
     }
   }
 }

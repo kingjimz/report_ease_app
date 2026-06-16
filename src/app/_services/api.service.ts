@@ -36,13 +36,18 @@ export class ApiService {
   private goalsSubject = new BehaviorSubject<any[]>([]);
   goals$ = this.goalsSubject.asObservable();
 
+  private missionCompletionsSubject = new BehaviorSubject<any[]>([]);
+  missionCompletions$ = this.missionCompletionsSubject.asObservable();
+
   reportSignal = signal<any[]>([]);
   bibleStudySignal = signal<any[]>([]);
   goalsSignal = signal<any[]>([]);
+  missionCompletionsSignal = signal<any[]>([]);
 
   private unsubscribeReports?: () => void;
   private unsubscribeBibleStudies?: () => void;
   private unsubscribeGoals?: () => void;
+  private unsubscribeMissionCompletions?: () => void;
   private isSyncing = false;
 
   constructor(
@@ -100,6 +105,12 @@ export class ApiService {
         this.goalsSignal.set(cachedGoals);
         this.goalsSubject.next(cachedGoals);
       }
+
+      const cachedMissions = await this.offlineStorage.getCachedData(`missionCompletions_${user.uid}`);
+      if (cachedMissions && cachedMissions.length >= 0) {
+        this.missionCompletionsSignal.set(cachedMissions);
+        this.missionCompletionsSubject.next(cachedMissions);
+      }
     } catch (error) {
       console.error('Error loading cached data on init:', error);
     }
@@ -115,6 +126,7 @@ export class ApiService {
     this.listenToReports();
     this.listenToBibleStudies();
     this.listenToGoals();
+    this.listenToMissionCompletions();
   }
 
   private cleanupListeners() {
@@ -129,6 +141,10 @@ export class ApiService {
     if (this.unsubscribeGoals) {
       this.unsubscribeGoals();
       this.unsubscribeGoals = undefined;
+    }
+    if (this.unsubscribeMissionCompletions) {
+      this.unsubscribeMissionCompletions();
+      this.unsubscribeMissionCompletions = undefined;
     }
   }
 
@@ -248,6 +264,42 @@ export class ApiService {
     );
   }
 
+  private listenToMissionCompletions() {
+    const user = this.auth.currentUser;
+    if (!user) return;
+
+    const missionsCollection = collection(
+      this.fireStore,
+      'users',
+      user.uid,
+      'missionCompletions',
+    );
+    const missionsQuery = query(missionsCollection);
+
+    // 🔥 Real-time listener for mission completions (works offline with Firestore cache)
+    this.unsubscribeMissionCompletions = onSnapshot(
+      missionsQuery,
+      { includeMetadataChanges: true },
+      (snapshot) => {
+        const completions = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        // Cache the data for offline access
+        this.offlineStorage.cacheData(`missionCompletions_${user.uid}`, completions).catch(console.error);
+
+        this.missionCompletionsSignal.set(completions);
+        this.missionCompletionsSubject.next(completions);
+        console.log(`Mission completions updated: ${completions.length} items (fromCache: ${snapshot.metadata.fromCache})`);
+      },
+      (error) => {
+        console.error('Error in mission completions listener:', error);
+        this.loadMissionCompletionsFromCache();
+      }
+    );
+  }
+
   // Clean up listeners when service is destroyed
   ngOnDestroy() {
     this.cleanupListeners();
@@ -267,6 +319,31 @@ export class ApiService {
 
   notifyGoalChange(data: any[]) {
     this.goalsSubject.next(data);
+  }
+
+  // Durability net: when a write fails for ANY reason (offline, rule denial,
+  // unreachable backend, transient error), queue it so it is retried on the next
+  // sync rather than silently dropped. A write that throws never committed to the
+  // server, so re-queuing cannot create duplicates. Queued writes flush on
+  // reconnect, on app start, and immediately below when we're already online.
+  private async queueForRetry(
+    type: 'create' | 'update' | 'delete',
+    collection: 'reports' | 'bibleStudies' | 'goals' | 'missionCompletions',
+    data: any,
+    context: string,
+  ): Promise<void> {
+    try {
+      await this.offlineStorage.queueOperation(type, collection, data);
+      console.warn(`${context}: write did not reach Firestore, queued for retry`);
+      // If we're online, the reconnect event won't fire, so kick a sync now.
+      if (this.networkService.isOnline) {
+        this.syncQueuedOperations().catch((e) =>
+          console.error('Retry sync failed:', e),
+        );
+      }
+    } catch (queueError) {
+      console.error(`${context}: failed to queue write for retry`, queueError);
+    }
   }
 
   // 🔹 Simplified methods - no need for manual fetching since we have real-time listeners
@@ -305,13 +382,7 @@ export class ApiService {
       // No need to call getReports() - real-time listener will update automatically
     } catch (error) {
       console.error('Error creating report:', error);
-      // If error and offline, queue it
-      if (!this.networkService.isOnline) {
-        await this.offlineStorage.queueOperation('create', 'reports', report);
-        console.log('Report queued for sync after error');
-        return;
-      }
-      throw error;
+      await this.queueForRetry('create', 'reports', report, 'Report create');
     }
   }
 
@@ -345,13 +416,7 @@ export class ApiService {
       // Real-time listener will update automatically
     } catch (error) {
       console.error('Error updating report:', error);
-      // If error and offline, queue it
-      if (!this.networkService.isOnline) {
-        await this.offlineStorage.queueOperation('update', 'reports', report);
-        console.log('Report update queued for sync after error');
-        return;
-      }
-      throw error;
+      await this.queueForRetry('update', 'reports', report, 'Report update');
     }
   }
 
@@ -385,13 +450,7 @@ export class ApiService {
       // Real-time listener will update automatically
     } catch (error) {
       console.error('Error deleting report:', error);
-      // If error and offline, queue it
-      if (!this.networkService.isOnline) {
-        await this.offlineStorage.queueOperation('delete', 'reports', { id: reportId });
-        console.log('Report deletion queued for sync after error');
-        return;
-      }
-      throw error;
+      await this.queueForRetry('delete', 'reports', { id: reportId }, 'Report delete');
     }
   }
 
@@ -421,13 +480,7 @@ export class ApiService {
       // Real-time listener will update automatically
     } catch (error) {
       console.error('Error adding study:', error);
-      // If error and offline, queue it
-      if (!this.networkService.isOnline) {
-        await this.offlineStorage.queueOperation('create', 'bibleStudies', study);
-        console.log('Study queued for sync after error');
-        return;
-      }
-      throw error;
+      await this.queueForRetry('create', 'bibleStudies', study, 'Study create');
     }
   }
 
@@ -465,15 +518,7 @@ export class ApiService {
       // Real-time listener will update automatically
     } catch (error) {
       console.error('Error updating study:', error);
-      // If error and offline, queue it
-      if (!this.networkService.isOnline) {
-        await this.offlineStorage.queueOperation('update', 'bibleStudies', study);
-        console.log('Study update queued for sync after error');
-        return;
-      }
-      console.error('Study data:', study);
-      console.error('Full error:', error);
-      throw error;
+      await this.queueForRetry('update', 'bibleStudies', study, 'Study update');
     }
   }
 
@@ -507,13 +552,7 @@ export class ApiService {
       // Real-time listener will update automatically
     } catch (error) {
       console.error('Error deleting study:', error);
-      // If error and offline, queue it
-      if (!this.networkService.isOnline) {
-        await this.offlineStorage.queueOperation('delete', 'bibleStudies', { id: study.id });
-        console.log('Study deletion queued for sync after error');
-        return;
-      }
-      throw error;
+      await this.queueForRetry('delete', 'bibleStudies', { id: study.id }, 'Study delete');
     }
   }
 
@@ -543,13 +582,7 @@ export class ApiService {
       // Real-time listener will update automatically
     } catch (error) {
       console.error('Error adding goal:', error);
-      // If error and offline, queue it
-      if (!this.networkService.isOnline) {
-        await this.offlineStorage.queueOperation('create', 'goals', goal);
-        console.log('Goal queued for sync after error');
-        return;
-      }
-      throw error;
+      await this.queueForRetry('create', 'goals', goal, 'Goal create');
     }
   }
 
@@ -576,13 +609,7 @@ export class ApiService {
       // Real-time listener will update automatically
     } catch (error) {
       console.error('Error updating goal:', error);
-      // If error and offline, queue it
-      if (!this.networkService.isOnline) {
-        await this.offlineStorage.queueOperation('update', 'goals', goal);
-        console.log('Goal update queued for sync after error');
-        return;
-      }
-      throw error;
+      await this.queueForRetry('update', 'goals', goal, 'Goal update');
     }
   }
 
@@ -609,13 +636,79 @@ export class ApiService {
       // Real-time listener will update automatically
     } catch (error) {
       console.error('Error deleting goal:', error);
-      // If error and offline, queue it
+      await this.queueForRetry('delete', 'goals', { id: goal.id }, 'Goal delete');
+    }
+  }
+
+  // Mark a mission complete for a given day. dateId (YYYY-MM-DD) is the doc ID,
+  // so writing twice on the same day is idempotent (no duplicate records).
+  async markMissionComplete(dateId: string, data: any) {
+    try {
+      const user = this.auth.currentUser;
+      if (!user) throw new Error('User not logged in');
+      if (!dateId) throw new Error('Date ID is required');
+
+      const record = { ...data, id: dateId };
+
+      // If offline, queue the operation
       if (!this.networkService.isOnline) {
-        await this.offlineStorage.queueOperation('delete', 'goals', { id: goal.id });
-        console.log('Goal deletion queued for sync after error');
+        await this.offlineStorage.queueOperation('create', 'missionCompletions', record);
+        // Update local state optimistically
+        const current = this.missionCompletionsSignal();
+        const filtered = current.filter((c) => c.id !== dateId);
+        const updated = [...filtered, record];
+        this.missionCompletionsSignal.set(updated);
+        this.missionCompletionsSubject.next(updated);
+        console.log('Mission completion queued for sync when online');
         return;
       }
-      throw error;
+
+      const missionDoc = doc(
+        this.fireStore,
+        'users',
+        user.uid,
+        'missionCompletions',
+        dateId,
+      );
+      const { id, ...writeData } = record;
+      await setDoc(missionDoc, writeData);
+      // Real-time listener will update automatically
+    } catch (error) {
+      console.error('Error marking mission complete:', error);
+      await this.queueForRetry('create', 'missionCompletions', { ...data, id: dateId }, 'Mission complete');
+    }
+  }
+
+  async unmarkMissionComplete(dateId: string) {
+    try {
+      const user = this.auth.currentUser;
+      if (!user) throw new Error('User not logged in');
+      if (!dateId) throw new Error('Date ID is required');
+
+      // If offline, queue the operation
+      if (!this.networkService.isOnline) {
+        await this.offlineStorage.queueOperation('delete', 'missionCompletions', { id: dateId });
+        // Update local state optimistically
+        const current = this.missionCompletionsSignal();
+        const filtered = current.filter((c) => c.id !== dateId);
+        this.missionCompletionsSignal.set(filtered);
+        this.missionCompletionsSubject.next(filtered);
+        console.log('Mission completion deletion queued for sync when online');
+        return;
+      }
+
+      const missionDoc = doc(
+        this.fireStore,
+        'users',
+        user.uid,
+        'missionCompletions',
+        dateId,
+      );
+      await deleteDoc(missionDoc);
+      // Real-time listener will update automatically
+    } catch (error) {
+      console.error('Error unmarking mission complete:', error);
+      await this.queueForRetry('delete', 'missionCompletions', { id: dateId }, 'Mission unmark');
     }
   }
 
@@ -880,6 +973,20 @@ export class ApiService {
     }
   }
 
+  private async loadMissionCompletionsFromCache() {
+    try {
+      const user = this.auth.currentUser;
+      if (!user) return;
+      const cachedData = await this.offlineStorage.getCachedData(`missionCompletions_${user.uid}`);
+      if (cachedData) {
+        this.missionCompletionsSignal.set(cachedData);
+        this.missionCompletionsSubject.next(cachedData);
+      }
+    } catch (error) {
+      console.error('Error loading mission completions from cache:', error);
+    }
+  }
+
   // Sync queued operations when back online
   async syncQueuedOperations(): Promise<void> {
     if (this.isSyncing || !this.networkService.isOnline) {
@@ -915,6 +1022,9 @@ export class ApiService {
               break;
             case 'goals':
               await this.syncGoalOperation(operation);
+              break;
+            case 'missionCompletions':
+              await this.syncMissionCompletionOperation(operation);
               break;
           }
 
@@ -1010,6 +1120,25 @@ export class ApiService {
         break;
       case 'delete':
         const deleteDocRef = doc(this.fireStore, 'users', user.uid, 'goals', operation.data.id);
+        await deleteDoc(deleteDocRef);
+        break;
+    }
+  }
+
+  private async syncMissionCompletionOperation(operation: any): Promise<void> {
+    const user = this.auth.currentUser;
+    if (!user) throw new Error('User not logged in');
+
+    switch (operation.type) {
+      case 'create':
+      case 'update':
+        // Use setDoc with the date-based ID to keep daily records idempotent
+        const missionDoc = doc(this.fireStore, 'users', user.uid, 'missionCompletions', operation.data.id);
+        const { id, ...writeData } = operation.data;
+        await setDoc(missionDoc, writeData);
+        break;
+      case 'delete':
+        const deleteDocRef = doc(this.fireStore, 'users', user.uid, 'missionCompletions', operation.data.id);
         await deleteDoc(deleteDocRef);
         break;
     }

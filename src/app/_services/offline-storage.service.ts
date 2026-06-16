@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 interface QueuedOperation {
   id: string;
   type: 'create' | 'update' | 'delete';
-  collection: 'reports' | 'bibleStudies' | 'goals';
+  collection: 'reports' | 'bibleStudies' | 'goals' | 'missionCompletions';
   data: any;
   timestamp: number;
   retries: number;
@@ -67,7 +67,7 @@ export class OfflineStorageService {
 
   async queueOperation(
     type: 'create' | 'update' | 'delete',
-    collection: 'reports' | 'bibleStudies' | 'goals',
+    collection: 'reports' | 'bibleStudies' | 'goals' | 'missionCompletions',
     data: any
   ): Promise<string> {
     const db = await this.ensureDB();

@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../_services/api.service';
 import { AlertsComponent } from '../components/alerts/alerts.component';
 import { ModalService } from '../_services/modal.service';
+import { DailyMissionComponent } from '../components/daily-mission/daily-mission.component';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DailyMissionComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css',
 })
@@ -24,7 +25,10 @@ export class SettingsComponent implements OnDestroy {
   showDeleteConfirm = false;
   goalToDelete: any = null;
   showAllGoals = false;
-  
+
+  // Active section tab: spiritual goals vs the daily mission.
+  activeTab: 'goals' | 'mission' = 'mission';
+
   // Expose Math to template
   Math = Math;
 
@@ -135,6 +139,10 @@ export class SettingsComponent implements OnDestroy {
 
   toggleShowAllGoals() {
     this.showAllGoals = !this.showAllGoals;
+  }
+
+  setTab(tab: 'goals' | 'mission') {
+    this.activeTab = tab;
   }
 
   onSearchChange() {

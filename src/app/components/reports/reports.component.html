@@ -6,99 +6,101 @@
   <ng-template #contentLoaded>
     <div class="container mx-auto px-2 py-2 sm:py-2 md:py-8 mb-12 sm:mb-12 md:mb-2 lg:mb-2 xl:mb-2">
       <!-- Header Section -->
-      <div *ngIf="reports && reports.length > 0" class="mb-4 sm:mb-6 md:mb-8">
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div class="flex-1">
-            <h1 class="text-2xl font-bold page-title">Reports</h1>
-            <p class="page-subtitle mb-3 text-sm">
-              Track your spiritual activities, download reports, and manage your ministry service records.
+      <div *ngIf="reports && reports.length > 0" class="mb-5 sm:mb-6 md:mb-8">
+        <!-- Title + primary action -->
+        <div class="flex items-start justify-between gap-4 mb-4">
+          <div>
+            <h1 class="text-xl sm:text-2xl font-semibold page-title">Reports</h1>
+            <p class="page-subtitle text-sm">
+              Track your activity and manage your ministry service records.
             </p>
           </div>
-          
-          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <!-- Quick Stats Bar -->
-            <div class="flex items-center gap-8 text-center lg:text-left">
-              <div class="flex flex-col">
-                <span class="text-2xl font-bold text-blue-600">{{ reports.length }}</span>
-                <span class="text-sm text-gray-500">Total Reports</span>
-              </div>
-              <div class="flex flex-col">
-                <span class="text-2xl font-bold text-emerald-600">{{ numberOfBibleStudies }}</span>
-                <span class="text-sm text-gray-500">Bible Studies</span>
-              </div>
-              <div class="flex flex-col">
-                <span class="text-2xl font-bold text-amber-600">{{ numberOfReturnVisits }}</span>
-                <span class="text-sm text-gray-500">Return Visits</span>
-              </div>
+          <button
+            (click)="openGenerateReportModal()"
+            class="flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all shadow-sm hover:shadow-md font-medium text-sm flex-shrink-0"
+          >
+            <i class="bi bi-file-earmark-pdf"></i>
+            <span class="hidden sm:inline">Generate Report</span>
+          </button>
+        </div>
+
+        <!-- Stat tiles -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+            <div class="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-1">
+              <i class="bi bi-journal-text"></i>
+              <span class="text-2xl font-semibold">{{ reports.length }}</span>
             </div>
-            
-            <!-- Action Buttons -->
-            <div class="flex items-center gap-3 w-full sm:w-auto">
-              <button
-                (click)="openGenerateReportModal()"
-                class="flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all shadow-sm hover:shadow-md font-medium text-sm w-full sm:w-auto"
-              >
-                <i class="bi bi-file-earmark-pdf"></i>
-                <span>Generate Report</span>
-              </button>
+            <span class="text-xs text-gray-500 dark:text-gray-400">Total Reports</span>
+          </div>
+          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+            <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 mb-1">
+              <i class="bi bi-book"></i>
+              <span class="text-2xl font-semibold">{{ numberOfBibleStudies }}</span>
             </div>
+            <span class="text-xs text-gray-500 dark:text-gray-400">Active Bible Studies</span>
+          </div>
+          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+            <div class="flex items-center gap-2 text-amber-600 dark:text-amber-400 mb-1">
+              <i class="bi bi-arrow-repeat"></i>
+              <span class="text-2xl font-semibold">{{ numberOfReturnVisits }}</span>
+            </div>
+            <span class="text-xs text-gray-500 dark:text-gray-400">Return Visits</span>
+          </div>
+          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+            <div class="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
+              <i class="bi bi-check-circle"></i>
+              <span class="text-2xl font-semibold">{{ numberOfCompletedStudies }}</span>
+            </div>
+            <span class="text-xs text-gray-500 dark:text-gray-400">Completed (record only)</span>
           </div>
         </div>
       </div>
 
       <!-- Ministry Reports Section -->
       <div *ngIf="reports && reports.length > 0" class="mb-8">
-        <!-- Section Header with Search -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
-          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div>
-              <h2 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center mb-2">
-                <i class="bi bi-journal-text text-blue-600 dark:text-blue-400 mr-3"></i>
-                Ministry Reports
-              </h2>
-              <p class="text-sm text-gray-600 dark:text-gray-400">
-                Browse and download your monthly ministry reports
-              </p>
-            </div>
-            <div class="flex items-center gap-3">
-              <!-- Show All Toggle -->
-              <button
-                (click)="toggleShowAllReports()"
-                class="flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-all text-base font-medium text-gray-700 dark:text-gray-300"
-              >
-                <i [class]="showAllReports ? 'bi bi-eye-slash mr-2' : 'bi bi-eye mr-2'"></i>
-                {{ showAllReports ? 'Show Less' : 'Show All' }}
-              </button>
-            </div>
-          </div>
+        <!-- Section Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center">
+            <i class="bi bi-journal-text text-blue-600 dark:text-blue-400 mr-2"></i>
+            Ministry Reports
+          </h2>
+          <!-- Show All / Show Less toggle (full width on mobile) -->
+          <button
+            (click)="toggleShowAllReports()"
+            class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            <i [class]="showAllReports ? 'bi bi-eye-slash mr-2' : 'bi bi-eye mr-2'"></i>
+            {{ showAllReports ? 'Show Less' : 'Show All' }}
+          </button>
         </div>
-        
+
         <!-- Reports Grid View -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5 mb-6 sm:mb-8">
+
           <!-- Report Cards -->
-          <div 
-            *ngFor="let report of paginatedReports; let i = index" 
-            class="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+          <div
+            *ngFor="let report of paginatedReports; let i = index"
+            class="group relative bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300 sm:hover:-translate-y-1"
             [class.border-blue-300]="hoveredReport === i"
             (mouseenter)="hoveredReport = i"
             (mouseleave)="hoveredReport = null"
           >
             <!-- Card Header with Gradient -->
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-4">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-4 py-3 sm:px-5 sm:py-4">
               <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                  <div class="w-12 h-12 bg-white bg-opacity-20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                    <i class="bi bi-calendar text-white text-xl"></i>
+                <div class="flex items-center space-x-2.5">
+                  <div class="w-9 h-9 sm:w-11 sm:h-11 bg-white bg-opacity-20 backdrop-blur-sm rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i class="bi bi-calendar text-white text-base sm:text-lg"></i>
                   </div>
                   <div>
-                    <h3 class="text-lg font-bold text-white">{{ report.month_name }} {{ report.year }}</h3>
-                    <p class="text-sm text-blue-100">Monthly Service Report</p>
+                    <h3 class="text-base sm:text-lg font-semibold text-white">{{ report.month_name }} {{ report.year }}</h3>
+                    <p class="text-xs sm:text-sm text-blue-100">Monthly Service Report</p>
                   </div>
                 </div>
                 <div class="relative">
                   <button
-                    class="flex items-center px-3 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-lg transition-all backdrop-blur-sm"
+                    class="flex items-center px-2.5 py-1.5 sm:px-3 sm:py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-lg transition-all backdrop-blur-sm"
                     (click)="toggleDropdown(i)"
                   >
                     <i class="bi bi-download mr-1"></i>
@@ -135,45 +137,43 @@
             </div>
             
             <!-- Card Body -->
-            <div class="p-6">
+            <div class="p-4 sm:p-5">
               <!-- Hours Display -->
-              <div class="mb-6">
-                <div class="flex items-baseline justify-between mb-3">
+              <div class="mb-4 sm:mb-5">
+                <div class="flex items-baseline justify-between mb-2">
                   <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Hours</span>
                   <div class="flex items-baseline space-x-1">
-                    <span class="text-4xl font-bold text-gray-900 dark:text-white">{{ report.total_hours }}</span>
-                    <span class="text-lg text-gray-500 dark:text-gray-400">hrs</span>
+                    <span class="text-3xl sm:text-4xl font-semibold text-gray-900 dark:text-white">{{ report.total_hours }}</span>
+                    <span class="text-base text-gray-500 dark:text-gray-400">hrs</span>
                   </div>
                 </div>
                 <!-- Progress Bar -->
-                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
-                  <div 
-                    class="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-500" 
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
+                  <div
+                    class="bg-gradient-to-r from-blue-500 to-indigo-600 h-2.5 rounded-full transition-all duration-500"
                     [style.width.%]="getProgressWidth(report.total_hours)"
                   ></div>
                 </div>
               </div>
-              
-              <!-- Participation Status - Full Width -->
-              <div 
-                class="p-4 rounded-xl border-2 transition-all"
+
+              <!-- Participation Status -->
+              <div
+                class="p-3 rounded-xl border transition-all"
                 [ngClass]="report.is_joined_ministry ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'"
               >
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center space-x-3">
-                    <i 
-                      [ngClass]="report.is_joined_ministry ? 'bi bi-check-circle-fill text-emerald-600 dark:text-emerald-400' : 'bi bi-x-circle-fill text-red-600 dark:text-red-400'"
-                      class="text-xl"
-                    ></i>
-                    <div>
-                      <span class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase block mb-1">Ministry Participation</span>
-                      <p 
-                        class="text-base font-bold"
-                        [ngClass]="report.is_joined_ministry ? 'text-emerald-800 dark:text-emerald-300' : 'text-red-800 dark:text-red-300'"
-                      >
-                        {{ report.is_joined_ministry ? "Participated" : "Not Participated" }}
-                      </p>
-                    </div>
+                <div class="flex items-center space-x-2.5">
+                  <i
+                    [ngClass]="report.is_joined_ministry ? 'bi bi-check-circle-fill text-emerald-600 dark:text-emerald-400' : 'bi bi-x-circle-fill text-red-600 dark:text-red-400'"
+                    class="text-lg flex-shrink-0"
+                  ></i>
+                  <div>
+                    <span class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide block">Ministry Participation</span>
+                    <p
+                      class="text-sm font-semibold"
+                      [ngClass]="report.is_joined_ministry ? 'text-emerald-800 dark:text-emerald-300' : 'text-red-800 dark:text-red-300'"
+                    >
+                      {{ report.is_joined_ministry ? "Participated" : "Not Participated" }}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -335,8 +335,8 @@
         <div class="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-5">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h2 class="text-2xl font-bold text-white flex items-center mb-1">
-                <i class="bi bi-book mr-3"></i>
+              <h2 class="text-lg font-semibold text-white flex items-center mb-1">
+                <i class="bi bi-book mr-2"></i>
                 Bible Studies
               </h2>
               <p class="text-sm text-emerald-100">
@@ -433,70 +433,85 @@
           </div>
           
           <!-- Studies Grid -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-6">
-            <div 
-              *ngFor="let study of getDisplayedBibleStudies(); let i = index" 
-              class="group relative bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg hover:border-emerald-300 dark:hover:border-emerald-600 transition-all duration-300 cursor-pointer"
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 p-4 sm:p-6">
+            <div
+              *ngFor="let study of getDisplayedBibleStudies(); let i = index"
+              class="group relative bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg hover:border-emerald-300 dark:hover:border-emerald-600 transition-all duration-300 cursor-pointer"
+              [class.opacity-60]="study.completed"
               (click)="editStudy(study)"
             >
               <!-- Card Header -->
-              <div 
-                class="px-5 py-4 border-b-2 relative"
+              <div
+                class="px-4 py-3 border-b relative"
                 [ngClass]="study.type === 'bs' ? 'bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border-emerald-200 dark:border-emerald-800' : 'bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-amber-200 dark:border-amber-800'"
               >
-                <!-- Overdue Indicator -->
-                <div 
-                  *ngIf="isStudyOverdue(study)"
-                  class="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-gray-800 shadow-sm animate-pulse"
+                <!-- Overdue Indicator (hidden once completed) -->
+                <div
+                  *ngIf="isStudyOverdue(study) && !study.completed"
+                  class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-gray-800 shadow-sm animate-pulse"
                   title="Study is overdue"
                 ></div>
-                <div class="flex items-center justify-between mb-3">
-                  <div 
-                    class="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"
+                <div class="flex items-center gap-2.5">
+                  <div
+                    class="w-9 h-9 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0"
                     [ngClass]="study.type === 'bs' ? 'bg-emerald-500' : 'bg-amber-500'"
                   >
-                    <i 
-                      class="text-white text-xl"
+                    <i
+                      class="text-white text-base"
                       [ngClass]="study.type === 'bs' ? 'bi bi-book' : 'bi bi-arrow-repeat'"
                     ></i>
                   </div>
-                  <span 
-                    class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold"
-                    [ngClass]="study.type === 'bs' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'"
-                  >
-                    {{ study.type === 'bs' ? 'Bible Study' : 'Return Visit' }}
-                  </span>
+                  <div class="min-w-0 flex-1">
+                    <span
+                      class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold mb-0.5"
+                      [ngClass]="study.type === 'bs' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'"
+                    >
+                      {{ study.type === 'bs' ? 'Bible Study' : 'Return Visit' }}
+                    </span>
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white line-clamp-1">{{ study.bible_study }}</h3>
+                  </div>
                 </div>
-                <h3 class="text-lg font-bold text-gray-900 dark:text-white line-clamp-1">{{ study.bible_study }}</h3>
               </div>
-              
+
               <!-- Card Body -->
-              <div class="p-5">
+              <div class="p-4">
                 <!-- Address -->
-                <div class="mb-4">
-                  <div class="flex items-start space-x-2">
-                    <i class="bi bi-geo-alt text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0"></i>
-                    <p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{{ study.address }}</p>
-                  </div>
+                <div class="mb-2.5 flex items-start space-x-2">
+                  <i class="bi bi-geo-alt text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0 text-sm"></i>
+                  <p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">{{ study.address }}</p>
                 </div>
-                
+
                 <!-- Schedule -->
-                <div class="mb-4">
-                  <div class="flex items-center space-x-2">
-                    <i class="bi bi-clock text-gray-400 dark:text-gray-500 flex-shrink-0"></i>
-                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ formatScheduleForDisplay(study.schedule) }}</p>
-                  </div>
+                <div class="mb-3 flex items-center space-x-2">
+                  <i class="bi bi-clock text-gray-400 dark:text-gray-500 flex-shrink-0 text-sm"></i>
+                  <p class="text-xs font-medium text-gray-700 dark:text-gray-300">{{ formatScheduleForDisplay(study.schedule) }}</p>
                 </div>
-                
+
                 <!-- Last Study Date -->
-                <div *ngIf="study.updated_at" class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div *ngIf="study.updated_at" class="pt-3 border-t border-gray-200 dark:border-gray-700">
                   <div class="flex items-center justify-between">
                     <span class="text-xs text-gray-500 dark:text-gray-400">Last studied</span>
                     <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                      {{ util.calculateDaysAgo(study.updated_at) }} 
+                      {{ util.calculateDaysAgo(study.updated_at) }}
                       {{ util.calculateDaysAgo(study.updated_at) === 1 ? 'day' : 'days' }} ago
                     </span>
                   </div>
+                </div>
+
+                <!-- Mark as completed -->
+                <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                  <button
+                    type="button"
+                    (click)="toggleStudyCompleted(study, $event)"
+                    class="w-full inline-flex items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors"
+                    [ngClass]="study.completed
+                      ? 'bg-green-500 text-white hover:bg-green-600'
+                      : 'border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-green-500 hover:text-green-600 dark:hover:text-green-400'"
+                    [attr.aria-label]="(study.completed ? 'Mark as not completed: ' : 'Mark as completed: ') + study.bible_study"
+                  >
+                    <i class="bi" [ngClass]="study.completed ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+                    {{ study.completed ? 'Completed' : 'Mark as completed' }}
+                  </button>
                 </div>
               </div>
               
@@ -702,8 +717,12 @@
 
     <!-- Delete Confirmation Modal -->
     <ng-container *ngIf="studyDelete">
-      <div class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-[10000] backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-2xl border border-gray-200 p-8 max-w-md w-full mx-4 transform transition-all">
+      <div class="fixed inset-0 z-[10000] flex flex-col justify-end">
+        <div class="app-sheet-fade absolute inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm" (click)="closeDeleteModal()"></div>
+        <div class="app-sheet-up relative w-full max-w-md mx-auto bg-white rounded-t-2xl shadow-2xl border border-b-0 border-gray-200 px-8 pb-8 pt-3 max-h-[88vh] overflow-y-auto">
+          <div class="flex justify-center pb-4">
+            <span class="w-10 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+          </div>
           <!-- Modal Header -->
           <div class="flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mx-auto mb-6">
             <i class="bi bi-exclamation-triangle text-red-600 text-2xl"></i>

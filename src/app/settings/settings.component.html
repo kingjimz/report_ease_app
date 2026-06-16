@@ -1,13 +1,19 @@
 <!-- Delete Confirmation Modal -->
 <div
   *ngIf="showDeleteConfirm"
-  class="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm px-4"
-  (click)="closeDeleteConfirm()"
+  class="fixed inset-0 z-[10000] flex flex-col justify-end"
 >
   <div
-    class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md relative shadow-2xl"
+    class="app-sheet-fade absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+    (click)="closeDeleteConfirm()"
+  ></div>
+  <div
+    class="app-sheet-up relative w-full max-w-md mx-auto bg-white dark:bg-gray-800 rounded-t-2xl px-6 pb-6 pt-3 shadow-2xl max-h-[88vh] overflow-y-auto"
     (click)="$event.stopPropagation()"
   >
+    <div class="flex justify-center pb-3">
+      <span class="w-10 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+    </div>
     <div class="text-center">
       <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
         <i class="bi bi-exclamation-triangle text-red-600 dark:text-red-400 text-2xl"></i>
@@ -39,13 +45,19 @@
 <!-- Add/Edit Goal Modal -->
 <div
   *ngIf="showGoalModal"
-  class="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm px-4"
-  (click)="closeGoalModal()"
+  class="fixed inset-0 z-[10000] flex flex-col justify-end"
 >
   <div
-    class="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 w-full max-w-lg relative shadow-2xl transform transition-all max-h-[90vh] overflow-y-auto"
+    class="app-sheet-fade absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+    (click)="closeGoalModal()"
+  ></div>
+  <div
+    class="app-sheet-up relative w-full max-w-lg mx-auto bg-white dark:bg-gray-800 rounded-t-2xl px-6 sm:px-8 pb-6 sm:pb-8 pt-3 shadow-2xl max-h-[88vh] overflow-y-auto"
     (click)="$event.stopPropagation()"
   >
+    <div class="flex justify-center pb-3">
+      <span class="w-10 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+    </div>
     <!-- Modal Header -->
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center space-x-3">
@@ -147,21 +159,58 @@
 <div class="min-h-screen bg-white dark:bg-gray-900 py-6 px-4">
   <div class="max-w-6xl mx-auto">
     <!-- Page Header -->
-    <div class="mb-8">
-      <div class="flex flex-col items-center gap-4 mb-6">
-        <div class="flex items-center space-x-4">
-          <div class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <i class="bi bi-bullseye text-white text-2xl"></i>
+    <div class="mb-6">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+        <div class="flex items-center space-x-4 flex-1">
+          <div class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
+            <i class="bi bi-compass text-white text-2xl"></i>
           </div>
           <div>
             <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-              Spiritual Goals
+              Spiritual Growth
             </h1>
             <p class="text-sm text-gray-600 dark:text-gray-400">
-              Set and track your spiritual progress
+              Your goals and daily practice in one place
             </p>
           </div>
         </div>
+      </div>
+
+      <!-- Section Tabs -->
+      <div class="flex w-full bg-gray-100 dark:bg-gray-800 rounded-xl p-1 gap-1">
+        <button
+          type="button"
+          (click)="setTab('mission')"
+          class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all"
+          [ngClass]="activeTab === 'mission'
+            ? 'bg-white dark:bg-gray-900 text-amber-600 dark:text-amber-400 shadow-sm'
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
+        >
+          <i class="bi bi-bookmark-star"></i>
+          Daily Practice
+        </button>
+        <button
+          type="button"
+          (click)="setTab('goals')"
+          class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all"
+          [ngClass]="activeTab === 'goals'
+            ? 'bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
+        >
+          <i class="bi bi-bullseye"></i>
+          Spiritual Goals
+          <span
+            class="ml-1 px-2 py-0.5 rounded-full text-xs font-bold"
+            [ngClass]="activeTab === 'goals' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'"
+          >{{ goals.length }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ============ GOALS TAB ============ -->
+    <div *ngIf="activeTab === 'goals'">
+      <!-- Add Goal action -->
+      <div class="flex justify-end mb-4">
         <button
           (click)="openGoalModal()"
           class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium rounded-lg transition-all shadow-md hover:shadow-lg"
@@ -239,11 +288,10 @@
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Empty State -->
-    <div
-      *ngIf="filteredGoals().length === 0 && goals.length === 0"
+      <!-- Empty State -->
+      <div
+        *ngIf="filteredGoals().length === 0 && goals.length === 0"
       class="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center border-2 border-dashed border-gray-300 dark:border-gray-700"
     >
       <div class="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -378,6 +426,13 @@
           </div>
         </div>
       </div>
+    </div>
+    </div>
+    <!-- ============ END GOALS TAB ============ -->
+
+    <!-- ============ MISSION TAB ============ -->
+    <div *ngIf="activeTab === 'mission'">
+      <app-daily-mission></app-daily-mission>
     </div>
   </div>
 </div>

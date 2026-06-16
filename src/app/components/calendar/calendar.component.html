@@ -332,13 +332,19 @@
 <!-- Delete Confirmation Modal -->
 <div
   *ngIf="showDeleteConfirmModal"
-  class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-[10000] p-4"
-  (click)="closeDeleteConfirmModal()"
+  class="fixed inset-0 z-[10000] flex flex-col justify-end"
 >
   <div
-    class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all"
+    class="app-sheet-fade absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+    (click)="closeDeleteConfirmModal()"
+  ></div>
+  <div
+    class="app-sheet-up relative w-full max-w-md mx-auto bg-white dark:bg-gray-800 rounded-t-2xl shadow-2xl px-6 pb-6 pt-3 max-h-[88vh] overflow-y-auto"
     (click)="$event.stopPropagation()"
   >
+    <div class="flex justify-center pb-3">
+      <span class="w-10 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+    </div>
     <!-- Icon -->
     <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-red-100 dark:bg-red-900/30 rounded-full">
       <i class="bi bi-exclamation-triangle-fill text-red-600 dark:text-red-400 text-3xl"></i>

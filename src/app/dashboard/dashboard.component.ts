@@ -3,6 +3,8 @@ import { ChartComponent } from '../components/chart/chart.component';
 import { ApiService } from '../_services/api.service';
 import { UtilService } from '../_services/util.service';
 import { SettingsService } from '../_services/settings.service';
+import { MissionService, PracticeSummary } from '../_services/mission.service';
+import { NavigationService } from '../_services/navigation.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ModalComponent } from '../components/modal/modal.component';
@@ -72,18 +74,28 @@ export class DashboardComponent implements OnInit {
   reportSuccess: boolean = false;
   reportAlertMessage: string = '';
 
+  // Today's daily practice summary (verse, progress, streak) for the dashboard card.
+  practice: PracticeSummary | null = null;
+
   constructor(
     public api: ApiService,
     public util: UtilService,
-    private settingsService: SettingsService
+    private settingsService: SettingsService,
+    private missionSvc: MissionService,
+    private navigationService: NavigationService,
   ) {}
 
   ngOnInit() {
     this.calculateServiceYear();
     this.loadUserSettings();
-    
+
     // Subscribe to real-time data streams (works offline with Firestore cache)
     this.subscribeToDataStreams();
+
+    // Keep the daily practice summary in sync with completion records.
+    this.api.missionCompletions$.subscribe((completions) => {
+      this.practice = this.missionSvc.getTodaySummary(completions || []);
+    });
     
     // Also try to load initial data (will use cache if offline)
     this.loadReports();
@@ -117,10 +129,10 @@ export class DashboardComponent implements OnInit {
         // Don't call updateBibleStudies here - it would create an infinite loop
         // The data is already coming from the subject
         this.numberOfBibleStudies = this.bibleStudies.filter(
-          (study) => study.type === 'bs',
+          (study) => study.type === 'bs' && !study.completed,
         ).length;
         this.numberOfReturnVisits = this.bibleStudies.filter(
-          (study) => study.type === 'rv',
+          (study) => study.type === 'rv' && !study.completed,
         ).length;
         this.loading = false;
       }
@@ -296,10 +308,10 @@ export class DashboardComponent implements OnInit {
         // Don't call updateBibleStudies here - the real-time listener will handle updates
         // Calling it would create a loop since we're also subscribed to bibleStudies$
         this.numberOfBibleStudies = this.bibleStudies.filter(
-          (study) => study.type === 'bs',
+          (study) => study.type === 'bs' && !study.completed,
         ).length;
         this.numberOfReturnVisits = this.bibleStudies.filter(
-          (study) => study.type === 'rv',
+          (study) => study.type === 'rv' && !study.completed,
         ).length;
       }
       this.loading = false;
@@ -364,6 +376,16 @@ export class DashboardComponent implements OnInit {
 
   getCurrentDate(): string {
     return new Date().toLocaleDateString();
+  }
+
+  // Open the full Daily Practice page (the goals tab defaults to the practice view).
+  goToPractice() {
+    this.navigationService.changeTab('goals');
+  }
+
+  // Total number of practices in the rotation (for the "X of Y" label).
+  get practiceTotal(): number {
+    return this.missionSvc.count;
   }
 
   /**

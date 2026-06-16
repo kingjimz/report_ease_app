@@ -49,6 +49,14 @@ export class UtilService {
     return text.charAt(0).toUpperCase() + text.slice(1);
   }
 
+  // Returns a local-time YYYY-MM-DD key (used as a per-day doc ID prefix)
+  getLocalDateKey(date: Date = new Date()): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
   aggregateReportsByMonth(reports: any[]): any[] {
     const aggregated: Record<string, any> = {};
 

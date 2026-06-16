@@ -1,11 +1,22 @@
-<div
-  class="fixed inset-0 bg-gray-800 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-[10000]"
->
+<div class="fixed inset-0 z-[10000] flex flex-col justify-end">
+  <!-- Backdrop -->
+  <div class="app-sheet-fade absolute inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm"></div>
+
+  <!-- Bottom sheet (leaves space at the top, never covers the full screen) -->
   <div
-    class="modal-container p-4 sm:p-6 shadow-md rounded-xl border transition duration-300 hover:shadow-2xl mt-3 relative w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto overflow-x-hidden"
+    class="modal-container app-sheet-up relative w-full max-w-2xl mx-auto rounded-t-2xl shadow-2xl border border-b-0 max-h-[88vh] flex flex-col"
     style="box-sizing: border-box;"
   >
-    <div class="w-full min-w-0" style="box-sizing: border-box;">
+    <!-- Drag handle -->
+    <div class="flex justify-center pt-2.5 pb-1 flex-shrink-0">
+      <span class="w-10 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+    </div>
+
+    <!-- Scrollable content -->
+    <div
+      class="overflow-y-auto overflow-x-hidden px-4 sm:px-6 pb-5 pt-1 w-full min-w-0"
+      style="box-sizing: border-box;"
+    >
       <ng-content></ng-content>
     </div>
   </div>

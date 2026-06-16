@@ -41,6 +41,7 @@ export class ReportsComponent implements OnDestroy {
   isCopied = false;
   numberOfBibleStudies = 0;
   numberOfReturnVisits = 0;
+  numberOfCompletedStudies = 0;
   hoveredReport: number | null = null;
 
   // Add Study properties
@@ -115,11 +116,15 @@ export class ReportsComponent implements OnDestroy {
     this.api.bibleStudies$.subscribe((data) => {
       if (data && data.length > 0) {
         this.bibleStudies = data;
+        // Completed studies stay as a record but are excluded from active counts.
         this.numberOfBibleStudies = this.bibleStudies.filter(
-          (study) => study.type === 'bs',
+          (study) => study.type === 'bs' && !study.completed,
         ).length;
         this.numberOfReturnVisits = this.bibleStudies.filter(
-          (study) => study.type === 'rv',
+          (study) => study.type === 'rv' && !study.completed,
+        ).length;
+        this.numberOfCompletedStudies = this.bibleStudies.filter(
+          (study) => study.completed,
         ).length;
         this.applyFilters();
       } else {
@@ -127,6 +132,7 @@ export class ReportsComponent implements OnDestroy {
         this.filteredBibleStudies = [];
         this.numberOfBibleStudies = 0;
         this.numberOfReturnVisits = 0;
+        this.numberOfCompletedStudies = 0;
       }
     });
   }
@@ -451,6 +457,26 @@ export class ReportsComponent implements OnDestroy {
     this.modalService.openModal();
   }
 
+  // Toggle a study's completed flag and persist it to Firestore. Stop the click
+  // from bubbling to the card (which opens the edit view).
+  async toggleStudyCompleted(study: any, event: Event) {
+    event.stopPropagation();
+    if (!study?.id) return;
+
+    const newStatus = !study.completed;
+    study.completed = newStatus; // optimistic update
+    try {
+      await this.api.updateStudy({
+        id: study.id,
+        completed: newStatus,
+        completed_at: newStatus ? new Date().toISOString() : null,
+      });
+    } catch (error) {
+      study.completed = !newStatus; // revert on failure
+      console.error('Error updating study completion:', error);
+    }
+  }
+
   async confirmDelete() {
     this.studyDelete = false;
     this.isCopied = false;
@@ -589,7 +615,8 @@ export class ReportsComponent implements OnDestroy {
   }
 
   filterBibleStudies(studies: any[]): any[] {
-    return studies.filter((study) => study.type !== 'rv');
+    // Active Bible studies only: exclude return visits and completed studies.
+    return studies.filter((study) => study.type !== 'rv' && !study.completed);
   }
 
   closeDlModal() {

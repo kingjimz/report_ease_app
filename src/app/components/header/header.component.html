@@ -185,13 +185,19 @@
 <!-- Configure Modal -->
 <div
   *ngIf="showConfigureModal"
-  class="fixed inset-0 z-[10000] flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4"
-  (click)="closeConfigureModal()"
+  class="fixed inset-0 z-[10000] flex flex-col justify-end"
 >
   <div
-    class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md mx-auto relative flex flex-col max-h-[90vh]"
+    class="app-sheet-fade absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+    (click)="closeConfigureModal()"
+  ></div>
+  <div
+    class="app-sheet-up relative w-full max-w-md mx-auto bg-white dark:bg-gray-800 rounded-t-2xl shadow-2xl flex flex-col max-h-[88vh]"
     (click)="$event.stopPropagation()"
   >
+    <div class="flex justify-center pt-2.5 pb-1 flex-shrink-0">
+      <span class="w-10 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+    </div>
     <!-- Modal Header -->
     <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
       <div class="flex items-center space-x-2">

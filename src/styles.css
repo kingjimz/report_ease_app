@@ -3,6 +3,30 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Shared bottom-sheet modal animations (slide up from bottom, fade backdrop) */
+@keyframes app-sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.app-sheet-up {
+  animation: app-sheet-up 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+@keyframes app-sheet-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.app-sheet-fade {
+  animation: app-sheet-fade 0.25s ease-out;
+}
+
 :root {
   /* Light mode colors */
   --bg-primary: #ffffff;
