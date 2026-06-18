@@ -246,6 +246,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     now.setHours(0, 0, 0, 0); // Set to start of day for comparison
 
     this.overdueStudies = this.bibleStudies.filter((study) => {
+      // Completed studies are records only, exclude them from notifications
+      if (study.completed) return false;
       if (!study.schedule) return false;
 
       let scheduleDate: Date | null = null;

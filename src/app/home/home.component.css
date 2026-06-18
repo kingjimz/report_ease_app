@@ -9,9 +9,17 @@
 /* Grid-based layout for proper centering and equal margins */
 .home-container {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   width: 100%;
+  max-width: 100%;
   padding: 0 0.5rem; /* px-2 */
+}
+
+/* Allow the content column to shrink below its intrinsic width so wide
+   descendants (charts, long numbers, non-wrapping rows) can't push the
+   page past the viewport on small phones. */
+.home-content {
+  min-width: 0;
 }
 
 @media (min-width: 640px) {
@@ -22,7 +30,7 @@
 
 @media (min-width: 768px) {
   .home-container {
-    grid-template-columns: 1.5rem 1fr 1.5rem; /* Equal margins on both sides */
+    grid-template-columns: 1.5rem minmax(0, 1fr) 1.5rem; /* Equal margins on both sides */
     padding: 0;
   }
   

@@ -71,6 +71,11 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
       y: {
         beginAtZero: true,
       },
+      x: {
+        ticks: {
+          display: false,
+        },
+      },
     },
     layout: {
       padding: {

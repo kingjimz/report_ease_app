@@ -2,13 +2,7 @@
 
 /* Dark Mode Support */
 :host ::ng-deep .reports-page {
-  background: linear-gradient(to bottom right, #f8fafc, #eff6ff, #eef2ff);
-  transition: background 0.3s ease;
   min-height: 100vh;
-}
-
-:host-context(.dark) ::ng-deep .reports-page {
-  background: linear-gradient(to bottom right, var(--bg-primary), var(--bg-secondary), var(--bg-primary)) !important;
 }
 
 :host ::ng-deep .page-title {

@@ -4,7 +4,7 @@
   </div>
 
   <ng-template #contentLoaded>
-    <div class="container mx-auto px-2 py-2 sm:py-2 md:py-8 mb-12 sm:mb-12 md:mb-2 lg:mb-2 xl:mb-2">
+    <div class="container py-2 sm:py-2 md:py-4 px-2 mb-2">
       <!-- Header Section -->
       <div *ngIf="reports && reports.length > 0" class="mb-5 sm:mb-6 md:mb-8">
         <!-- Title + primary action -->
@@ -52,13 +52,13 @@
               <i class="bi bi-check-circle"></i>
               <span class="text-2xl font-semibold">{{ numberOfCompletedStudies }}</span>
             </div>
-            <span class="text-xs text-gray-500 dark:text-gray-400">Completed (record only)</span>
+            <span class="text-xs text-gray-500 dark:text-gray-400">Completed</span>
           </div>
         </div>
       </div>
 
       <!-- Ministry Reports Section -->
-      <div *ngIf="reports && reports.length > 0" class="mb-8">
+      <div *ngIf="reports && reports.length > 0" class="mb-4">
         <!-- Section Header -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center">
@@ -247,7 +247,7 @@
             </div>
             
             <!-- Items per page selector -->
-            <div class="flex items-center space-x-2 text-sm text-gray-600">
+            <div class="hidden sm:flex items-center space-x-2 text-sm text-gray-600">
               <span>Show:</span>
               <select
                 [(ngModel)]="itemsPerPage"

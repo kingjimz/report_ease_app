@@ -20,6 +20,13 @@ import { AlertsComponent } from '../components/alerts/alerts.component';
 export class DashboardComponent implements OnInit {
   reports: any[] = [];
 
+  get greeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  }
+
   bibleStudies: any[] = [];
   studySelected: any = null;
   isSelected = false;
