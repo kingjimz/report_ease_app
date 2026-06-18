@@ -58,6 +58,10 @@ export class CalendarComponent implements OnInit, OnDestroy {
   minutes = 0;
   noChangeDetected = false;
   reports: any[] = [];
+  // Raw reports keyed by id, merged from the full-history fetch (cache-first)
+  // and the live windowed stream, so browsing old months keeps working while
+  // recent edits still update live.
+  private rawReportsById = new Map<string, any>();
   public Math = Math;
   showDeleteConfirmModal = false;
   isDeleting = false;
@@ -86,10 +90,12 @@ export class CalendarComponent implements OnInit, OnDestroy {
     this.generateWeekDays();
     this.loadReports();
     
-    // Subscribe to reports$ for immediate updates when reports are added offline
+    // Subscribe to reports$ (the live, windowed stream) for immediate updates
+    // when recent reports are added/edited, including offline. These are merged
+    // into the full-history map rather than replacing it.
     this.reportsSubscription = this.api.reports$.subscribe((reports) => {
       if (reports && reports.length > 0) {
-        this.updateEventsFromReports(reports);
+        this.upsertReports(reports);
       }
     });
   }
@@ -239,14 +245,36 @@ export class CalendarComponent implements OnInit, OnDestroy {
   async loadReports() {
     this.isLoading = true;
     try {
-      const data = await this.api.getReports();
+      // Full history (cache-first, free) so the calendar can show any month,
+      // not just the live window. Reseed the map from scratch on a full load.
+      const data = await this.api.getAllReports();
+      this.rawReportsById = new Map(
+        (data || [])
+          .filter((r: any) => r && r.id)
+          .map((r: any) => [r.id, r] as [string, any]),
+      );
       this.reports = this.util.aggregateReportsByMonth(data);
       this.api.updateAggregatedData(this.reports);
-      this.updateEventsFromReports(data);
+      this.rebuildEvents();
     } catch (error) {
       console.error('Error fetching reports:', error);
     }
     this.isLoading = false;
+  }
+
+  // Merge live (windowed) reports into the full-history map, then rebuild events.
+  // Upsert by id: recent edits/additions win; full history loaded by loadReports
+  // is preserved. (A delete arriving via the stream from another device isn't
+  // removed here; the local delete path calls loadReports() which reseeds.)
+  private upsertReports(reports: any[]) {
+    for (const r of reports) {
+      if (r && r.id) this.rawReportsById.set(r.id, r);
+    }
+    this.rebuildEvents();
+  }
+
+  private rebuildEvents() {
+    this.updateEventsFromReports(Array.from(this.rawReportsById.values()));
   }
 
   private updateEventsFromReports(reports: any[]) {

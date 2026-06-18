@@ -171,6 +171,15 @@ export class DailyMissionComponent implements OnInit, OnDestroy {
 
   private sub?: Subscription;
 
+  // The live missionCompletions$ stream is windowed to recent days (to bound
+  // Firestore reads). Lifetime stats and old-month browsing need full history,
+  // so we hold both and merge: the recent window is authoritative for in-window
+  // days, older days come from the one-off full (cache-first) fetch.
+  private fullCompletions: any[] = [];
+  private recentCompletions: any[] = [];
+  private recentLoaded = false;
+  private missionWindowKey = '';
+
   constructor(
     public api: ApiService,
     private util: UtilService,
@@ -183,9 +192,44 @@ export class DailyMissionComponent implements OnInit, OnDestroy {
     this.buildVerses();
     this.todayVerse = this.getVerseForDate(this.todayKey);
     this.computeRotationPosition();
+    this.missionWindowKey = this.api.getMissionWindowStartKey();
+
+    // Load full history once (cache-first, free) for lifetime stats and browsing
+    // months older than the live window.
+    this.api
+      .getAllMissionCompletions()
+      .then((all) => {
+        this.fullCompletions = all || [];
+        this.recomputeFromSources();
+      })
+      .catch((e) => console.error('Error loading mission history:', e));
+
+    // Live windowed stream drives recent days reactively.
     this.sub = this.api.missionCompletions$.subscribe((completions) => {
-      this.ingestCompletions(completions || []);
+      this.recentCompletions = completions || [];
+      if (this.recentCompletions.length > 0) this.recentLoaded = true;
+      this.recomputeFromSources();
     });
+  }
+
+  // Date key (YYYY-MM-DD) for a completion, tolerating legacy "date__verse" ids.
+  private completionDateKey(c: any): string {
+    return String(c?.id ?? '').split(KEY_SEPARATOR)[0];
+  }
+
+  // Merge the two sources and re-ingest. The recent window (once it has loaded)
+  // is authoritative for in-window days, so an unmarked day correctly disappears
+  // instead of lingering. Older-than-window days come from the full fetch.
+  private recomputeFromSources() {
+    const olderThanWindow = this.fullCompletions.filter(
+      (c) => this.completionDateKey(c) < this.missionWindowKey,
+    );
+    const inWindow = this.recentLoaded
+      ? this.recentCompletions
+      : this.fullCompletions.filter(
+          (c) => this.completionDateKey(c) >= this.missionWindowKey,
+        );
+    this.ingestCompletions([...olderThanWindow, ...inWindow]);
   }
 
   ngOnDestroy() {

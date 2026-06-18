@@ -14,6 +14,7 @@ import {
   deleteDoc,
   getDocsFromCache,
   getDocsFromServer,
+  where,
 } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import { Observable, BehaviorSubject } from 'rxjs';
@@ -49,6 +50,10 @@ export class ApiService {
   private unsubscribeGoals?: () => void;
   private unsubscribeMissionCompletions?: () => void;
   private isSyncing = false;
+  // Tracks which user the live listeners are currently attached for, so a
+  // repeat auth event for the same user doesn't tear them down and re-subscribe
+  // (a re-subscribe can trigger a fresh full-collection sync = billed reads).
+  private listenersUserId?: string;
 
   constructor(
     private auth: Auth,
@@ -117,16 +122,61 @@ export class ApiService {
   }
 
   private setupRealtimeListeners() {
-    // Clean up existing listeners first
-    this.cleanupListeners();
-    
     const user = this.auth.currentUser;
     if (!user) return;
+
+    // Already listening for this exact user: do nothing. Re-running would
+    // unsubscribe and re-attach all four listeners, each re-syncing its whole
+    // collection from the server and billing reads we don't need.
+    if (this.listenersUserId === user.uid && this.unsubscribeReports) {
+      return;
+    }
+
+    // Different user (or first attach): clear any stale listeners first.
+    this.cleanupListeners();
 
     this.listenToReports();
     this.listenToBibleStudies();
     this.listenToGoals();
     this.listenToMissionCompletions();
+    this.listenersUserId = user.uid;
+  }
+
+  // --- Rolling-window boundaries for the live (server-syncing) listeners ---
+  // The live listeners only stream RECENT data so each server sync bills a small,
+  // bounded number of reads. Full history (older calendar months, lifetime streak
+  // stats) is served on demand from the local cache, which is free, via the
+  // getAll* helpers below.
+
+  // Reports window: from the start of the current service year (Sep–Aug) OR the
+  // start of last month, whichever is earlier. This always covers the dashboard
+  // (current + previous month, service-year totals), the chart, and the current
+  // calendar month, with margin for month boundaries.
+  private reportsWindowStart(): Date {
+    const now = new Date();
+    const serviceYearStartYear =
+      now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+    const serviceYearStart = new Date(serviceYearStartYear, 8, 1); // Sep 1
+    const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return serviceYearStart < prevMonthStart ? serviceYearStart : prevMonthStart;
+  }
+
+  // Mission completions window: last 120 days as a YYYY-MM-DD key. Mission docs
+  // store a `date` string field, so we filter on that. Covers the current streak
+  // and recent practice calendar; lifetime stats use the cache-first full fetch.
+  private missionWindowStartKey(): string {
+    const d = new Date();
+    d.setDate(d.getDate() - 120);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  // Public boundary so consumers can merge the live (windowed) stream with the
+  // full-history fetch without duplicating the window math.
+  getMissionWindowStartKey(): string {
+    return this.missionWindowStartKey();
   }
 
   private cleanupListeners() {
@@ -146,6 +196,7 @@ export class ApiService {
       this.unsubscribeMissionCompletions();
       this.unsubscribeMissionCompletions = undefined;
     }
+    this.listenersUserId = undefined;
   }
 
   private listenToReports() {
@@ -158,12 +209,21 @@ export class ApiService {
       user.uid,
       'reports',
     );
-    const reportsQuery = query(reportsCollection);
+    // Only stream reports inside the rolling window. Older reports are loaded on
+    // demand from the cache (free) by getAllReports() when the calendar browses
+    // back. This bounds the per-sync read count instead of pulling all history.
+    // where() accepts a JS Date and converts it to a Timestamp for comparison.
+    const reportsQuery = query(
+      reportsCollection,
+      where('report_date', '>=', this.reportsWindowStart()),
+    );
 
-    // 🔥 Real-time listener for reports (works offline with Firestore cache)
+    // 🔥 Real-time listener for reports (works offline with Firestore cache).
+    // No includeMetadataChanges: we only care about real data changes, not
+    // cache/server metadata transitions, which would fire the callback (and
+    // rewrite the offline cache) far more often than needed.
     this.unsubscribeReports = onSnapshot(
       reportsQuery,
-      { includeMetadataChanges: true },
       (snapshot) => {
         const reports = snapshot.docs.map((doc) => {
           const data = doc.data();
@@ -205,7 +265,6 @@ export class ApiService {
     // 🔥 Real-time listener for bible studies (works offline with Firestore cache)
     this.unsubscribeBibleStudies = onSnapshot(
       studiesQuery,
-      { includeMetadataChanges: true },
       (snapshot) => {
         const studies = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -242,7 +301,6 @@ export class ApiService {
     // 🔥 Real-time listener for goals (works offline with Firestore cache)
     this.unsubscribeGoals = onSnapshot(
       goalsQuery,
-      { includeMetadataChanges: true },
       (snapshot) => {
         const goals = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -274,12 +332,17 @@ export class ApiService {
       user.uid,
       'missionCompletions',
     );
-    const missionsQuery = query(missionsCollection);
+    // Only stream the recent window. Lifetime stats (longest streak, total
+    // passed) and older practice-calendar months read the full set from cache
+    // (free) via getAllMissionCompletions().
+    const missionsQuery = query(
+      missionsCollection,
+      where('date', '>=', this.missionWindowStartKey()),
+    );
 
     // 🔥 Real-time listener for mission completions (works offline with Firestore cache)
     this.unsubscribeMissionCompletions = onSnapshot(
       missionsQuery,
-      { includeMetadataChanges: true },
       (snapshot) => {
         const completions = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -709,6 +772,76 @@ export class ApiService {
     } catch (error) {
       console.error('Error unmarking mission complete:', error);
       await this.queueForRetry('delete', 'missionCompletions', { id: dateId }, 'Mission unmark');
+    }
+  }
+
+  // Full report history for views that browse beyond the live window (the
+  // calendar). Cache-first: the local persistent cache is free to read, so this
+  // only hits the server when older data was never synced (e.g. cold device,
+  // first time browsing far back). Does NOT touch reportSignal/reports$, which
+  // stay scoped to the live window.
+  async getAllReports(): Promise<any[]> {
+    const user = this.auth.currentUser;
+    if (!user) return [];
+    const reportsCollection = collection(
+      this.fireStore,
+      'users',
+      user.uid,
+      'reports',
+    );
+    const mapReports = (snap: any) =>
+      snap.docs.map((doc: any) => {
+        const data = doc.data();
+        return { id: doc.id, ...data, report_date: data['report_date'] || null };
+      });
+    try {
+      const cached = mapReports(await getDocsFromCache(reportsCollection));
+      // If the cache is empty but we're online, fall back to the server once so
+      // a cold device still gets full history.
+      if (cached.length === 0 && this.networkService.isOnline) {
+        return mapReports(await getDocsFromServer(reportsCollection));
+      }
+      return cached;
+    } catch {
+      if (this.networkService.isOnline) {
+        try {
+          return mapReports(await getDocsFromServer(reportsCollection));
+        } catch (e) {
+          console.error('getAllReports server fetch failed:', e);
+        }
+      }
+      return [];
+    }
+  }
+
+  // Full mission-completion history for lifetime stats and the practice calendar.
+  // Cache-first, same rationale as getAllReports().
+  async getAllMissionCompletions(): Promise<any[]> {
+    const user = this.auth.currentUser;
+    if (!user) return [];
+    const missionsCollection = collection(
+      this.fireStore,
+      'users',
+      user.uid,
+      'missionCompletions',
+    );
+    const mapDocs = (snap: any) =>
+      snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+    try {
+      const cached = mapDocs(await getDocsFromCache(missionsCollection));
+      if (cached.length === 0 && this.networkService.isOnline) {
+        return mapDocs(await getDocsFromServer(missionsCollection));
+      }
+      return cached;
+    } catch {
+      if (this.networkService.isOnline) {
+        try {
+          return mapDocs(await getDocsFromServer(missionsCollection));
+        } catch (e) {
+          console.error('getAllMissionCompletions server fetch failed:', e);
+        }
+      }
+      return [];
     }
   }
 
