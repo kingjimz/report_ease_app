@@ -1,12 +1,14 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { SwUpdateService } from '../../_services/sw-update.service';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-app-update-toast',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatButtonModule, MatIconModule],
   templateUrl: './app-update-toast.component.html',
   styleUrl: './app-update-toast.component.css',
 })

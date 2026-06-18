@@ -1,6 +1,8 @@
 import { Component, Output, EventEmitter, Input, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
+import { MatRippleModule } from '@angular/material/core';
 import { CalendarComponent } from '../calendar/calendar.component';
 import { NavigationService } from '../../_services/navigation.service';
 import { Subscription } from 'rxjs';
@@ -10,7 +12,7 @@ import { Subscription } from 'rxjs';
   selector: 'app-tab-card',
   templateUrl: './tab-card.component.html',
   styleUrls: ['./tab-card.component.css'],
-  imports: [CommonModule],
+  imports: [CommonModule, MatIconModule, MatRippleModule],
 })
 export class TabCardComponent implements OnInit, OnChanges, OnDestroy {
   @Output() tabChange = new EventEmitter<string>();
@@ -25,25 +27,25 @@ export class TabCardComponent implements OnInit, OnChanges, OnDestroy {
     {
       id: 'dashboard',
       title: 'Home',
-      icon: 'bi bi-house-fill',
+      icon: 'home',
       description: 'Overview of your activities',
     },
     {
       id: 'calendar',
       title: 'Calendar',
-      icon: 'bi bi-calendar-fill',
+      icon: 'calendar_month',
       description: 'View upcoming events',
     },
     {
       id: 'reports',
       title: 'Reports',
-      icon: 'bi bi-book-half',
+      icon: 'menu_book',
       description: 'Track your progress',
     },
     {
       id: 'goals',
       title: 'Goals',
-      icon: 'bi bi-flag-fill',
+      icon: 'flag',
       description: 'Set and manage your goals',
     },
   ];

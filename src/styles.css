@@ -3,6 +3,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* CDK overlay (mat-select panels, mat-menu, datepicker, tooltips) defaults to
+   z-index 1000, but the app's bottom-sheet modals sit at z-index 10000. Without
+   this, a mat-select opened inside a modal renders BEHIND it and looks broken.
+   Lift the overlay container above the modals. */
+.cdk-overlay-container {
+  z-index: 11000;
+}
+
 /* Shared bottom-sheet modal animations (slide up from bottom, fade backdrop) */
 @keyframes app-sheet-up {
   from {
@@ -27,42 +35,75 @@
   animation: app-sheet-fade 0.25s ease-out;
 }
 
+/* Native date inputs inside Material form fields carry a large intrinsic
+   min-width that overflows the field (and the modal). Let them shrink to fit. */
+.mat-mdc-form-field input[type="date"],
+.mat-mdc-form-field input[type="datetime-local"],
+.mat-mdc-form-field input[type="time"] {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* The infix is the flex item that actually governs shrinking. Without this it
+   keeps its intrinsic width and shoves the matSuffix icon past the field edge,
+   so the calendar icon shows only half. */
+.mat-mdc-form-field .mat-mdc-form-field-infix {
+  min-width: 0;
+}
+
+/* Hide the browser's built-in date icon/spinners so our matSuffix <mat-icon>
+   is the only one and isn't pushed off the right edge of the field. */
+.mat-mdc-form-field input[type="date"]::-webkit-calendar-picker-indicator,
+.mat-mdc-form-field input[type="date"]::-webkit-inner-spin-button,
+.mat-mdc-form-field input[type="date"]::-webkit-clear-button {
+  display: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Material Symbols Outlined helper class (consumed by <mat-icon>).
+   The font itself is loaded from Google Fonts in index.html. */
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Legacy app tokens bridged onto Material 3 system tokens (--mat-sys-*),
+   defined by theme.scss. These auto-switch under the `.dark` class, so the
+   light/dark values no longer need to be hand-maintained here. Kept so any
+   not-yet-migrated screen still themes correctly during the rollout. */
 :root {
-  /* Light mode colors */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f3f4f6;
-  --bg-tertiary: #e5e7eb;
-  --text-primary: #111827;
-  --text-secondary: #4b5563;
-  --text-tertiary: #6b7280;
-  --border-color: #d1d5db;
-  --card-bg: #ffffff;
+  --bg-primary: var(--mat-sys-surface);
+  --bg-secondary: var(--mat-sys-surface-container);
+  --bg-tertiary: var(--mat-sys-surface-container-high);
+  --text-primary: var(--mat-sys-on-surface);
+  --text-secondary: var(--mat-sys-on-surface-variant);
+  --text-tertiary: var(--mat-sys-outline);
+  --border-color: var(--mat-sys-outline-variant);
+  --card-bg: var(--mat-sys-surface-container-low);
   --shadow: rgba(0, 0, 0, 0.1);
-  --input-bg: #ffffff;
-  --input-border: #d1d5db;
-  --button-primary-bg: #3b82f6;
-  --button-primary-hover: #2563eb;
-  --button-secondary-bg: #f3f4f6;
-  --button-secondary-hover: #e5e7eb;
+  --input-bg: var(--mat-sys-surface-container-highest);
+  --input-border: var(--mat-sys-outline);
+  --button-primary-bg: var(--mat-sys-primary);
+  --button-primary-hover: var(--mat-sys-primary);
+  --button-secondary-bg: var(--mat-sys-surface-container);
+  --button-secondary-hover: var(--mat-sys-surface-container-high);
 }
 
 .dark {
-  /* Dark mode colors */
-  --bg-primary: #111827;
-  --bg-secondary: #1f2937;
-  --bg-tertiary: #374151;
-  --text-primary: #f9fafb;
-  --text-secondary: #d1d5db;
-  --text-tertiary: #9ca3af;
-  --border-color: #4b5563;
-  --card-bg: #1f2937;
   --shadow: rgba(0, 0, 0, 0.3);
-  --input-bg: #374151;
-  --input-border: #4b5563;
-  --button-primary-bg: #3b82f6;
-  --button-primary-hover: #2563eb;
-  --button-secondary-bg: #374151;
-  --button-secondary-hover: #4b5563;
 }
 
 html, body {
@@ -155,23 +196,6 @@ body {
 .dark .shadow-md,
 .dark .shadow-lg {
   box-shadow: 0 4px 6px -1px var(--shadow) !important;
-}
-
-.dark input[type="text"],
-.dark input[type="date"],
-.dark input[type="email"],
-.dark input[type="password"],
-.dark input[type="number"],
-.dark textarea,
-.dark select {
-  background-color: var(--input-bg) !important;
-  border-color: var(--input-border) !important;
-  color: var(--text-primary) !important;
-}
-
-.dark input::placeholder,
-.dark textarea::placeholder {
-  color: var(--text-tertiary) !important;
 }
 
 /* Hide scrollbars but keep scrolling functionality */

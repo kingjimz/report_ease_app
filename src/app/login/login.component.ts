@@ -2,6 +2,12 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AuthService } from '../_services/auth.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { AlertsComponent } from '../components/alerts/alerts.component';
 import { Router, RouterLink } from '@angular/router';
 import { ThemeService } from '../services/theme.service';
 import { NetworkService } from '../_services/network.service';
@@ -11,7 +17,17 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    AlertsComponent,
+  ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })

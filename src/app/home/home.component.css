@@ -53,8 +53,8 @@
 }
 
 .tab-card-container {
-  background-color: var(--card-bg);
-  border-color: var(--border-color);
+  background-color: var(--mat-sys-surface-container);
+  border-color: var(--mat-sys-outline-variant);
   transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
   transform: translateY(0);
   will-change: transform;
@@ -66,6 +66,99 @@
   transform: translateY(100%) !important;
   opacity: 0;
   pointer-events: none;
+}
+
+/* Material modal helpers */
+.md-divider-b {
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.md-divider-t {
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}
+
+.md-modal-leading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background-color: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+.md-onboard-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  margin: 0 auto 1rem;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #fbbf24, #f97316);
+  color: #fff;
+}
+
+.md-onboard-hero mat-icon {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+}
+
+.md-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 2px solid var(--mat-sys-outline-variant);
+  background-color: var(--mat-sys-surface-container-low);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.md-choice.selected {
+  border-color: var(--mat-sys-primary);
+  background-color: var(--mat-sys-secondary-container);
+}
+
+.md-choice-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  border-radius: 12px;
+  color: #fff;
+}
+
+.md-choice-icon.amber {
+  background: linear-gradient(135deg, #fbbf24, #f97316);
+}
+
+.md-choice-icon.blue {
+  background: linear-gradient(135deg, #3b82f6, #4338ca);
+}
+
+.md-info-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 16px;
+  background-color: var(--mat-sys-surface-container);
+  border: 1px solid var(--mat-sys-outline-variant);
+}
+
+.md-icon-sm {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: var(--mat-sys-on-surface-variant);
 }
 
 .dark .bg-white {
@@ -164,14 +257,6 @@
 
 .dark .border-gray-300 {
   border-color: var(--border-color) !important;
-}
-
-.dark input,
-.dark select,
-.dark textarea {
-  background-color: var(--input-bg) !important;
-  border-color: var(--input-border) !important;
-  color: var(--text-primary) !important;
 }
 
 /* Report type radio buttons */

@@ -1,432 +1,349 @@
 <!-- Delete Confirmation Modal -->
-<div
-  *ngIf="showDeleteConfirm"
-  class="fixed inset-0 z-[10000] flex flex-col justify-end"
->
-  <div
-    class="app-sheet-fade absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
-    (click)="closeDeleteConfirm()"
-  ></div>
-  <div
-    class="app-sheet-up relative w-full max-w-md mx-auto bg-white dark:bg-gray-800 rounded-t-2xl px-6 pb-6 pt-3 shadow-2xl max-h-[88vh] overflow-y-auto"
-    (click)="$event.stopPropagation()"
-  >
-    <div class="flex justify-center pb-3">
-      <span class="w-10 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600"></span>
-    </div>
-    <div class="text-center">
-      <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-        <i class="bi bi-exclamation-triangle text-red-600 dark:text-red-400 text-2xl"></i>
-      </div>
-      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Delete Goal</h3>
-      <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
-        Are you sure you want to delete "<span class="font-semibold">{{ goalToDelete?.goal_title }}</span>"? This action cannot be undone.
-      </p>
-      <div class="flex space-x-3">
-        <button
-          type="button"
-          (click)="closeDeleteConfirm()"
-          class="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors"
-        >
-          Cancel
+<ng-container *ngIf="showDeleteConfirm">
+  <app-modal>
+    <div class="w-full">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between mb-4 pb-3 md-divider-b">
+        <div class="flex items-center space-x-2 min-w-0 flex-1">
+          <div class="md-modal-leading md-modal-leading-error">
+            <mat-icon>warning</mat-icon>
+          </div>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-base font-bold truncate" style="color: var(--mat-sys-on-surface);">Delete Goal</h3>
+            <p class="text-xs truncate" style="color: var(--mat-sys-on-surface-variant);">This action cannot be undone</p>
+          </div>
+        </div>
+        <button mat-icon-button (click)="closeDeleteConfirm()" aria-label="Close">
+          <mat-icon>close</mat-icon>
         </button>
-        <button
-          type="button"
-          (click)="confirmDelete()"
-          class="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
-        >
+      </div>
+
+      <p class="text-sm mb-5" style="color: var(--mat-sys-on-surface-variant);">
+        Are you sure you want to delete
+        "<span class="font-semibold" style="color: var(--mat-sys-on-surface);">{{ goalToDelete?.goal_title }}</span>"?
+      </p>
+
+      <!-- Modal Footer -->
+      <div class="flex justify-end gap-2 pt-3 md-divider-t">
+        <button mat-stroked-button type="button" (click)="closeDeleteConfirm()">Cancel</button>
+        <button mat-flat-button color="warn" type="button" (click)="confirmDelete()">
+          <mat-icon>delete</mat-icon>
           Delete
         </button>
       </div>
     </div>
-  </div>
-</div>
+  </app-modal>
+</ng-container>
 
 <!-- Add/Edit Goal Modal -->
-<div
-  *ngIf="showGoalModal"
-  class="fixed inset-0 z-[10000] flex flex-col justify-end"
->
-  <div
-    class="app-sheet-fade absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
-    (click)="closeGoalModal()"
-  ></div>
-  <div
-    class="app-sheet-up relative w-full max-w-lg mx-auto bg-white dark:bg-gray-800 rounded-t-2xl px-6 sm:px-8 pb-6 sm:pb-8 pt-3 shadow-2xl max-h-[88vh] overflow-y-auto"
-    (click)="$event.stopPropagation()"
-  >
-    <div class="flex justify-center pb-3">
-      <span class="w-10 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600"></span>
-    </div>
-    <!-- Modal Header -->
-    <div class="flex items-center justify-between mb-6">
-      <div class="flex items-center space-x-3">
-        <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-          <i class="bi bi-{{ goalSelected ? 'pencil' : 'plus-lg' }} text-white text-xl"></i>
-        </div>
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ goalSelected ? 'Edit Goal' : 'Add New Goal' }}</h2>
-          <p class="text-sm text-gray-600 dark:text-gray-400">{{ goalSelected ? 'Update your spiritual goal' : 'Create a spiritual goal' }}</p>
-        </div>
-      </div>
-      <button
-        type="button"
-        (click)="closeGoalModal()"
-        class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-        aria-label="Close"
-      >
-        <i class="bi bi-x-lg text-gray-600 dark:text-gray-400 text-xl"></i>
-      </button>
-    </div>
-
-    <form #goalForm="ngForm" class="space-y-5" (ngSubmit)="onSubmit()">
-      <div>
-        <label
-          for="goalTitle"
-          class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
-        >
-          Goal Title *
-        </label>
-        <input
-          type="text"
-          id="goalTitle"
-          name="goalTitle"
-          [(ngModel)]="goal_title"
-          required
-          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
-          placeholder="e.g., Increase field service hours"
-        />
-      </div>
-      <div>
-        <label
-          for="goalDescription"
-          class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
-        >
-          Description *
-        </label>
-        <textarea
-          id="goalDescription"
-          name="goalDescription"
-          [(ngModel)]="goal_description"
-          required
-          rows="3"
-          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm resize-none"
-          placeholder="Describe what you want to achieve and why it's important to you"
-        ></textarea>
-      </div>
-      <div>
-        <label
-          for="category"
-          class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
-        >
-          Category *
-        </label>
-        <select
-          id="category"
-          name="category"
-          [(ngModel)]="category"
-          required
-          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
-        >
-          <option value="">Select a category</option>
-          <option value="ministry">Ministry</option>
-          <option value="congregation">Congregation</option>
-          <option value="other">Other</option>
-        </select>
-      </div>
-      <div class="flex space-x-3 pt-2">
-        <button
-          type="button"
-          (click)="closeGoalModal()"
-          class="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-xl transition-colors"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          [disabled]="!isFormValid()"
-          [class.opacity-50]="!isFormValid()"
-          [class.cursor-not-allowed]="!isFormValid()"
-          class="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl disabled:hover:shadow-lg"
-        >
-          {{ goalSelected ? "Update Goal" : "Add Goal" }}
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<div class="min-h-screen bg-white dark:bg-gray-900 py-6 px-4">
-  <div class="max-w-6xl mx-auto">
-    <!-- Page Header -->
-    <div class="mb-6">
-      <div class="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
-        <div class="flex items-center space-x-4 flex-1">
-          <div class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
-            <i class="bi bi-compass text-white text-2xl"></i>
+<ng-container *ngIf="showGoalModal">
+  <app-modal>
+    <div class="w-full">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between mb-4 pb-3 md-divider-b">
+        <div class="flex items-center space-x-2 min-w-0 flex-1">
+          <div class="md-modal-leading">
+            <mat-icon>{{ goalSelected ? 'edit' : 'add' }}</mat-icon>
           </div>
-          <div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-              Spiritual Growth
-            </h1>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              Your goals and daily practice in one place
+          <div class="min-w-0 flex-1">
+            <h3 class="text-base font-bold truncate" style="color: var(--mat-sys-on-surface);">
+              {{ goalSelected ? 'Edit Goal' : 'Add New Goal' }}
+            </h3>
+            <p class="text-xs truncate" style="color: var(--mat-sys-on-surface-variant);">
+              {{ goalSelected ? 'Update your spiritual goal' : 'Create a spiritual goal' }}
             </p>
           </div>
         </div>
+        <button mat-icon-button (click)="closeGoalModal()" aria-label="Close">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Goal Form -->
+      <form #goalForm="ngForm" (ngSubmit)="onSubmit()">
+        <mat-form-field appearance="fill" class="w-full">
+          <mat-label>Goal Title</mat-label>
+          <input
+            matInput
+            type="text"
+            name="goalTitle"
+            [(ngModel)]="goal_title"
+            required
+            placeholder="e.g., Increase field service hours"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="w-full">
+          <mat-label>Description</mat-label>
+          <textarea
+            matInput
+            name="goalDescription"
+            [(ngModel)]="goal_description"
+            required
+            rows="3"
+            placeholder="Describe what you want to achieve and why it's important to you"
+          ></textarea>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="w-full">
+          <mat-label>Category</mat-label>
+          <mat-select name="category" [(ngModel)]="category" required>
+            <mat-option value="ministry">Ministry</mat-option>
+            <mat-option value="congregation">Congregation</mat-option>
+            <mat-option value="other">Other</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Modal Footer -->
+        <div class="flex justify-end gap-2 pt-3 md-divider-t">
+          <button mat-stroked-button type="button" (click)="closeGoalModal()">Cancel</button>
+          <button mat-flat-button color="primary" type="submit" [disabled]="!isFormValid()">
+            {{ goalSelected ? "Update Goal" : "Add Goal" }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </app-modal>
+</ng-container>
+
+<div class="md-page min-h-screen">
+  <div class="container py-2 sm:py-2 md:py-4 px-2 mb-12 sm:mb-12 md:mb-2 lg:mb-2 xl:mb-2">
+    <!-- Page Header -->
+    <div class="mb-6">
+      <div class="mb-4 sm:mb-6">
+        <h1 class="text-xl sm:text-2xl font-semibold mb-1" style="color: var(--mat-sys-on-surface);">
+          Spiritual Growth
+        </h1>
+        <p class="text-sm" style="color: var(--mat-sys-on-surface-variant);">
+          Your goals and daily practice in one place
+        </p>
       </div>
 
       <!-- Section Tabs -->
-      <div class="flex w-full bg-gray-100 dark:bg-gray-800 rounded-xl p-1 gap-1">
-        <button
-          type="button"
-          (click)="setTab('mission')"
-          class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all"
-          [ngClass]="activeTab === 'mission'
-            ? 'bg-white dark:bg-gray-900 text-amber-600 dark:text-amber-400 shadow-sm'
-            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
-        >
-          <i class="bi bi-bookmark-star"></i>
+      <mat-button-toggle-group
+        class="md-tab-toggle w-full"
+        [(ngModel)]="activeTab"
+        name="activeTab"
+        aria-label="Section"
+      >
+        <mat-button-toggle value="mission" class="flex-1">
+          <mat-icon>bookmark</mat-icon>
           Daily Practice
-        </button>
-        <button
-          type="button"
-          (click)="setTab('goals')"
-          class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all"
-          [ngClass]="activeTab === 'goals'
-            ? 'bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
-            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
-        >
-          <i class="bi bi-bullseye"></i>
+        </mat-button-toggle>
+        <mat-button-toggle value="goals" class="flex-1">
+          <mat-icon>track_changes</mat-icon>
           Spiritual Goals
-          <span
-            class="ml-1 px-2 py-0.5 rounded-full text-xs font-bold"
-            [ngClass]="activeTab === 'goals' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'"
-          >{{ goals.length }}</span>
-        </button>
-      </div>
+          <span class="md-chip md-tab-count">{{ goals.length }}</span>
+        </mat-button-toggle>
+      </mat-button-toggle-group>
     </div>
 
     <!-- ============ GOALS TAB ============ -->
     <div *ngIf="activeTab === 'goals'">
       <!-- Add Goal action -->
       <div class="flex justify-end mb-4">
-        <button
-          (click)="openGoalModal()"
-          class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium rounded-lg transition-all shadow-md hover:shadow-lg"
-        >
-          <i class="bi bi-plus-lg mr-2"></i>
+        <button mat-flat-button color="primary" class="w-full sm:w-auto" (click)="openGoalModal()">
+          <mat-icon>add</mat-icon>
           Add Goal
         </button>
       </div>
 
       <!-- Stats and Search Bar -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-6">
+      <mat-card appearance="outlined" class="md-surface-card p-4 sm:p-6 mb-6">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <!-- Stats -->
           <div class="grid grid-cols-2 md:flex md:flex-wrap items-center gap-4 w-full md:w-auto">
-            <div class="w-full md:w-auto px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
-              <div class="flex items-center space-x-2">
-                <i class="bi bi-bullseye text-indigo-600 dark:text-indigo-400"></i>
-                <div>
-                  <p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{{ goals.length }}</p>
-                  <p class="text-xs text-gray-600 dark:text-gray-400">Total Goals</p>
-                </div>
+            <div class="md-stat-tile-row">
+              <mat-icon style="color: var(--mat-sys-primary);">track_changes</mat-icon>
+              <div>
+                <p class="text-2xl font-semibold" style="color: var(--mat-sys-on-surface);">{{ goals.length }}</p>
+                <p class="text-xs" style="color: var(--mat-sys-on-surface-variant);">Total Goals</p>
               </div>
             </div>
-            <div class="w-full md:w-auto px-4 py-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-              <div class="flex items-center space-x-2">
-                <i class="bi bi-briefcase text-blue-600 dark:text-blue-400"></i>
-                <div>
-                  <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ getCategoryCount('ministry') }}</p>
-                  <p class="text-xs text-gray-600 dark:text-gray-400">Ministry</p>
-                </div>
+            <div class="md-stat-tile-row">
+              <mat-icon style="color: var(--mat-sys-on-surface-variant);">work</mat-icon>
+              <div>
+                <p class="text-2xl font-semibold" style="color: var(--mat-sys-on-surface);">{{ getCategoryCount('ministry') }}</p>
+                <p class="text-xs" style="color: var(--mat-sys-on-surface-variant);">Ministry</p>
               </div>
             </div>
-            <div class="w-full md:w-auto px-4 py-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-              <div class="flex items-center space-x-2">
-                <i class="bi bi-people text-purple-600 dark:text-purple-400"></i>
-                <div>
-                  <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{ getCategoryCount('congregation') }}</p>
-                  <p class="text-xs text-gray-600 dark:text-gray-400">Congregation</p>
-                </div>
+            <div class="md-stat-tile-row">
+              <mat-icon style="color: var(--mat-sys-on-surface-variant);">groups</mat-icon>
+              <div>
+                <p class="text-2xl font-semibold" style="color: var(--mat-sys-on-surface);">{{ getCategoryCount('congregation') }}</p>
+                <p class="text-xs" style="color: var(--mat-sys-on-surface-variant);">Congregation</p>
               </div>
             </div>
-            <div class="w-full md:w-auto px-4 py-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-              <div class="flex items-center space-x-2">
-                <i class="bi bi-star text-amber-600 dark:text-amber-400"></i>
-                <div>
-                  <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">{{ getCategoryCount('other') }}</p>
-                  <p class="text-xs text-gray-600 dark:text-gray-400">Other</p>
-                </div>
+            <div class="md-stat-tile-row">
+              <mat-icon style="color: var(--mat-sys-on-surface-variant);">star</mat-icon>
+              <div>
+                <p class="text-2xl font-semibold" style="color: var(--mat-sys-on-surface);">{{ getCategoryCount('other') }}</p>
+                <p class="text-xs" style="color: var(--mat-sys-on-surface-variant);">Other</p>
               </div>
             </div>
           </div>
 
           <!-- Search and Filter -->
           <div class="flex flex-col sm:flex-row gap-3 flex-1 lg:max-w-md">
-            <div class="relative flex-1">
-              <i class="bi bi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            <mat-form-field appearance="fill" class="w-full md-dense">
+              <mat-label>Search goals</mat-label>
+              <mat-icon matPrefix>search</mat-icon>
               <input
+                matInput
                 type="text"
                 [(ngModel)]="searchQuery"
                 (input)="onSearchChange()"
                 placeholder="Search goals..."
-                class="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm"
               />
-            </div>
-            <select
-              [(ngModel)]="goalFilter"
-              name="goalFilter"
-              class="px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
-            >
-              <option value="">All Categories</option>
-              <option value="ministry">Ministry</option>
-              <option value="congregation">Congregation</option>
-              <option value="other">Other</option>
-            </select>
+            </mat-form-field>
+            <mat-form-field appearance="fill" class="md-dense">
+              <mat-label>Category</mat-label>
+              <mat-icon matPrefix>filter_list</mat-icon>
+              <mat-select [(ngModel)]="goalFilter" name="goalFilter">
+                <mat-option value="">All Categories</mat-option>
+                <mat-option value="ministry">Ministry</mat-option>
+                <mat-option value="congregation">Congregation</mat-option>
+                <mat-option value="other">Other</mat-option>
+              </mat-select>
+            </mat-form-field>
           </div>
         </div>
-      </div>
+      </mat-card>
 
       <!-- Empty State -->
-      <div
+      <mat-card
         *ngIf="filteredGoals().length === 0 && goals.length === 0"
-      class="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center border-2 border-dashed border-gray-300 dark:border-gray-700"
-    >
-      <div class="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-        <i class="bi bi-bullseye text-indigo-600 dark:text-indigo-400 text-4xl"></i>
-      </div>
-      <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">No Goals Yet</h3>
-      <p class="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
-        Start your spiritual journey by setting your first goal. Track your progress and stay motivated!
-      </p>
-      <button
-        (click)="openGoalModal()"
-        class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl"
+        appearance="outlined"
+        class="md-surface-card md-empty p-12 text-center"
       >
-        <i class="bi bi-plus-lg mr-2"></i>
-        Add Your First Goal
-      </button>
-    </div>
-
-    <!-- No Results State -->
-    <div
-      *ngIf="filteredGoals().length === 0 && goals.length > 0"
-      class="bg-white dark:bg-gray-800 rounded-2xl p-8 text-center border border-gray-200 dark:border-gray-700"
-    >
-      <i class="bi bi-search text-gray-400 text-4xl mb-4"></i>
-      <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No goals found</h3>
-      <p class="text-gray-600 dark:text-gray-400">
-        Try adjusting your search or filter criteria
-      </p>
-    </div>
-
-    <!-- Show All Button -->
-    <div *ngIf="filteredGoals().length > 3" class="mb-4 flex justify-end">
-      <button
-        (click)="toggleShowAllGoals()"
-        class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
-        <i [class]="showAllGoals ? 'bi bi-eye-slash mr-2' : 'bi bi-eye mr-2'"></i>
-        {{ showAllGoals ? 'Show Less' : 'Show All (' + filteredGoals().length + ')' }}
-      </button>
-    </div>
-
-    <!-- Goals Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-      <div
-        *ngFor="let goal of getDisplayedGoals(); let i = index"
-        class="goal-card-enhanced group relative bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-      >
-        <!-- Delete Button -->
-        <button
-          type="button"
-          (click)="openDeleteConfirm(goal); $event.stopPropagation()"
-          class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-lg bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all opacity-0 group-hover:opacity-100 z-10"
-          aria-label="Delete goal"
-        >
-          <i class="bi bi-trash text-sm"></i>
+        <div class="md-empty-icon">
+          <mat-icon>track_changes</mat-icon>
+        </div>
+        <h3 class="text-2xl font-semibold mb-3" style="color: var(--mat-sys-on-surface);">No Goals Yet</h3>
+        <p class="mb-6 max-w-md mx-auto" style="color: var(--mat-sys-on-surface-variant);">
+          Start your spiritual journey by setting your first goal. Track your progress and stay motivated!
+        </p>
+        <button mat-flat-button color="primary" (click)="openGoalModal()">
+          <mat-icon>add</mat-icon>
+          Add Your First Goal
         </button>
+      </mat-card>
 
-        <!-- Goal Content -->
-        <div class="relative cursor-pointer p-6" (click)="editGoal(goal)">
-          <!-- Category Badge and Status -->
-          <div class="flex items-center justify-between mb-4">
-            <span
-              class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide"
-              [ngClass]="{
-                'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300': goal.category === 'ministry',
-                'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300': goal.category === 'congregation',
-                'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300': goal.category === 'other'
-              }"
-            >
-              <i [ngClass]="{
-                'bi bi-briefcase': goal.category === 'ministry',
-                'bi bi-people': goal.category === 'congregation',
-                'bi bi-star': goal.category === 'other'
-              }" class="mr-1.5"></i>
-              {{ goal.category }}
-            </span>
-            <span *ngIf="getGoalStatus(goal)" 
-              class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-              [ngClass]="{
-                'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300': getGoalStatus(goal) === 'overdue',
-                'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300': getGoalStatus(goal) === 'due-soon',
-                'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300': getGoalStatus(goal) === 'on-track'
-              }"
-            >
-              {{ getGoalStatus(goal) === 'overdue' ? 'Overdue' : getGoalStatus(goal) === 'due-soon' ? 'Due Soon' : 'On Track' }}
-            </span>
+      <!-- No Results State -->
+      <mat-card
+        *ngIf="filteredGoals().length === 0 && goals.length > 0"
+        appearance="outlined"
+        class="md-surface-card p-8 text-center"
+      >
+        <mat-icon class="md-empty-glyph" style="color: var(--mat-sys-outline);">search</mat-icon>
+        <h3 class="text-xl font-semibold mb-2" style="color: var(--mat-sys-on-surface);">No goals found</h3>
+        <p style="color: var(--mat-sys-on-surface-variant);">
+          Try adjusting your search or filter criteria
+        </p>
+      </mat-card>
+
+      <!-- Show All Button -->
+      <div *ngIf="filteredGoals().length > 3" class="mb-4 flex justify-end">
+        <button mat-stroked-button (click)="toggleShowAllGoals()">
+          <mat-icon>{{ showAllGoals ? 'visibility_off' : 'visibility' }}</mat-icon>
+          {{ showAllGoals ? 'Show Less' : 'Show All (' + filteredGoals().length + ')' }}
+        </button>
+      </div>
+
+      <!-- Goals Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <mat-card
+          *ngFor="let goal of getDisplayedGoals(); let i = index"
+          appearance="outlined"
+          class="md-surface-card goal-card-enhanced group relative overflow-hidden"
+        >
+          <!-- Row actions -->
+          <div class="absolute top-2 right-2 z-10">
+            <button mat-icon-button [matMenuTriggerFor]="goalMenu" (click)="$event.stopPropagation()" aria-label="Goal actions">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #goalMenu="matMenu">
+              <button mat-menu-item type="button" (click)="editGoal(goal)">
+                <mat-icon>edit</mat-icon>
+                <span>Edit</span>
+              </button>
+              <button mat-menu-item type="button" (click)="openDeleteConfirm(goal)">
+                <mat-icon>delete</mat-icon>
+                <span>Delete</span>
+              </button>
+            </mat-menu>
           </div>
 
-          <!-- Goal Title -->
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2 line-clamp-2">
-            {{ goal.goal_title }}
-          </h3>
+          <!-- Goal Content -->
+          <div class="relative cursor-pointer p-6" (click)="editGoal(goal)">
+            <!-- Category Badge and Status -->
+            <div class="flex items-center justify-between mb-4 pr-8">
+              <span class="md-chip md-category" [ngClass]="goal.category">
+                <mat-icon class="md-icon-sm">
+                  {{ goal.category === 'ministry' ? 'work' : goal.category === 'congregation' ? 'groups' : 'star' }}
+                </mat-icon>
+                {{ goal.category }}
+              </span>
+              <span
+                *ngIf="getGoalStatus(goal)"
+                class="md-chip"
+                [ngClass]="{
+                  'error': getGoalStatus(goal) === 'overdue',
+                  'warn': getGoalStatus(goal) === 'due-soon',
+                  'success': getGoalStatus(goal) === 'on-track'
+                }"
+              >
+                {{ getGoalStatus(goal) === 'overdue' ? 'Overdue' : getGoalStatus(goal) === 'due-soon' ? 'Due Soon' : 'On Track' }}
+              </span>
+            </div>
 
-          <!-- Goal Description -->
-          <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-3">
-            {{ goal.goal_description }}
-          </p>
+            <!-- Goal Title -->
+            <h3 class="text-lg font-semibold mb-2 line-clamp-2" style="color: var(--mat-sys-on-surface);">
+              {{ goal.goal_title }}
+            </h3>
 
-          <!-- Target Date -->
-          <div *ngIf="goal.target_date" class="mb-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
-            <div class="flex items-center space-x-2">
-              <i class="bi bi-calendar-event text-gray-500 dark:text-gray-400"></i>
-              <div class="flex-1">
-                <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Target Date</p>
-                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ formatTargetDate(goal.target_date) }}</p>
-                <p *ngIf="getDaysUntilTarget(goal.target_date) !== null" class="text-xs mt-1"
-                   [ngClass]="{
-                     'text-red-600 dark:text-red-400': getDaysUntilTarget(goal.target_date)! < 0,
-                     'text-yellow-600 dark:text-yellow-400': getDaysUntilTarget(goal.target_date)! >= 0 && getDaysUntilTarget(goal.target_date)! <= 7,
-                     'text-gray-500 dark:text-gray-400': getDaysUntilTarget(goal.target_date)! > 7
-                   }">
-                  <span *ngIf="getDaysUntilTarget(goal.target_date)! < 0">
-                    {{ Math.abs(getDaysUntilTarget(goal.target_date)!) }} days overdue
-                  </span>
-                  <span *ngIf="getDaysUntilTarget(goal.target_date)! >= 0 && getDaysUntilTarget(goal.target_date)! <= 7">
-                    {{ getDaysUntilTarget(goal.target_date) }} days remaining
-                  </span>
-                  <span *ngIf="getDaysUntilTarget(goal.target_date)! > 7">
-                    {{ getDaysUntilTarget(goal.target_date) }} days remaining
-                  </span>
-                </p>
+            <!-- Goal Description -->
+            <p class="text-sm mb-4 line-clamp-3" style="color: var(--mat-sys-on-surface-variant);">
+              {{ goal.goal_description }}
+            </p>
+
+            <!-- Target Date -->
+            <div *ngIf="goal.target_date" class="mb-4 p-3 rounded-lg md-target-box">
+              <div class="flex items-center space-x-2">
+                <mat-icon class="md-icon-sm" style="color: var(--mat-sys-on-surface-variant);">event</mat-icon>
+                <div class="flex-1">
+                  <p class="text-xs mb-0.5" style="color: var(--mat-sys-on-surface-variant);">Target Date</p>
+                  <p class="text-sm font-semibold" style="color: var(--mat-sys-on-surface);">{{ formatTargetDate(goal.target_date) }}</p>
+                  <p *ngIf="getDaysUntilTarget(goal.target_date) !== null" class="text-xs mt-1"
+                     [ngClass]="{
+                       'md-text-error': getDaysUntilTarget(goal.target_date)! < 0,
+                       'md-text-warn': getDaysUntilTarget(goal.target_date)! >= 0 && getDaysUntilTarget(goal.target_date)! <= 7,
+                       'md-text-muted': getDaysUntilTarget(goal.target_date)! > 7
+                     }">
+                    <span *ngIf="getDaysUntilTarget(goal.target_date)! < 0">
+                      {{ Math.abs(getDaysUntilTarget(goal.target_date)!) }} days overdue
+                    </span>
+                    <span *ngIf="getDaysUntilTarget(goal.target_date)! >= 0 && getDaysUntilTarget(goal.target_date)! <= 7">
+                      {{ getDaysUntilTarget(goal.target_date) }} days remaining
+                    </span>
+                    <span *ngIf="getDaysUntilTarget(goal.target_date)! > 7">
+                      {{ getDaysUntilTarget(goal.target_date) }} days remaining
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Edit Hint -->
+            <div class="pt-3 md-divider-t">
+              <div class="flex items-center justify-center text-xs" style="color: var(--mat-sys-on-surface-variant);">
+                <mat-icon class="md-icon-sm mr-1">edit</mat-icon>
+                <span>Click to edit</span>
               </div>
             </div>
           </div>
-
-          <!-- Edit Hint -->
-          <div class="pt-3 border-t border-gray-100 dark:border-gray-700">
-            <div class="flex items-center justify-center text-xs text-gray-500 dark:text-gray-400">
-              <i class="bi bi-pencil-square mr-1"></i>
-              <span>Click to edit</span>
-            </div>
-          </div>
-        </div>
+        </mat-card>
       </div>
-    </div>
     </div>
     <!-- ============ END GOALS TAB ============ -->
 

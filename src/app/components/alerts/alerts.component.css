@@ -1,0 +1,32 @@
+.md-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.md-alert.success {
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 14%, var(--mat-sys-surface));
+  color: var(--mat-sys-primary);
+}
+
+.md-alert.warn {
+  background-color: color-mix(in srgb, var(--mat-sys-error) 14%, var(--mat-sys-surface));
+  color: var(--mat-sys-error);
+}
+
+.md-alert-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.md-alert-text {
+  margin: 0;
+  min-width: 0;
+}

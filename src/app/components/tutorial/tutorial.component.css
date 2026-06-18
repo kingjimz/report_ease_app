@@ -1,9 +1,26 @@
-/* Tutorial Component Styles */
-.tutorial-modal {
-  animation: slideIn 0.3s ease-out;
+/* Tutorial Component — Material 3 styling */
+
+/* Full-screen backdrop */
+.tutorial-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
 }
 
-@keyframes slideIn {
+/* Dialog panel */
+.tutorial-modal {
+  background: var(--mat-sys-surface-container-low);
+  border-radius: 16px;
+  box-shadow: var(--mat-sys-level3);
+  animation: tutorialSlideIn 0.3s ease-out;
+}
+
+@keyframes tutorialSlideIn {
   from {
     opacity: 0;
     transform: translateY(-20px) scale(0.95);
@@ -14,43 +31,34 @@
   }
 }
 
-/* Dark mode support */
-.dark .tutorial-modal {
-  background-color: var(--card-bg, #1f2937);
+/* Leading icon badge */
+.tutorial-icon-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 5rem;
+  height: 5rem;
+  border-radius: 16px;
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
 }
 
-.dark .text-gray-900 {
-  color: var(--text-primary, #f9fafb);
+.tutorial-icon-symbol {
+  font-size: 40px;
+  width: 40px;
+  height: 40px;
 }
 
-.dark .text-gray-600,
-.dark .text-gray-400 {
-  color: var(--text-secondary, #d1d5db);
+/* Step progress dots */
+.tutorial-dot {
+  height: 0.5rem;
+  width: 0.5rem;
+  border-radius: 9999px;
+  background: var(--mat-sys-outline-variant);
+  transition: all 0.3s ease;
 }
 
-.dark .bg-gray-100 {
-  background-color: var(--bg-tertiary, #374151);
+.tutorial-dot.active {
+  width: 2rem;
+  background: var(--mat-sys-primary);
 }
-
-.dark .bg-gray-200 {
-  background-color: var(--bg-tertiary, #4b5563);
-}
-
-.dark .hover\:bg-gray-200:hover {
-  background-color: var(--bg-tertiary, #4b5563);
-}
-
-.dark .hover\:bg-gray-600:hover {
-  background-color: var(--bg-tertiary, #4b5563);
-}
-
-/* Ensure buttons are visible in dark mode */
-.dark button {
-  color: inherit;
-}
-
-/* Progress bar animation */
-.bg-gradient-to-r {
-  transition: width 0.3s ease-out;
-}
-

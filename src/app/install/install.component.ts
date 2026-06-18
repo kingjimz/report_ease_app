@@ -1,5 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { PwaService } from '../_services/pwa.service';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
@@ -8,7 +12,13 @@ import { takeUntil } from 'rxjs/operators';
 @Component({
   selector: 'app-install',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    MatCardModule,
+    MatIconModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+  ],
   templateUrl: './install.component.html',
   styleUrls: ['./install.component.css']
 })

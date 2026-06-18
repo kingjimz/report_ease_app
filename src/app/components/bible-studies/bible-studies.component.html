@@ -1,23 +1,25 @@
-<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-  <div class="container mx-auto px-6 py-8">
+<div class="min-h-screen">
+  <div class="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
     <!-- Header Section -->
-    <div class="mb-12">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-4xl font-bold text-gray-900 mb-3">Bible Studies & Return Visits</h1>
-          <p class="text-gray-600 text-lg">
+    <div class="mb-6 sm:mb-8">
+      <div class="flex items-start justify-between gap-4">
+        <div class="min-w-0">
+          <h1 class="text-xl sm:text-2xl font-semibold mb-1" style="color: var(--mat-sys-on-surface);">
+            Bible Studies &amp; Return Visits
+          </h1>
+          <p class="text-sm" style="color: var(--mat-sys-on-surface-variant);">
             Manage your spiritual conversations and schedule follow-up visits with ease.
           </p>
         </div>
-        <div class="hidden lg:flex items-center space-x-4">
-          <div class="text-center px-6 py-4 bg-white rounded-xl shadow-sm border border-gray-100">
-            <p class="text-2xl font-bold text-emerald-600">{{ getBibleStudiesCount() }}</p>
-            <p class="text-sm text-gray-500">Bible Studies</p>
-          </div>
-          <div class="text-center px-6 py-4 bg-white rounded-xl shadow-sm border border-gray-100">
-            <p class="text-2xl font-bold text-amber-600">{{ getReturnVisitsCount() }}</p>
-            <p class="text-sm text-gray-500">Return Visits</p>
-          </div>
+        <div class="hidden lg:flex items-center gap-3 flex-shrink-0">
+          <mat-card class="md-stat-card" appearance="outlined">
+            <p class="text-2xl font-semibold" style="color: var(--mat-sys-primary);">{{ getBibleStudiesCount() }}</p>
+            <p class="text-xs" style="color: var(--mat-sys-on-surface-variant);">Bible Studies</p>
+          </mat-card>
+          <mat-card class="md-stat-card" appearance="outlined">
+            <p class="text-2xl font-semibold" style="color: var(--mat-sys-tertiary);">{{ getReturnVisitsCount() }}</p>
+            <p class="text-xs" style="color: var(--mat-sys-on-surface-variant);">Return Visits</p>
+          </mat-card>
         </div>
       </div>
     </div>
@@ -25,260 +27,175 @@
     <!-- Content Area -->
     <ng-container *ngIf="bibleStudies.length > 0; else noStudies">
       <!-- Action Bar -->
-      <div class="flex items-center justify-between mb-8">
-        <div class="flex items-center space-x-4">
-          <div class="flex items-center space-x-2 text-gray-600">
-            <i class="bi bi-grid-3x3-gap"></i>
-            <span class="text-sm font-medium">{{ bibleStudies.length }} Total Studies</span>
-          </div>
-          <div class="h-4 w-px bg-gray-300"></div>
-          <div class="flex items-center space-x-2">
-            <div class="w-3 h-3 bg-emerald-500 rounded-full"></div>
-            <span class="text-sm text-gray-600">Bible Studies</span>
-            <div class="w-3 h-3 bg-amber-500 rounded-full ml-4"></div>
-            <span class="text-sm text-gray-600">Return Visits</span>
-          </div>
+      <div class="flex items-center justify-between gap-3 mb-5 sm:mb-6">
+        <div class="flex items-center gap-2 min-w-0" style="color: var(--mat-sys-on-surface-variant);">
+          <mat-icon class="md-icon-sm">menu_book</mat-icon>
+          <span class="text-sm font-medium truncate">{{ bibleStudies.length }} Total Studies</span>
         </div>
-        <button
-          (click)="showModal = true"
-          class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 font-medium"
-        >
-          <i class="bi bi-plus-lg mr-2"></i>
+        <button mat-flat-button color="primary" (click)="showModal = true">
+          <mat-icon>add</mat-icon>
           Add New Study
         </button>
       </div>
 
       <!-- Studies Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
-        <div
+      <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+        <mat-card
           *ngFor="let study of bibleStudies; let i = index"
+          appearance="outlined"
+          class="md-surface-card md-study-card overflow-hidden cursor-pointer"
           (click)="editStudy(study)"
-          class="group relative bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl cursor-pointer transition-all duration-300 overflow-hidden hover:-translate-y-1"
           (mouseenter)="hoveredCard = i"
           (mouseleave)="hoveredCard = null"
         >
-          <!-- Status Indicator -->
-          <div 
-            class="absolute top-0 left-0 w-full h-1 rounded-t-2xl"
-            [ngClass]="study.type === 'bs' ? 'bg-gradient-to-r from-emerald-500 to-teal-600' : 'bg-gradient-to-r from-amber-500 to-orange-600'"
-          ></div>
-          
-          <!-- Decorative Element -->
-          <div 
-            class="absolute top-0 right-0 w-24 h-24 opacity-5 rounded-bl-full transform translate-x-12 -translate-y-12 group-hover:scale-125 transition-transform duration-500"
-            [ngClass]="study.type === 'bs' ? 'bg-gradient-to-br from-emerald-500 to-teal-600' : 'bg-gradient-to-br from-amber-500 to-orange-600'"
-          ></div>
-
-          <div class="relative p-6">
+          <div class="p-4 sm:p-5">
             <!-- Header -->
-            <div class="flex items-start justify-between mb-6">
-              <div class="flex items-center space-x-4">
-                <div 
-                  class="flex items-center justify-center w-14 h-14 rounded-xl text-white font-bold text-lg shadow-md group-hover:shadow-lg transition-all duration-300"
-                  [ngClass]="study.type === 'bs' ? 'bg-gradient-to-br from-emerald-500 to-teal-600' : 'bg-gradient-to-br from-amber-500 to-orange-600'"
-                >
+            <div class="flex items-start justify-between gap-3 mb-4">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="md-avatar">
                   {{ getInitials(study.bible_study) }}
                 </div>
-                <div>
-                  <h3 class="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
+                <div class="min-w-0">
+                  <h3 class="text-base font-semibold line-clamp-2" style="color: var(--mat-sys-on-surface);">
                     {{ study.bible_study }}
                   </h3>
-                  <span 
-                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium mt-2"
-                    [ngClass]="study.type === 'bs' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
+                  <span
+                    class="md-chip mt-1.5 inline-flex items-center gap-1"
+                    [ngClass]="study.type === 'bs' ? 'primary' : 'tertiary'"
                   >
-                    <i [ngClass]="study.type === 'bs' ? 'bi bi-book' : 'bi bi-arrow-repeat'" class="mr-1"></i>
+                    <mat-icon class="md-icon-xs">{{ study.type === 'bs' ? 'menu_book' : 'autorenew' }}</mat-icon>
                     {{ study.type === 'bs' ? 'Bible Study' : 'Return Visit' }}
                   </span>
                 </div>
               </div>
-              <i class="bi bi-chevron-right text-gray-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all duration-300"></i>
+              <button
+                mat-icon-button
+                aria-label="Edit study"
+                (click)="$event.stopPropagation(); editStudy(study)"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
             </div>
 
             <!-- Schedule Info -->
-            <div class="bg-gray-50 rounded-xl p-4 mb-4 group-hover:bg-blue-50 transition-colors duration-300">
-              <div class="flex items-center text-gray-700 group-hover:text-blue-700 transition-colors">
-                <i class="bi bi-calendar-event text-lg mr-3"></i>
-                <div>
-                  <p class="font-medium text-sm">Schedule</p>
-                  <p class="text-gray-900 group-hover:text-blue-900">{{ study.schedule }}</p>
-                </div>
+            <div class="md-info-tile mb-3">
+              <mat-icon class="md-icon-sm" style="color: var(--mat-sys-primary);">event</mat-icon>
+              <div class="min-w-0">
+                <p class="text-xs font-medium" style="color: var(--mat-sys-on-surface-variant);">Schedule</p>
+                <p class="text-sm" style="color: var(--mat-sys-on-surface);">{{ study.schedule }}</p>
               </div>
             </div>
 
             <!-- Address Info -->
-            <div class="bg-gray-50 rounded-xl p-4 mb-6 group-hover:bg-blue-50 transition-colors duration-300">
-              <div class="flex items-start text-gray-700 group-hover:text-blue-700 transition-colors">
-                <i class="bi bi-geo-alt text-lg mr-3 mt-1 flex-shrink-0"></i>
-                <div class="min-w-0 flex-1">
-                  <p class="font-medium text-sm">Address</p>
-                  <p class="text-gray-900 group-hover:text-blue-900 line-clamp-2">{{ study.address }}</p>
-                </div>
+            <div class="md-info-tile mb-4">
+              <mat-icon class="md-icon-sm mt-0.5 flex-shrink-0" style="color: var(--mat-sys-primary);">location_on</mat-icon>
+              <div class="min-w-0 flex-1">
+                <p class="text-xs font-medium" style="color: var(--mat-sys-on-surface-variant);">Address</p>
+                <p class="text-sm line-clamp-2" style="color: var(--mat-sys-on-surface);">{{ study.address }}</p>
               </div>
             </div>
 
             <!-- Last Study Info -->
-            <div *ngIf="study.updated_at" class="border-t border-gray-100 pt-4">
-              <div class="flex items-center text-xs text-gray-500">
-                <i class="bi bi-clock-history mr-2"></i>
+            <div *ngIf="study.updated_at" class="pt-3 md-divider-t">
+              <div class="flex items-center gap-2 text-xs" style="color: var(--mat-sys-outline);">
+                <mat-icon class="md-icon-xs">schedule</mat-icon>
                 <span>Last updated {{ getTimeAgo(study.updated_at) }}</span>
               </div>
             </div>
-
-            <!-- Action Hint -->
-            <div class="text-center text-xs text-gray-400 group-hover:text-blue-500 transition-colors duration-300 mt-4 pt-4 border-t border-gray-100">
-              <i class="bi bi-cursor mr-1"></i>
-              Click to view or edit details
-            </div>
           </div>
-        </div>
+        </mat-card>
       </div>
     </ng-container>
 
-  <ng-template #noStudies>
-    <div
-      class="col-span-full text-center bg-white rounded-xl shadow p-10 border border-dashed border-gray-300"
-    >
-      <i class="bi bi-journal-x text-5xl text-blue-300 mb-4"></i>
-      <h2 class="text-xl font-semibold text-gray-700">No Bible Studies Found</h2>
-      <p class="text-gray-500 mt-2">
-        You haven’t added any Bible studies yet.
-      </p>
-      <button
-        (click)="showModal = true"
-        class="mt-6 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
-      >
-        <i class="bi bi-plus-lg mr-2"></i>
-        Add Your First Study
-      </button>
-    </div>
-  </ng-template>
-</div>
-
+    <ng-template #noStudies>
+      <mat-card appearance="outlined" class="md-surface-card text-center p-8 sm:p-10">
+        <div class="flex flex-col items-center">
+          <div class="md-modal-leading mb-4" style="width: 3.5rem; height: 3.5rem; border-radius: 16px;">
+            <mat-icon>menu_book</mat-icon>
+          </div>
+          <h2 class="text-lg font-semibold" style="color: var(--mat-sys-on-surface);">No Bible Studies Found</h2>
+          <p class="text-sm mt-1" style="color: var(--mat-sys-on-surface-variant);">
+            You haven&rsquo;t added any Bible studies yet.
+          </p>
+          <button mat-flat-button color="primary" class="mt-5" (click)="showModal = true">
+            <mat-icon>add</mat-icon>
+            Add Your First Study
+          </button>
+        </div>
+      </mat-card>
+    </ng-template>
+  </div>
 </div>
 
 <app-modal *ngIf="showModal">
-  <div class="flex justify-between items-center pb-3 mt-3">
-    <button
-      (click)="showModal = false"
-      class="text-gray-500 hover:text-gray-700"
-    >
-      <i class="bi bi-x-lg"></i>
-    </button>
-  </div>
-  <div class="bg-white mt-3">
-    <div class="max-w-7xl mx-auto">
-      <h1 class="font-bold text-2xl">Bible Study / Return Visit</h1>
-      <small class="text-gray-500">Add a new Bible Study or Return Visit</small>
-      <Form>
-        <div class="mt-3 mb-4">
-          <label
-            for="bible-study"
-            class="block text-sm font-medium text-gray-700"
-            >Name</label
-          >
-          <input
-            type="text"
-            id="bible-study"
-            name="bible-study"
-            [(ngModel)]="bible_study"
-            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            placeholder="Name"
-          />
+  <div class="w-full">
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between mb-4 pb-3 md-divider-b">
+      <div class="flex items-center space-x-2 min-w-0 flex-1">
+        <div class="md-modal-leading">
+          <mat-icon>menu_book</mat-icon>
         </div>
-
-        <div class="mb-4">
-          <label for="lesson" class="block text-sm font-medium text-gray-700"
-            >Address</label
-          >
-          <input
-            type="text"
-            id="address"
-            name="address"
-            [(ngModel)]="address"
-            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            placeholder="Address"
-          />
+        <div class="min-w-0 flex-1">
+          <h3 class="text-base font-bold truncate" style="color: var(--mat-sys-on-surface);">Bible Study / Return Visit</h3>
+          <p class="text-xs truncate" style="color: var(--mat-sys-on-surface-variant);">Add a new Bible Study or Return Visit</p>
         </div>
-
-        <div class="mb-4">
-          <label for="type" class="block text-sm font-medium text-gray-700"
-            >Type</label
-          >
-          <select
-            id="type"
-            name="type"
-            [(ngModel)]="type"
-            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          >
-            <option value="rv">Return Visit</option>
-            <option value="bs">Bible Study</option>
-          </select>
-        </div>
-
-        <div class="mb-4">
-          <label for="schedule" class="block text-sm font-medium text-gray-700"
-            >Schedule <small>(e.g., Thursday, 10 AM)</small></label
-          >
-          <input
-            type="text"
-            id="schedule"
-            [(ngModel)]="schedule"
-            name="schedule"
-            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            placeholder="Schedule"
-          />
-        </div>
-
-        <div class="mb-4">
-          <label for="lesson" class="block text-sm font-medium text-gray-700"
-            >Next Topic / Lesson
-            <small>(e.g., Chapter 1, Title, Point Number)</small></label
-          >
-          <textarea
-            id="lesson"
-            name="next_lesson"
-            [(ngModel)]="next_lesson"
-            rows="5"
-            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            placeholder="Next lesson"
-          ></textarea>
-        </div>
-
-        <div *ngIf="isSuccess">
-          <app-alerts
-            [isSuccess]="isSuccess"
-            [alertMessage]="alertMessage"
-          ></app-alerts>
-        </div>
-        <div *ngIf="!isSuccess">
-          <app-alerts
-            [isSuccess]="isSuccess"
-            [alertMessage]="alertMessage"
-          ></app-alerts>
-        </div>
-
-        <div class="flex justify-between">
-          <button
-            (click)="onSubmit()"
-            type="button"
-            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-8"
-            [disabled]="
-              isLoading || !bible_study || !address || !schedule || !next_lesson
-            "
-            [ngClass]="{
-              'opacity-50 cursor-not-allowed':
-                !bible_study || !address || !schedule || !next_lesson,
-            }"
-          >
-            <span
-              *ngIf="isLoading"
-              class="animate-spin rounded-full h-4 w-4 border-t-2 border-white inline-block mr-2"
-            ></span>
-            Save
-          </button>
-        </div>
-      </Form>
+      </div>
+      <button mat-icon-button (click)="showModal = false" aria-label="Close">
+        <mat-icon>close</mat-icon>
+      </button>
     </div>
+
+    <!-- Form -->
+    <form class="space-y-3">
+      <mat-form-field appearance="fill" class="w-full">
+        <mat-label>Name</mat-label>
+        <input matInput type="text" name="bible-study" [(ngModel)]="bible_study" placeholder="Name" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="w-full">
+        <mat-label>Address</mat-label>
+        <input matInput type="text" name="address" [(ngModel)]="address" placeholder="Address" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="w-full">
+        <mat-label>Type</mat-label>
+        <mat-select name="type" [(ngModel)]="type">
+          <mat-option value="rv">Return Visit</mat-option>
+          <mat-option value="bs">Bible Study</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="w-full">
+        <mat-label>Schedule</mat-label>
+        <input matInput type="text" name="schedule" [(ngModel)]="schedule" placeholder="e.g., Thursday, 10 AM" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="w-full">
+        <mat-label>Next Topic / Lesson</mat-label>
+        <textarea
+          matInput
+          name="next_lesson"
+          [(ngModel)]="next_lesson"
+          rows="4"
+          placeholder="e.g., Chapter 1, Title, Point Number"
+        ></textarea>
+      </mat-form-field>
+
+      <app-alerts [isSuccess]="isSuccess" [alertMessage]="alertMessage"></app-alerts>
+
+      <!-- Footer -->
+      <div class="flex justify-end gap-2 pt-3 md-divider-t">
+        <button mat-stroked-button type="button" (click)="showModal = false">Cancel</button>
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          (click)="onSubmit()"
+          [disabled]="isLoading || !bible_study || !address || !schedule || !next_lesson"
+        >
+          {{ isLoading ? 'Saving...' : 'Save' }}
+        </button>
+      </div>
+    </form>
   </div>
 </app-modal>

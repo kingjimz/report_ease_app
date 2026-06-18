@@ -1,0 +1,134 @@
+// Angular Material 3 theme for ReportEase
+// Light theme applied at :root, dark applied under the existing `.dark` class
+// (toggled by ThemeService on document.documentElement). Brand font: Poppins.
+@use '@angular/material' as mat;
+@use 'sass:map';
+
+@include mat.core();
+
+$app-typography: (
+  brand-family: 'Poppins, sans-serif',
+  plain-family: 'Poppins, sans-serif',
+);
+
+$light-theme: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: mat.$azure-palette,
+    tertiary: mat.$blue-palette,
+  ),
+  typography: $app-typography,
+  density: (
+    scale: 0,
+  ),
+));
+
+$dark-theme: mat.define-theme((
+  color: (
+    theme-type: dark,
+    primary: mat.$azure-palette,
+    tertiary: mat.$blue-palette,
+  ),
+  typography: $app-typography,
+  density: (
+    scale: 0,
+  ),
+));
+
+// Angular Material 18 does NOT emit the M3 `--mat-sys-*` system tokens on its
+// own (that arrived with mat.theme() in v19). The app's custom markup relies on
+// them heavily, so we emit them by hand. Values are the exact M3 azure/neutral
+// tones the Material components use, so custom surfaces and Material widgets
+// (FAB, buttons, cards) are the same blue — one cohesive, professional scheme.
+$sys-light: (
+  primary: #005cbb,
+  on-primary: #ffffff,
+  primary-container: #d7e3ff,
+  on-primary-container: #001b3f,
+  secondary: #565f71,
+  on-secondary: #ffffff,
+  secondary-container: #dae2f9,
+  on-secondary-container: #131c2b,
+  tertiary: #0061a4,
+  on-tertiary: #ffffff,
+  tertiary-container: #d3e4ff,
+  on-tertiary-container: #001c38,
+  error: #ba1a1a,
+  on-error: #ffffff,
+  error-container: #ffdad6,
+  on-error-container: #410002,
+  surface: #faf9fd,
+  surface-dim: #dad9dd,
+  surface-bright: #faf9fd,
+  surface-container-lowest: #ffffff,
+  surface-container-low: #f4f3f7,
+  surface-container: #eeedf1,
+  surface-container-high: #e8e7eb,
+  surface-container-highest: #e3e2e6,
+  on-surface: #1a1b1f,
+  on-surface-variant: #44474f,
+  outline: #74777f,
+  outline-variant: #c4c6d0,
+  inverse-surface: #2f3033,
+  inverse-on-surface: #f1f0f4,
+  surface-tint: #005cbb,
+);
+
+$sys-dark: (
+  primary: #abc7ff,
+  on-primary: #002f65,
+  primary-container: #00458f,
+  on-primary-container: #d7e3ff,
+  secondary: #bec6dc,
+  on-secondary: #283141,
+  secondary-container: #3e4759,
+  on-secondary-container: #dae2f9,
+  tertiary: #9ecaff,
+  on-tertiary: #00325a,
+  tertiary-container: #00497e,
+  on-tertiary-container: #d3e4ff,
+  error: #ffb4ab,
+  on-error: #690005,
+  error-container: #93000a,
+  on-error-container: #ffdad6,
+  surface: #121316,
+  surface-dim: #121316,
+  surface-bright: #38393c,
+  surface-container-lowest: #0d0e11,
+  surface-container-low: #1a1b1f,
+  surface-container: #1e1f23,
+  surface-container-high: #282a2d,
+  surface-container-highest: #333538,
+  on-surface: #e3e2e6,
+  on-surface-variant: #c4c6d0,
+  outline: #8e9099,
+  outline-variant: #44474f,
+  inverse-surface: #e3e2e6,
+  inverse-on-surface: #2f3033,
+  surface-tint: #abc7ff,
+);
+
+@mixin emit-sys-tokens($scheme) {
+  @each $role, $value in $scheme {
+    --mat-sys-#{$role}: #{$value};
+  }
+}
+
+:root {
+  @include mat.all-component-themes($light-theme);
+  @include emit-sys-tokens($sys-light);
+
+  // Material 3 elevation tokens (theme-independent standard shadows),
+  // consumed via box-shadow: var(--mat-sys-levelN) across components.
+  --mat-sys-level0: none;
+  --mat-sys-level1: 0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+  --mat-sys-level2: 0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+  --mat-sys-level3: 0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px 0px rgba(0, 0, 0, 0.3);
+  --mat-sys-level4: 0px 6px 10px 4px rgba(0, 0, 0, 0.15), 0px 2px 3px 0px rgba(0, 0, 0, 0.3);
+  --mat-sys-level5: 0px 8px 12px 6px rgba(0, 0, 0, 0.15), 0px 4px 4px 0px rgba(0, 0, 0, 0.3);
+}
+
+.dark {
+  @include mat.all-component-colors($dark-theme);
+  @include emit-sys-tokens($sys-dark);
+}

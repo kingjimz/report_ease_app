@@ -6,12 +6,15 @@
       #chartCanvas
       style="width: 100% !important; height: 100% !important"
     ></canvas>
-    <div *ngIf="!reportData || reportData.length === 0" class="absolute inset-0 flex flex-col items-center justify-center bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg">
-      <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
-        <i class="bi bi-graph-up text-gray-400 text-2xl"></i>
+    <div
+      *ngIf="!reportData || reportData.length === 0"
+      class="absolute inset-0 flex flex-col items-center justify-center rounded-lg md-chart-empty"
+    >
+      <div class="md-chart-empty-icon mb-4">
+        <mat-icon>show_chart</mat-icon>
       </div>
-      <p class="text-gray-500 dark:text-gray-400 font-medium">No report data available</p>
-      <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Start adding reports to see your activity chart</p>
+      <p class="font-medium" style="color: var(--mat-sys-on-surface-variant);">No report data available</p>
+      <p class="text-sm mt-1" style="color: var(--mat-sys-outline);">Start adding reports to see your activity chart</p>
     </div>
   </div>
 </div>

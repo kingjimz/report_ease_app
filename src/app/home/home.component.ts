@@ -10,6 +10,12 @@ import { SettingsComponent } from '../settings/settings.component';
 import { DashboardComponent } from '../dashboard/dashboard.component';
 import { ModalComponent } from '../components/modal/modal.component';
 import { FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatRadioModule } from '@angular/material/radio';
 import { ApiService } from '../_services/api.service';
 import { AlertsComponent } from '../components/alerts/alerts.component';
 import { UtilService } from '../_services/util.service';
@@ -32,6 +38,12 @@ import { NavigationService } from '../_services/navigation.service';
     DashboardComponent,
     ModalComponent,
     FormsModule,
+    MatIconModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatRadioModule,
     AlertsComponent,
     TutorialComponent,
   ],

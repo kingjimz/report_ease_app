@@ -7,13 +7,33 @@ import { MissionService, PracticeSummary } from '../_services/mission.service';
 import { NavigationService } from '../_services/navigation.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { ModalComponent } from '../components/modal/modal.component';
 import { AlertsComponent } from '../components/alerts/alerts.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [ChartComponent, CommonModule, FormsModule, ModalComponent, AlertsComponent],
+  imports: [
+    ChartComponent,
+    CommonModule,
+    FormsModule,
+    MatCardModule,
+    MatIconModule,
+    MatButtonModule,
+    MatProgressBarModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    ModalComponent,
+    AlertsComponent,
+  ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })

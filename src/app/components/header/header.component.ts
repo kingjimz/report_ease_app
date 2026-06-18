@@ -1,6 +1,13 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatBadgeModule } from '@angular/material/badge';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { AlertsComponent } from '../alerts/alerts.component';
 import { Router } from '@angular/router';
 import { AuthService } from '../../_services/auth.service';
 import { SettingsService } from '../../_services/settings.service';
@@ -17,7 +24,17 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatToolbarModule,
+    MatIconModule,
+    MatButtonModule,
+    MatBadgeModule,
+    MatMenuModule,
+    MatSlideToggleModule,
+    AlertsComponent,
+  ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
 })

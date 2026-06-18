@@ -1,2 +1,135 @@
-/* Additional custom styles if needed */
-/* Most styling is handled by Tailwind classes in the template */
+/* Install Component — Material 3 styling */
+
+.install-page {
+  background: var(--mat-sys-surface-container-low);
+}
+
+/* Surface card */
+.md-surface-card {
+  border-radius: 16px;
+  background: var(--mat-sys-surface-container-low);
+}
+
+/* Brand gradient hero icon */
+.install-hero-icon {
+  background: linear-gradient(135deg, #3b82f6, #4f46e5);
+  box-shadow: var(--mat-sys-level2);
+}
+
+.install-hero-symbol {
+  color: #fff;
+  font-size: 40px;
+  width: 40px;
+  height: 40px;
+}
+
+/* Leading icon badge */
+.install-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 12px;
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+.install-badge-lg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 16px;
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+.install-badge-lg mat-icon {
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+}
+
+/* Numbered step pill (small, inline lists) */
+.install-step-num {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+/* iOS numbered badge (larger) */
+.install-num-badge {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1.125rem;
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+}
+
+/* iOS instruction tiles */
+.install-instruction-card {
+  border-radius: 12px;
+  background: var(--mat-sys-surface-container);
+  border: 1px solid var(--mat-sys-outline-variant);
+}
+
+/* Inline icons within paragraphs */
+.install-inline-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+/* Info note (left-accented alert) */
+.install-note {
+  border-radius: 10px;
+  border-left: 4px solid var(--mat-sys-primary);
+  background: var(--mat-sys-surface-container);
+}
+
+.install-note-icon {
+  flex-shrink: 0;
+  color: var(--mat-sys-primary);
+}
+
+/* Already-installed success card */
+.install-success-icon {
+  color: var(--mat-sys-primary);
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+}
+
+/* Inline error alert */
+.install-error {
+  font-size: 0.875rem;
+  border-radius: 10px;
+  padding: 0.75rem;
+  color: var(--mat-sys-error);
+  background: var(--mat-sys-error-container);
+  border: 1px solid var(--mat-sys-outline-variant);
+}
+
+/* Spinner inside button */
+.install-btn-spinner {
+  display: inline-block;
+  margin-right: 0.25rem;
+}

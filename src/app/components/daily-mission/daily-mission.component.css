@@ -1,0 +1,251 @@
+/* Daily Practice — Material 3 styling */
+
+/* Surface card */
+.md-surface-card {
+  border-radius: 16px;
+  background-color: var(--mat-sys-surface-container-low);
+}
+
+/* Gradient hero header (brand amber/orange) */
+.md-hero-amber {
+  background: linear-gradient(90deg, #f59e0b, #ea580c);
+}
+
+.md-hero-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(4px);
+  color: #fff;
+}
+
+/* Stat tiles (streak / best / total) */
+.md-stat-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.75rem;
+  border-radius: 12px;
+  background-color: var(--mat-sys-surface-container);
+}
+
+.md-stat-tile.accent {
+  background-color: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+/* Verse / mission step card */
+.md-verse-card {
+  border-radius: 12px;
+  padding: 1rem;
+  background-color: var(--mat-sys-surface-container);
+  border: 1px solid var(--mat-sys-outline-variant);
+}
+
+.md-verse-card.passed {
+  background-color: var(--mat-sys-primary-container);
+  border-color: transparent;
+}
+
+/* Progress bar tint */
+.md-bar-amber ::ng-deep .mdc-linear-progress__bar-inner {
+  border-color: #f59e0b !important;
+}
+
+.md-bar-success ::ng-deep .mdc-linear-progress__bar-inner {
+  border-color: #22c55e !important;
+}
+
+/* Passed banner */
+.md-passed-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 10px;
+  padding: 0.625rem 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  background-color: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+/* ----- Calendar / streak grid ----- */
+.md-cal-cell {
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  background-color: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface-variant);
+  transition: background-color 0.15s ease;
+}
+
+.md-cal-cell:hover:not(:disabled) {
+  background-color: var(--mat-sys-surface-container-highest);
+}
+
+.md-cal-cell:disabled {
+  cursor: not-allowed;
+  color: var(--mat-sys-outline);
+  background-color: transparent;
+}
+
+/* Completed day */
+.md-cal-cell.passed {
+  background-color: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+  font-weight: 600;
+}
+
+.md-cal-cell.passed:hover:not(:disabled) {
+  background-color: var(--mat-sys-primary-container);
+  filter: brightness(0.97);
+}
+
+/* Today ring */
+.md-cal-cell.today {
+  box-shadow: inset 0 0 0 2px var(--mat-sys-primary);
+  font-weight: 600;
+}
+
+/* Selected (non-today) ring */
+.md-cal-cell.selected {
+  box-shadow: inset 0 0 0 2px var(--mat-sys-tertiary);
+}
+
+.md-cal-dot {
+  position: absolute;
+  bottom: 2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+}
+
+.md-cal-dot.today {
+  background-color: var(--mat-sys-primary);
+}
+
+.md-cal-check {
+  position: absolute;
+  bottom: 0;
+  font-size: 11px;
+  width: 11px;
+  height: 11px;
+  line-height: 11px;
+}
+
+/* Legend swatches */
+.md-legend-swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 4px;
+}
+
+.md-legend-swatch.passed {
+  background-color: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+.md-legend-swatch.empty {
+  background-color: var(--mat-sys-surface-container-high);
+}
+
+.md-legend-swatch.today {
+  box-shadow: inset 0 0 0 2px var(--mat-sys-primary);
+}
+
+/* ----- Bottom-sheet day detail (custom overlay) ----- */
+.md-sheet {
+  background-color: var(--mat-sys-surface-container-low);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 8px 3px rgba(0, 0, 0, 0.15);
+}
+
+.md-sheet-handle {
+  width: 2.5rem;
+  height: 0.375rem;
+  border-radius: 9999px;
+  background-color: var(--mat-sys-outline-variant);
+}
+
+/* Modal leading icon + dividers (component-scoped) */
+.md-modal-leading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background-color: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+.md-divider-b {
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.md-divider-t {
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}
+
+/* Status chip */
+.md-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 9999px;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.md-status-chip.passed {
+  background-color: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+.md-status-chip.pending {
+  background-color: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+/* Celebration overlay pill */
+.md-celebrate-pill {
+  background-color: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+}
+
+.md-celebrate-msg {
+  background-color: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface);
+}
+
+/* Small icon sizes */
+.md-icon-sm {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.md-icon-xs {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}

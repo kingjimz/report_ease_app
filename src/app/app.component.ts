@@ -10,6 +10,7 @@ import { ThemeService } from './services/theme.service';
 import { NetworkService } from './_services/network.service';
 import { NotificationService } from './_services/notification.service';
 import { VersionService } from './_services/version.service';
+import { MatIconRegistry } from '@angular/material/icon';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -31,7 +32,11 @@ export class AppComponent implements OnInit, OnDestroy {
     private networkService: NetworkService,
     private notificationService: NotificationService,
     private versionService: VersionService,
-  ) {}
+    private iconRegistry: MatIconRegistry,
+  ) {
+    // Use Material Symbols Outlined as the default font for all <mat-icon> usages.
+    this.iconRegistry.setDefaultFontSetClass('material-symbols-outlined');
+  }
 
   ngOnInit() {
     // Initialize version checking (for iOS support)

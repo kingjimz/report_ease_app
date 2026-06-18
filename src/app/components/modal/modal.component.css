@@ -1,14 +1,21 @@
 /* Modal Component Dark Mode Support */
 
 .modal-container {
-  background-color: var(--card-bg);
-  border-color: var(--border-color);
-  transition: all 0.3s ease;
+  background-color: var(--mat-sys-surface-container-low);
+  border-color: var(--mat-sys-outline-variant);
+  /* Material 3 elevation level 3 for a bottom sheet */
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.3),
+    0 4px 8px 3px rgba(0, 0, 0, 0.15);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
   box-sizing: border-box;
 }
 
-.modal-container:hover {
-  border-color: var(--text-tertiary);
+.modal-drag-handle {
+  width: 2.5rem;
+  height: 0.25rem;
+  border-radius: 9999px;
+  background-color: var(--mat-sys-outline-variant);
 }
 
 /* Ensure modal content inherits proper colors */

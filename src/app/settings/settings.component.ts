@@ -5,11 +5,35 @@ import { ApiService } from '../_services/api.service';
 import { AlertsComponent } from '../components/alerts/alerts.component';
 import { ModalService } from '../_services/modal.service';
 import { DailyMissionComponent } from '../components/daily-mission/daily-mission.component';
+import { ModalComponent } from '../components/modal/modal.component';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, DailyMissionComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    DailyMissionComponent,
+    ModalComponent,
+    MatCardModule,
+    MatIconModule,
+    MatButtonModule,
+    MatButtonToggleModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatMenuModule,
+    MatTooltipModule,
+  ],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css',
 })

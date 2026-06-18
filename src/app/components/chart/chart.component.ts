@@ -11,6 +11,7 @@ import {
   OnChanges,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
 
 // Import Chart.js
 import { Chart, ChartConfiguration, ChartType, registerables } from 'chart.js';
@@ -21,7 +22,7 @@ Chart.register(...registerables);
 @Component({
   selector: 'app-chart',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatIconModule],
   templateUrl: './chart.component.html',
   styleUrl: './chart.component.css',
 })
@@ -30,6 +31,25 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
   chartCanvas!: ElementRef<HTMLCanvasElement>;
 
   private chart: Chart | null = null;
+
+  /** Read a Material 3 system color token from the document root. */
+  private cssVar(name: string, fallback: string): string {
+    if (typeof document === 'undefined') return fallback;
+    const value = getComputedStyle(document.documentElement)
+      .getPropertyValue(name)
+      .trim();
+    return value || fallback;
+  }
+
+  /** Material 3 palette pulled from CSS variables (with safe fallbacks). */
+  private get themeColors() {
+    const primary = this.cssVar('--mat-sys-primary', '#1976d2');
+    const onSurface = this.cssVar('--mat-sys-on-surface', '#1a1c1e');
+    const onSurfaceVariant = this.cssVar('--mat-sys-on-surface-variant', '#43474e');
+    const outlineVariant = this.cssVar('--mat-sys-outline-variant', '#c3c7cf');
+    const surface = this.cssVar('--mat-sys-surface', '#ffffff');
+    return { primary, onSurface, onSurfaceVariant, outlineVariant, surface };
+  }
   @Input() reportData: any[] = [];
   @Input() chartType: ChartType = 'line';
   @Input() chartOptions: any = {
@@ -252,6 +272,59 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
     }, 0);
   }
 
+  /** Push the current Material 3 theme colors into the dataset and scale options. */
+  private applyThemeColors() {
+    const { primary, onSurfaceVariant, outlineVariant, surface } = this.themeColors;
+
+    // Line + point colors
+    const dataset: any = this.chartData.datasets[0];
+    if (dataset) {
+      dataset.borderColor = primary;
+      dataset.backgroundColor = this.withAlpha(primary, 0.1);
+      dataset.pointBackgroundColor = primary;
+      dataset.pointBorderColor = surface;
+    }
+
+    // Grid + tick colors on the axes
+    const opts: any = this.chartOptions;
+    opts.scales = opts.scales || {};
+    for (const axis of ['x', 'y']) {
+      opts.scales[axis] = opts.scales[axis] || {};
+      opts.scales[axis].grid = {
+        ...(opts.scales[axis].grid || {}),
+        color: outlineVariant,
+      };
+      opts.scales[axis].ticks = {
+        ...(opts.scales[axis].ticks || {}),
+        color: onSurfaceVariant,
+      };
+    }
+
+    // Legend label color
+    opts.plugins = opts.plugins || {};
+    opts.plugins.legend = opts.plugins.legend || {};
+    opts.plugins.legend.labels = {
+      ...(opts.plugins.legend.labels || {}),
+      color: onSurfaceVariant,
+    };
+  }
+
+  /** Build an rgba() string from a hex or rgb color with the given alpha. */
+  private withAlpha(color: string, alpha: number): string {
+    const hex = color.replace('#', '');
+    if (/^[0-9a-fA-F]{6}$/.test(hex)) {
+      const r = parseInt(hex.slice(0, 2), 16);
+      const g = parseInt(hex.slice(2, 4), 16);
+      const b = parseInt(hex.slice(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+    if (color.startsWith('rgb(')) {
+      return color.replace('rgb(', 'rgba(').replace(')', `, ${alpha})`);
+    }
+    // Fallback to Material blue tint
+    return `rgba(25, 118, 210, ${alpha})`;
+  }
+
   private createChart() {
     if (!this.chartCanvas) {
       console.error('Canvas element not found');
@@ -280,6 +353,9 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
         console.warn('No chart data available, creating empty chart');
       }
     }
+
+    // Apply Material 3 theme colors (read from CSS variables) to data + options.
+    this.applyThemeColors();
 
     const config: ChartConfiguration = {
       type: this.chartType,

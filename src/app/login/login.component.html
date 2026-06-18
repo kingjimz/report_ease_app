@@ -1,184 +1,89 @@
-<div
-  class="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900"
->
+<div class="min-h-screen flex items-center justify-center px-4" style="background: var(--mat-sys-surface);">
   <form (submit)="login(); $event.preventDefault()" class="w-full max-w-md">
-    <div class="overflow-hidden">
-      <div class="px-8 py-6">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Welcome back</h2>
-        <p class="mt-1 text-gray-600 dark:text-gray-400">Sign in to continue</p>
+    <div class="px-2 py-6">
+      <h2 class="text-2xl font-bold" style="color: var(--mat-sys-on-surface);">Welcome back</h2>
+      <p class="mt-1" style="color: var(--mat-sys-on-surface-variant);">Sign in to continue</p>
+    </div>
+
+    <div class="px-2 py-4 space-y-2">
+      <mat-form-field appearance="fill" class="w-full">
+        <mat-label>Email</mat-label>
+        <mat-icon matPrefix>mail</mat-icon>
+        <input
+          matInput
+          type="email"
+          [(ngModel)]="email"
+          placeholder="you@example.com"
+          name="email"
+          required
+          [disabled]="!isOnline"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="w-full">
+        <mat-label>Password</mat-label>
+        <mat-icon matPrefix>lock</mat-icon>
+        <input
+          matInput
+          type="password"
+          [(ngModel)]="password"
+          placeholder="••••••••"
+          name="password"
+          required
+          [disabled]="!isOnline"
+        />
+      </mat-form-field>
+
+      <button
+        mat-flat-button
+        color="primary"
+        type="submit"
+        class="w-full md-tall-btn"
+        [disabled]="isLoading || !isOnline"
+      >
+        <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+        <span *ngIf="!isLoading" class="inline-flex items-center gap-2">
+          <mat-icon>login</mat-icon> Sign In
+        </span>
+      </button>
+
+      <div class="relative my-6">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full" style="border-top: 1px solid var(--mat-sys-outline-variant);"></div>
+        </div>
+        <div class="relative flex justify-center text-sm">
+          <span class="px-2" style="background: var(--mat-sys-surface); color: var(--mat-sys-on-surface-variant);">Or continue with</span>
+        </div>
       </div>
 
-      <div class="p-8 space-y-6">
-        <div class="space-y-4">
-          <div class="relative">
-            <label
-              for="email"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >Email</label
-            >
-            <div class="relative">
-              <div
-                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="text-gray-400 dark:text-gray-500"
-                >
-                  <path
-                    d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
-                  ></path>
-                  <polyline points="22,6 12,13 2,6"></polyline>
-                </svg>
-              </div>
-              <input
-                type="email"
-                id="email"
-                [(ngModel)]="email"
-                placeholder="you@example.com"
-                name="email"
-                required
-                [disabled]="!isOnline"
-                class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-            </div>
-          </div>
-
-          <div class="relative">
-            <div class="flex items-center justify-between mb-1">
-              <label
-                for="password"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >Password</label
-              >
-              <a
-                href="#"
-                class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition duration-200"
-                >Forgot password?</a
-              >
-            </div>
-            <div class="relative">
-              <div
-                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="text-gray-400 dark:text-gray-500"
-                >
-                  <rect
-                    x="3"
-                    y="11"
-                    width="18"
-                    height="11"
-                    rx="2"
-                    ry="2"
-                  ></rect>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                </svg>
-              </div>
-              <input
-                type="password"
-                id="password"
-                [(ngModel)]="password"
-                placeholder="••••••••"
-                name="password"
-                required
-                [disabled]="!isOnline"
-                class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-            </div>
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition duration-300 font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-          [disabled]="isLoading || !isOnline"
-        >
-          <svg
-            *ngIf="!isLoading"
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-            <polyline points="10 17 15 12 10 7"></polyline>
-            <line x1="15" y1="12" x2="3" y2="12"></line>
-          </svg>
-          <span *ngIf="!isLoading">Sign In</span>
-          <div
-            *ngIf="isLoading"
-            class="w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin"
-          ></div>
-        </button>
-
-        <div class="relative my-6">
-          <div class="absolute inset-0 flex items-center">
-            <div class="w-full border-t border-gray-200 dark:border-gray-700"></div>
-          </div>
-          <div class="relative flex justify-center text-sm">
-            <span class="px-2 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">Or continue with</span>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          (click)="signInWithGoogle()"
-          class="w-full flex items-center justify-center gap-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-300 border border-gray-300 dark:border-gray-600 shadow-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          [disabled]="isLoading || !isOnline"
-        >
-          <svg *ngIf="!isLoading" class="w-5 h-5" viewBox="0 0 24 24">
+      <button
+        mat-stroked-button
+        type="button"
+        (click)="signInWithGoogle()"
+        class="w-full md-tall-btn"
+        [disabled]="isLoading || !isOnline"
+      >
+        <span class="inline-flex items-center gap-3">
+          <svg class="w-5 h-5" viewBox="0 0 24 24">
             <path
               fill="currentColor"
               d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 10 10.22 10 5.35 0 9.25-3.67 9.25-9.09 0-1.15-.15-1.81-.15-1.81z"
             />
           </svg>
-          <span *ngIf="!isLoading">Sign in with Google</span>
-          <div
-            *ngIf="isLoading"
-            class="w-5 h-5 border-2 border-t-transparent border-gray-700 rounded-full animate-spin"
-          ></div>
-        </button>
-        <div class="text-center mt-6">
-          <p class="text-sm text-gray-600 dark:text-gray-400">
-            Don't have an account?
-            <a
-              routerLink="/register"
-              class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition duration-200"
-            >
-              Create an account
-            </a>
-          </p>
-        </div>
+          Sign in with Google
+        </span>
+      </button>
 
-        <p
-          *ngIf="errorMessage"
-          class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-lg text-sm"
-        >
-          {{ errorMessage }}
+      <div class="text-center mt-6">
+        <p class="text-sm" style="color: var(--mat-sys-on-surface-variant);">
+          Don't have an account?
+          <a routerLink="/register" class="font-medium" style="color: var(--mat-sys-primary);">
+            Create an account
+          </a>
         </p>
       </div>
+
+      <app-alerts *ngIf="errorMessage" [isSuccess]="false" [alertMessage]="errorMessage"></app-alerts>
     </div>
   </form>
 </div>

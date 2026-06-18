@@ -4,11 +4,28 @@ import { ApiService } from '../../_services/api.service';
 import { FormsModule } from '@angular/forms';
 import { AlertsComponent } from '../alerts/alerts.component';
 import { ModalComponent } from '../modal/modal.component';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 
 @Component({
   selector: 'app-bible-studies',
   standalone: true,
-  imports: [CommonModule, FormsModule, AlertsComponent, ModalComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    AlertsComponent,
+    ModalComponent,
+    MatCardModule,
+    MatIconModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+  ],
   templateUrl: './bible-studies.component.html',
   styleUrl: './bible-studies.component.css',
 })

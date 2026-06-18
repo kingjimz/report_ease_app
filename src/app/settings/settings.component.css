@@ -1,7 +1,202 @@
-/* Enhanced Goal Card Styles */
+/* Settings (Goals) — Material 3 styling */
+
+/* Surface card */
+.md-surface-card {
+  border-radius: 16px;
+  background-color: var(--mat-sys-surface-container-low);
+}
+
+/* Modal leading icon + dividers (component-scoped) */
+.md-modal-leading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background-color: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+.md-modal-leading-error {
+  background-color: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
+.md-divider-b {
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.md-divider-t {
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}
+
+/* Page wrapper: never let a child push the layout sideways */
+.md-page {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+/* Section tab toggle group */
+.md-tab-toggle {
+  width: 100%;
+  border-radius: 12px;
+}
+
+/* Let the two toggles share the width evenly and shrink instead of overflow */
+.md-tab-toggle ::ng-deep .mat-button-toggle {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.md-tab-toggle ::ng-deep .mat-button-toggle-button {
+  width: 100%;
+}
+
+.md-tab-toggle ::ng-deep .mat-button-toggle-label-content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0 0.5rem;
+  white-space: normal;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.md-tab-count {
+  flex-shrink: 0;
+}
+
+/* On narrow phones, drop the toggle icons so the labels always fit */
+@media (max-width: 400px) {
+  .md-tab-toggle ::ng-deep .mat-button-toggle-label-content > mat-icon {
+    display: none;
+  }
+}
+
+/* Chips */
+.md-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.md-chip.success {
+  background-color: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+.md-chip.warn {
+  background-color: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+}
+
+.md-chip.error {
+  background-color: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
+/* Category chips */
+.md-category {
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.md-category.ministry {
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+
+.md-category.congregation {
+  background-color: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+}
+
+.md-category.other {
+  background-color: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+/* Stat tile (inline row) */
+.md-stat-tile-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background-color: var(--mat-sys-surface-container);
+}
+
+@media (min-width: 768px) {
+  .md-stat-tile-row {
+    width: auto;
+  }
+}
+
+/* Target date box */
+.md-target-box {
+  background-color: var(--mat-sys-surface-container);
+  border: 1px solid var(--mat-sys-outline-variant);
+}
+
+/* Empty states */
+.md-empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 6rem;
+  height: 6rem;
+  margin: 0 auto 1.5rem;
+  border-radius: 9999px;
+  background-color: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+.md-empty-icon mat-icon {
+  font-size: 2.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.md-empty-glyph {
+  font-size: 2.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin: 0 auto 1rem;
+  display: block;
+}
+
+/* Status text colors */
+.md-text-error {
+  color: var(--mat-sys-error);
+}
+
+.md-text-warn {
+  color: var(--mat-sys-tertiary);
+}
+
+.md-text-muted {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+/* Icon sizes */
+.md-icon-sm {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+/* Goal card animation */
 .goal-card-enhanced {
-  @apply relative bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden;
-  transform: translateY(0);
   animation: slideInUp 0.4s ease-out;
   animation-fill-mode: both;
 }
@@ -13,9 +208,13 @@
 .goal-card-enhanced:nth-child(5) { animation-delay: 0.25s; }
 .goal-card-enhanced:nth-child(6) { animation-delay: 0.3s; }
 
+.goal-card-enhanced {
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
 .goal-card-enhanced:hover {
   transform: translateY(-4px);
-  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: var(--mat-sys-level3);
 }
 
 @keyframes slideInUp {
@@ -44,55 +243,6 @@
   overflow: hidden;
 }
 
-/* Animate In utility */
-.animate-in {
-  animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* Smooth Transitions */
-* {
-  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
-
-/* Focus States */
-input:focus,
-textarea:focus,
-select:focus {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-}
-
-/* Hover Effects for Interactive Elements */
-button:hover:not(:disabled),
-.cursor-pointer:hover {
-  transform: translateY(-1px);
-}
-
-button:active:not(:disabled),
-.cursor-pointer:active {
-  transform: translateY(0);
-}
-
-/* Mobile Optimizations */
-@media (max-width: 640px) {
-  .goal-card-enhanced {
-    padding: 1rem;
-  }
-}
-
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
@@ -104,50 +254,10 @@ button:active:not(:disabled),
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.5);
+  background: var(--mat-sys-outline-variant);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(107, 114, 128, 0.7);
-}
-
-:host-context(.dark) ::-webkit-scrollbar-thumb {
-  background: rgba(75, 85, 99, 0.5);
-}
-
-:host-context(.dark) ::-webkit-scrollbar-thumb:hover {
-  background: rgba(107, 114, 128, 0.7);
-}
-
-/* Status Badge Animations */
-@keyframes pulse-status {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.8;
-  }
-}
-
-.bg-red-100.animate-pulse-status {
-  animation: pulse-status 2s ease-in-out infinite;
-}
-
-/* Card Hover Effects */
-.goal-card-enhanced::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(to right, #6366f1, #8b5cf6);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.3s ease;
-}
-
-.goal-card-enhanced:hover::before {
-  transform: scaleX(1);
+  background: var(--mat-sys-outline);
 }

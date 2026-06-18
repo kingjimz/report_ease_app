@@ -49,9 +49,9 @@
               }
             ],
             "styles": [
+              "src/theme.scss",
               "src/styles.css",
-              "node_modules/angular-calendar/css/angular-calendar.css",
-              "node_modules/bootstrap-icons/font/bootstrap-icons.css"
+              "node_modules/angular-calendar/css/angular-calendar.css"
             ],
             "scripts": []
           },
@@ -66,8 +66,8 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "1.5MB",
-                  "maximumError": "2MB"
+                  "maximumWarning": "2.2MB",
+                  "maximumError": "2.75MB"
                 },
                 {
                   "type": "anyComponentStyle",
@@ -107,7 +107,7 @@
             "polyfills": ["zone.js", "zone.js/testing"],
             "tsConfig": "tsconfig.spec.json",
             "assets": ["src/assets", "src/favicon.ico"],
-            "styles": ["src/styles.css"],
+            "styles": ["src/theme.scss", "src/styles.css"],
             "scripts": []
           }
         }

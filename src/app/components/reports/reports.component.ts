@@ -8,6 +8,15 @@ import { LoaderComponent } from '../loader/loader.component';
 import { AlertsComponent } from '../alerts/alerts.component';
 import { ModalService } from '../../_services/modal.service';
 import { SettingsService } from '../../_services/settings.service';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-reports',
@@ -18,6 +27,15 @@ import { SettingsService } from '../../_services/settings.service';
     ModalComponent,
     LoaderComponent,
     AlertsComponent,
+    MatCardModule,
+    MatIconModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatMenuModule,
+    MatButtonToggleModule,
+    MatTooltipModule,
   ],
   templateUrl: './reports.component.html',
   styleUrl: './reports.component.css',
@@ -61,7 +79,7 @@ export class ReportsComponent implements OnDestroy {
   
   // Library view properties
   searchQuery: string = '';
-  filterType: 'all' | 'bs' | 'rv' = 'all';
+  filterType: 'all' | 'bs' | 'rv' | 'completed' = 'all';
   filteredBibleStudies: any[] = [];
   showAllBibleStudies = false;
   
@@ -140,8 +158,10 @@ export class ReportsComponent implements OnDestroy {
   applyFilters() {
     let filtered = [...this.bibleStudies];
     
-    // Filter by type
-    if (this.filterType !== 'all') {
+    // Filter by type / completion
+    if (this.filterType === 'completed') {
+      filtered = filtered.filter(study => study.completed);
+    } else if (this.filterType !== 'all') {
       filtered = filtered.filter(study => study.type === this.filterType);
     }
     

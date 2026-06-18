@@ -1,5 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { NotificationService, NotificationPermission } from '../../_services/notification.service';
 import { Auth, onAuthStateChanged } from '@angular/fire/auth';
 import { Subscription } from 'rxjs';
@@ -7,7 +9,7 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-notification-permission-toast',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatButtonModule, MatIconModule],
   templateUrl: './notification-permission-toast.component.html',
   styleUrl: './notification-permission-toast.component.css',
 })

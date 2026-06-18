@@ -1,6 +1,15 @@
 import { Component, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../_services/api.service';
 import { UtilService } from '../../_services/util.service';
 import { LoaderComponent } from '../loader/loader.component';
@@ -31,7 +40,22 @@ interface CalendarEvent {
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoaderComponent, ModalComponent, AlertsComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatCardModule,
+    MatIconModule,
+    MatButtonModule,
+    MatButtonToggleModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatTooltipModule,
+    MatProgressSpinnerModule,
+    LoaderComponent,
+    ModalComponent,
+    AlertsComponent,
+  ],
   templateUrl: './calendar.component.html',
   styleUrls: ['./calendar.component.css'],
 })

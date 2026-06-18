@@ -1,34 +1,24 @@
-<div *ngIf="showPrompt" class="notification-toast">
-  <div class="notification-toast-content">
-    <div class="notification-toast-icon">
-      <i class="bi bi-bell-fill"></i>
+<div *ngIf="showPrompt" class="md-toast">
+  <div class="md-toast-content">
+    <div class="md-toast-icon">
+      <mat-icon>notifications_active</mat-icon>
     </div>
-    <div class="notification-toast-text">
-      <p class="notification-toast-title">Enable Notifications</p>
-      <p class="notification-toast-message" *ngIf="!isBlocked">
+    <div class="md-toast-text">
+      <p class="md-toast-title">Enable Notifications</p>
+      <p class="md-toast-message" *ngIf="!isBlocked">
         Get daily reminders to join ministry plus end-of-month report alerts.
       </p>
-      <p class="notification-toast-message" *ngIf="isBlocked">
+      <p class="md-toast-message" *ngIf="isBlocked">
         Notifications are currently blocked. Please enable them in your browser settings to receive daily ministry reminders and report alerts.
       </p>
     </div>
-    <div class="notification-toast-actions">
-      <button 
-        class="btn-enable" 
-        (click)="requestPermission()" 
-        [disabled]="isRequesting"
-        title="Enable Notifications">
-        <span *ngIf="!isRequesting">Enable</span>
-        <span *ngIf="isRequesting">Enabling...</span>
+    <div class="md-toast-actions">
+      <button mat-flat-button color="primary" (click)="requestPermission()" [disabled]="isRequesting">
+        {{ isRequesting ? 'Enabling...' : 'Enable' }}
       </button>
-      <button 
-        *ngIf="!isBlocked"
-        class="btn-close" 
-        (click)="dismissPrompt()" 
-        title="Dismiss">
-        <i class="bi bi-x-lg"></i>
+      <button *ngIf="!isBlocked" mat-icon-button (click)="dismissPrompt()" aria-label="Dismiss">
+        <mat-icon>close</mat-icon>
       </button>
     </div>
   </div>
 </div>
-

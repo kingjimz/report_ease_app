@@ -1,40 +1,104 @@
-.bottom-nav-labels {
+/* Material 3 navigation bar */
+.md-bottom-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+  height: 80px;
+  padding: 0 0.5rem;
+  background-color: var(--mat-sys-surface-container);
   user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-
-  -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Dark Mode Support for Tab Card */
-:host ::ng-deep .bg-white {
-  background-color: var(--card-bg);
-  transition: background-color 0.3s ease;
+.md-nav-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--mat-sys-on-surface-variant);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: color 0.2s ease;
 }
 
-.dark :host ::ng-deep .bg-white {
-  background-color: var(--card-bg);
+.md-nav-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 32px;
+  border-radius: 16px;
+  transition: background-color 0.2s ease;
 }
 
-.dark .text-gray-500 {
-  color: var(--text-tertiary) !important;
+.md-nav-item.active {
+  color: var(--mat-sys-on-surface);
 }
 
-/* Spin animation for + button icon */
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  3% {
-    transform: rotate(360deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+.md-nav-item.active .md-nav-indicator {
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
 }
 
-.spin-icon {
-  animation: spin 10.3s linear infinite;
+.md-nav-item mat-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+}
+
+/* Filled icon for the active tab */
+.md-nav-item mat-icon.fill {
+  font-variation-settings: "FILL" 1;
+}
+
+.md-nav-label {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.5px;
+}
+
+/* Center floating action button */
+.md-nav-fab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin: 0 4px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  background-color: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.3),
+    0 4px 8px 3px rgba(0, 0, 0, 0.15);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.md-nav-fab:hover {
+  box-shadow:
+    0 2px 6px 2px rgba(0, 0, 0, 0.15),
+    0 1px 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+.md-nav-fab:active {
+  transform: scale(0.96);
+}
+
+.md-nav-fab mat-icon {
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
 }

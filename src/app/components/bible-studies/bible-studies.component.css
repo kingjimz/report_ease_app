@@ -1,0 +1,100 @@
+/* Bible Studies — Material 3 styling */
+
+.md-surface-card {
+  border-radius: 16px;
+  background-color: var(--mat-sys-surface-container-low);
+}
+
+.md-study-card {
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.md-study-card:hover {
+  box-shadow: var(--mat-sys-level2);
+  transform: translateY(-2px);
+}
+
+/* Stat cards in header */
+.md-stat-card {
+  border-radius: 16px;
+  padding: 0.75rem 1.25rem;
+  text-align: center;
+  background-color: var(--mat-sys-surface-container-low);
+}
+
+/* Name-initials avatar */
+.md-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 1rem;
+  background-color: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+/* Info tiles (schedule / address) */
+.md-info-tile {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 12px;
+  background-color: var(--mat-sys-surface-container);
+}
+
+/* Study type chips */
+.md-chip {
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.md-chip.primary {
+  background-color: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+.md-chip.tertiary {
+  background-color: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+}
+
+/* Modal leading icon + dividers */
+.md-modal-leading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background-color: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+.md-divider-b {
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.md-divider-t {
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}
+
+/* Small icon sizes */
+.md-icon-sm {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.md-icon-xs {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}

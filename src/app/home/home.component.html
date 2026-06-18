@@ -35,184 +35,78 @@
   <app-modal>
     <div class="w-full">
       <!-- Modal Header -->
-      <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
+      <div class="flex items-center justify-between mb-4 pb-3 md-divider-b">
         <div class="flex items-center space-x-2 min-w-0 flex-1">
-          <div class="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex-shrink-0">
-            <i class="bi bi-clipboard-plus text-white text-base"></i>
+          <div class="md-modal-leading">
+            <mat-icon>note_add</mat-icon>
           </div>
           <div class="min-w-0 flex-1">
-            <h3 class="text-base font-bold text-gray-900 truncate">Generate Report Manually</h3>
-            <p class="text-xs text-gray-500 truncate">Create a ministry service report for a specific date</p>
+            <h3 class="text-base font-bold truncate" style="color: var(--mat-sys-on-surface);">Generate Report Manually</h3>
+            <p class="text-xs truncate" style="color: var(--mat-sys-on-surface-variant);">Create a ministry service report for a specific date</p>
           </div>
         </div>
-        <button
-          (click)="closeManualReportModal()"
-          class="flex items-center justify-center w-8 h-8 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors flex-shrink-0 ml-2"
-          title="Close"
-        >
-          <i class="bi bi-x-lg text-xs"></i>
+        <button mat-icon-button (click)="closeManualReportModal()" aria-label="Close">
+          <mat-icon>close</mat-icon>
         </button>
       </div>
 
       <!-- Report Form -->
-      <form (ngSubmit)="generateManualReport()" class="space-y-4">
-        <!-- Date Selection -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5">
-            <i class="bi bi-calendar-event mr-1"></i>
-            Report Date *
-          </label>
-          <input
-            type="date"
-            [(ngModel)]="reportDate"
-            name="reportDate"
-            required
-            class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
-          />
-        </div>
+      <form (ngSubmit)="generateManualReport()" class="space-y-3">
+        <!-- Date -->
+        <mat-form-field appearance="fill" class="w-full">
+          <mat-label>Report Date</mat-label>
+          <input matInput type="date" [(ngModel)]="reportDate" name="reportDate" required />
+        </mat-form-field>
 
         <!-- Report Type -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5">
-            <i class="bi bi-person-badge mr-1"></i>
-            Report Type *
-          </label>
-          <div class="flex gap-2">
-            <label class="flex-1 flex items-center justify-center p-2.5 border-2 rounded-lg cursor-pointer transition-all min-w-0"
-              [class.border-blue-500]="!isPioneer"
-              [class.bg-blue-50]="!isPioneer"
-              [class.border-gray-300]="isPioneer">
-              <input
-                type="radio"
-                name="reportType"
-                [value]="false"
-                [(ngModel)]="isPioneer"
-                class="mr-1.5 flex-shrink-0"
-              />
-              <i class="bi bi-person mr-1 text-sm flex-shrink-0"></i>
-              <span class="font-medium text-sm truncate">Publisher</span>
-            </label>
-            <label class="flex-1 flex items-center justify-center p-2.5 border-2 rounded-lg cursor-pointer transition-all min-w-0"
-              [class.border-amber-500]="isPioneer"
-              [class.bg-amber-50]="isPioneer"
-              [class.border-gray-300]="!isPioneer">
-              <input
-                type="radio"
-                name="reportType"
-                [value]="true"
-                [(ngModel)]="isPioneer"
-                class="mr-1.5 flex-shrink-0"
-              />
-              <i class="bi bi-award mr-1 text-sm flex-shrink-0"></i>
-              <span class="font-medium text-sm truncate">Pioneer</span>
-            </label>
-          </div>
+        <div class="mb-2">
+          <p class="text-sm font-medium mb-2" style="color: var(--mat-sys-on-surface-variant);">Report Type</p>
+          <mat-radio-group [(ngModel)]="isPioneer" name="reportType" class="flex gap-4">
+            <mat-radio-button [value]="false">Publisher</mat-radio-button>
+            <mat-radio-button [value]="true">Pioneer</mat-radio-button>
+          </mat-radio-group>
         </div>
 
         <!-- Hours -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5">
-            <i class="bi bi-clock mr-1"></i>
-            Hours *
-          </label>
-          <div class="flex items-center gap-2">
-            <button
-              type="button"
-              (click)="decrementHours()"
-              class="flex items-center justify-center w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors flex-shrink-0"
-            >
-              <i class="bi bi-dash-lg text-base"></i>
-            </button>
-            <input
-              type="number"
-              [(ngModel)]="hours"
-              name="hours"
-              min="0"
-              class="flex-1 min-w-0 text-center p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-bold"
-            />
-            <button
-              type="button"
-              (click)="incrementHours()"
-              class="flex items-center justify-center w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex-shrink-0"
-            >
-              <i class="bi bi-plus-lg text-base"></i>
-            </button>
-          </div>
-        </div>
+        <mat-form-field appearance="fill" class="w-full">
+          <mat-label>Hours</mat-label>
+          <button matPrefix mat-icon-button type="button" (click)="decrementHours()" aria-label="Decrease hours">
+            <mat-icon>remove</mat-icon>
+          </button>
+          <input matInput type="number" class="text-center" [(ngModel)]="hours" name="hours" min="0" />
+          <button matSuffix mat-icon-button type="button" (click)="incrementHours()" aria-label="Increase hours">
+            <mat-icon>add</mat-icon>
+          </button>
+        </mat-form-field>
 
         <!-- Bible Studies -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5">
-            <i class="bi bi-book mr-1"></i>
-            Bible Studies
-          </label>
-          <div class="flex items-center gap-2">
-            <button
-              type="button"
-              (click)="decrementBibleStudies()"
-              class="flex items-center justify-center w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors flex-shrink-0"
-            >
-              <i class="bi bi-dash-lg text-base"></i>
-            </button>
-            <input
-              type="number"
-              [(ngModel)]="bibleStudiesCount"
-              name="bibleStudiesCount"
-              min="0"
-              class="flex-1 min-w-0 text-center p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-lg font-bold"
-            />
-            <button
-              type="button"
-              (click)="incrementBibleStudies()"
-              class="flex items-center justify-center w-10 h-10 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors flex-shrink-0"
-            >
-              <i class="bi bi-plus-lg text-base"></i>
-            </button>
-          </div>
-        </div>
+        <mat-form-field appearance="fill" class="w-full">
+          <mat-label>Bible Studies</mat-label>
+          <button matPrefix mat-icon-button type="button" (click)="decrementBibleStudies()" aria-label="Decrease studies">
+            <mat-icon>remove</mat-icon>
+          </button>
+          <input matInput type="number" class="text-center" [(ngModel)]="bibleStudiesCount" name="bibleStudiesCount" min="0" />
+          <button matSuffix mat-icon-button type="button" (click)="incrementBibleStudies()" aria-label="Increase studies">
+            <mat-icon>add</mat-icon>
+          </button>
+        </mat-form-field>
 
         <!-- Ministry Participation -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5">
-            <i class="bi bi-people mr-1"></i>
-            Did you participate in the ministry today? *
-          </label>
-          <select
-            [(ngModel)]="joined_ministry"
-            name="joined_ministry"
-            required
-            class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
-          >
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
-        </div>
+        <mat-form-field appearance="fill" class="w-full">
+          <mat-label>Did you participate in the ministry today?</mat-label>
+          <mat-select [(ngModel)]="joined_ministry" name="joined_ministry" required>
+            <mat-option value="yes">Yes</mat-option>
+            <mat-option value="no">No</mat-option>
+          </mat-select>
+        </mat-form-field>
 
         <!-- Alert Messages -->
-        <app-alerts
-          *ngIf="alertMessage"
-          [isSuccess]="isSuccess"
-          [alertMessage]="alertMessage"
-        ></app-alerts>
+        <app-alerts *ngIf="alertMessage" [isSuccess]="isSuccess" [alertMessage]="alertMessage"></app-alerts>
 
         <!-- Modal Footer -->
-        <div class="flex justify-end gap-2 pt-3 border-t border-gray-200">
-          <button
-            type="button"
-            (click)="closeManualReportModal()"
-            class="px-3 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            [disabled]="isSubmitting || !reportDate || !hours || !joined_ministry"
-            class="px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <span
-              *ngIf="isSubmitting"
-              class="animate-spin rounded-full h-4 w-4 border-t-2 border-white inline-block mr-2"
-            ></span>
+        <div class="flex justify-end gap-2 pt-3 md-divider-t">
+          <button mat-stroked-button type="button" (click)="closeManualReportModal()">Cancel</button>
+          <button mat-flat-button color="primary" type="submit" [disabled]="isSubmitting || !reportDate || !hours || !joined_ministry">
             {{ isSubmitting ? 'Generating...' : 'Generate Report' }}
           </button>
         </div>
@@ -234,89 +128,56 @@
     <div class="w-full max-w-md mx-auto">
       <!-- Modal Header -->
       <div class="text-center mb-6">
-        <div class="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl mx-auto mb-4">
-          <i class="bi bi-award text-white text-3xl"></i>
+        <div class="md-onboard-hero">
+          <mat-icon>workspace_premium</mat-icon>
         </div>
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Welcome to Field Service Tracker!</h2>
-        <p class="text-gray-600 dark:text-gray-400">Let's set up your profile to get started</p>
+        <h2 class="text-2xl font-bold mb-2" style="color: var(--mat-sys-on-surface);">Welcome to Field Service Tracker!</h2>
+        <p style="color: var(--mat-sys-on-surface-variant);">Let's set up your profile to get started</p>
       </div>
 
       <!-- Question -->
       <div class="mb-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
+        <h3 class="text-lg font-semibold mb-4 text-center" style="color: var(--mat-sys-on-surface);">
           Are you a pioneer?
         </h3>
-        
-        <!-- Pioneer Options -->
+
         <div class="space-y-3">
           <!-- Yes Option -->
-          <button
-            (click)="selectPioneerStatus(true)"
-            class="w-full p-4 rounded-xl border-2 transition-all text-left hover:border-amber-400 dark:border-gray-600"
-            [ngClass]="{
-              'border-amber-500 bg-amber-50 dark:bg-amber-900/20': onboardingPioneerChoice === true,
-              'border-gray-300': onboardingPioneerChoice !== true
-            }"
-          >
-            <div class="flex items-center space-x-3">
-              <div class="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex-shrink-0">
-                <i class="bi bi-award text-white text-xl"></i>
-              </div>
-              <div class="flex-1">
-                <p class="font-semibold text-gray-900 dark:text-white">Yes, I'm a pioneer</p>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Track your 600-hour annual goal</p>
-              </div>
-              <i 
-                *ngIf="onboardingPioneerChoice === true"
-                class="bi bi-check-circle-fill text-amber-500 text-xl"
-              ></i>
+          <button type="button" (click)="selectPioneerStatus(true)" class="md-choice" [class.selected]="onboardingPioneerChoice === true">
+            <div class="md-choice-icon amber">
+              <mat-icon>workspace_premium</mat-icon>
             </div>
+            <div class="flex-1 text-left">
+              <p class="font-semibold" style="color: var(--mat-sys-on-surface);">Yes, I'm a pioneer</p>
+              <p class="text-sm" style="color: var(--mat-sys-on-surface-variant);">Track your 600-hour annual goal</p>
+            </div>
+            <mat-icon *ngIf="onboardingPioneerChoice === true" style="color: var(--mat-sys-primary);">check_circle</mat-icon>
           </button>
 
           <!-- No Option -->
-          <button
-            (click)="selectPioneerStatus(false)"
-            class="w-full p-4 rounded-xl border-2 transition-all text-left hover:border-blue-400 dark:border-gray-600"
-            [ngClass]="{
-              'border-blue-500 bg-blue-50 dark:bg-blue-900/20': onboardingPioneerChoice === false,
-              'border-gray-300': onboardingPioneerChoice !== false
-            }"
-          >
-            <div class="flex items-center space-x-3">
-              <div class="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex-shrink-0">
-                <i class="bi bi-person text-white text-xl"></i>
-              </div>
-              <div class="flex-1">
-                <p class="font-semibold text-gray-900 dark:text-white">No, I'm a publisher</p>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Track your monthly service hours</p>
-              </div>
-              <i 
-                *ngIf="onboardingPioneerChoice === false"
-                class="bi bi-check-circle-fill text-blue-500 text-xl"
-              ></i>
+          <button type="button" (click)="selectPioneerStatus(false)" class="md-choice" [class.selected]="onboardingPioneerChoice === false">
+            <div class="md-choice-icon blue">
+              <mat-icon>person</mat-icon>
             </div>
+            <div class="flex-1 text-left">
+              <p class="font-semibold" style="color: var(--mat-sys-on-surface);">No, I'm a publisher</p>
+              <p class="text-sm" style="color: var(--mat-sys-on-surface-variant);">Track your monthly service hours</p>
+            </div>
+            <mat-icon *ngIf="onboardingPioneerChoice === false" style="color: var(--mat-sys-primary);">check_circle</mat-icon>
           </button>
         </div>
       </div>
 
       <!-- Info Message -->
-      <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-        <p class="text-sm text-gray-600 dark:text-gray-400 text-center">
-          <i class="bi bi-info-circle mr-1"></i>
-          You can change this setting anytime in the Configure menu
-        </p>
+      <div class="md-info-box mb-6">
+        <mat-icon class="md-icon-sm">info</mat-icon>
+        <span class="text-sm" style="color: var(--mat-sys-on-surface-variant);">You can change this setting anytime in the Configure menu</span>
       </div>
 
       <!-- Modal Footer -->
-      <div class="flex justify-end">
-        <button
-          (click)="completeOnboarding()"
-          [disabled]="onboardingPioneerChoice === null"
-          class="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Continue
-        </button>
-      </div>
+      <button mat-flat-button color="primary" class="w-full" (click)="completeOnboarding()" [disabled]="onboardingPioneerChoice === null">
+        Continue
+      </button>
     </div>
   </app-modal>
 </ng-container>

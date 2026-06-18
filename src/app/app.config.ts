@@ -4,6 +4,8 @@ import {
   isDevMode,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { environment } from '../environments/environment';
 import { routes } from './app.routes';
 import { provideClientHydration } from '@angular/platform-browser';
@@ -49,6 +51,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
+    provideAnimationsAsync(),
     provideClientHydration(),
     provideFirebaseApp(() => getFirebaseApp()),
     // Modified: Use initializeFirestore with persistentLocalCache for offline support
@@ -59,5 +62,9 @@ export const appConfig: ApplicationConfig = {
     ),
     provideAuth(() => getAuth()),
     provideServiceWorker('ngsw-worker.js', serviceWorkerConfig),
+    {
+      provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
+      useValue: { appearance: 'fill' },
+    },
   ],
 };
