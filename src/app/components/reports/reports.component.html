@@ -583,7 +583,7 @@
 
     <!-- Study Details Modal -->
     <ng-container *ngIf="studySelected">
-      <app-modal>
+      <app-modal (dismissed)="closeStudyDetails()">
         <div class="max-w-2xl mx-auto">
           <!-- Modal Header -->
           <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
@@ -717,9 +717,9 @@
 
     <!-- Delete Confirmation Modal -->
     <ng-container *ngIf="studyDelete">
-      <div class="fixed inset-0 z-[10000] flex flex-col justify-end">
+      <div [@bottomSheet] class="fixed inset-0 z-[10000] flex flex-col justify-end">
         <div class="app-sheet-fade absolute inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm" (click)="closeDeleteModal()"></div>
-        <div class="app-sheet-up relative w-full max-w-md mx-auto bg-white rounded-t-2xl shadow-2xl border border-b-0 border-gray-200 px-8 pb-8 pt-3 max-h-[88vh] overflow-y-auto">
+        <div appDragToClose (dismissed)="closeDeleteModal()" class="app-sheet-up relative w-full max-w-md mx-auto bg-white rounded-t-2xl shadow-2xl px-8 pb-8 pt-3 max-h-[88vh] overflow-y-auto">
           <div class="flex justify-center pb-4">
             <span class="w-10 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600"></span>
           </div>
@@ -756,7 +756,7 @@
 
     <!-- Add Study Modal -->
     <ng-container *ngIf="showStudyModal">
-      <app-modal>
+      <app-modal (dismissed)="closeStudyModal()">
         <div class="w-full">
           <!-- Modal Header -->
           <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
@@ -919,7 +919,7 @@
 
 <!-- Add Report Modal -->
 <ng-container *ngIf="showAddReportModal">
-  <app-modal>
+  <app-modal (dismissed)="closeAddReportModal()">
     <div class="w-full">
       <!-- Modal Header -->
       <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
@@ -1095,7 +1095,7 @@
 
 <!-- Generate Report Modal -->
 <ng-container *ngIf="showGenerateReportModal">
-  <app-modal>
+  <app-modal (dismissed)="closeGenerateReportModal()">
     <div class="w-full">
       <!-- Modal Header -->
       <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">

@@ -153,6 +153,32 @@ export class MissionService {
     return this.verses[this.rotationIndex(dateKey)];
   }
 
+  // Open the verse in the JW Library app if installed; otherwise fall back to
+  // the jw.org website. We try the app deep link and, if the tab is still
+  // visible shortly after (the app didn't take over), open the website.
+  openVerse(verse?: Verse | null): void {
+    if (!verse || typeof window === 'undefined') return;
+    let switchedToApp = false;
+    const onHide = () => {
+      if (document.hidden) switchedToApp = true;
+    };
+    document.addEventListener('visibilitychange', onHide);
+
+    const start = Date.now();
+    try {
+      window.location.href = verse.appLink;
+    } catch {
+      // Scheme not supported; fall through to the website below.
+    }
+
+    setTimeout(() => {
+      document.removeEventListener('visibilitychange', onHide);
+      if (!switchedToApp && !document.hidden && Date.now() - start < 2500) {
+        window.open(verse.link, '_blank', 'noopener');
+      }
+    }, 1200);
+  }
+
   // A completion is a fully-passed day when every checklist item of that day's
   // verse is checked. Legacy records (no checkedSteps) count as passed.
   isCompletionPassed(c: any): boolean {

@@ -8,6 +8,8 @@ import { LoaderComponent } from '../loader/loader.component';
 import { AlertsComponent } from '../alerts/alerts.component';
 import { ModalService } from '../../_services/modal.service';
 import { SettingsService } from '../../_services/settings.service';
+import { bottomSheet } from '../../_animations/bottom-sheet.animation';
+import { DragToCloseDirective } from '../../_directives/drag-to-close.directive';
 
 @Component({
   selector: 'app-reports',
@@ -18,9 +20,11 @@ import { SettingsService } from '../../_services/settings.service';
     ModalComponent,
     LoaderComponent,
     AlertsComponent,
+    DragToCloseDirective,
   ],
   templateUrl: './reports.component.html',
   styleUrl: './reports.component.css',
+  animations: [bottomSheet],
 })
 export class ReportsComponent implements OnDestroy {
   reports: any[] = [];

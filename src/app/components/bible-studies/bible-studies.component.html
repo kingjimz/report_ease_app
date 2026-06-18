@@ -157,7 +157,7 @@
 
 </div>
 
-<app-modal *ngIf="showModal">
+<app-modal *ngIf="showModal" (dismissed)="showModal = false">
   <div class="flex justify-between items-center pb-3 mt-3">
     <button
       (click)="showModal = false"

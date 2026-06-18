@@ -35,7 +35,7 @@ export class TutorialComponent implements OnInit, OnChanges, OnDestroy {
     {
       title: 'Dashboard Overview',
       description:
-        'The Dashboard shows your monthly hours, weekly progress, and statistics. You can see your Bible studies count, return visits, and track your monthly goals here.',
+        'The Dashboard shows your monthly hours, weekly progress, and statistics. You can see your Bible studies count and return visits here.',
       icon: 'bi bi-speedometer2',
       position: 'center',
     },

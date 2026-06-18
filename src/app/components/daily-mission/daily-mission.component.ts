@@ -11,6 +11,8 @@ import {
   KEY_SEPARATOR,
   ROTATION_EPOCH,
 } from '../../_services/mission.service';
+import { bottomSheet } from '../../_animations/bottom-sheet.animation';
+import { DragToCloseDirective } from '../../_directives/drag-to-close.directive';
 
 interface CalendarCell {
   day: number;
@@ -23,7 +25,7 @@ interface CalendarCell {
 @Component({
   selector: 'app-daily-mission',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, DragToCloseDirective],
   templateUrl: './daily-mission.component.html',
   styles: [
     `
@@ -98,6 +100,7 @@ interface CalendarCell {
       }
     `,
   ],
+  animations: [bottomSheet],
 })
 export class DailyMissionComponent implements OnInit, OnDestroy {
   // Fixed mission definition. Each day surfaces one command of the Sermon on the Mount.

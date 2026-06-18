@@ -2,13 +2,10 @@
 
 .modal-container {
   background-color: var(--card-bg);
-  border-color: var(--border-color);
-  transition: all 0.3s ease;
+  /* No border/outline: the shadow alone separates the sheet from the backdrop. */
+  border: none;
+  transition: background-color 0.3s ease;
   box-sizing: border-box;
-}
-
-.modal-container:hover {
-  border-color: var(--text-tertiary);
 }
 
 /* Ensure modal content inherits proper colors */

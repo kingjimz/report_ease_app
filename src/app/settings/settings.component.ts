@@ -5,13 +5,16 @@ import { ApiService } from '../_services/api.service';
 import { AlertsComponent } from '../components/alerts/alerts.component';
 import { ModalService } from '../_services/modal.service';
 import { DailyMissionComponent } from '../components/daily-mission/daily-mission.component';
+import { bottomSheet } from '../_animations/bottom-sheet.animation';
+import { DragToCloseDirective } from '../_directives/drag-to-close.directive';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, DailyMissionComponent],
+  imports: [CommonModule, FormsModule, DailyMissionComponent, DragToCloseDirective],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css',
+  animations: [bottomSheet],
 })
 export class SettingsComponent implements OnDestroy {
   category = '';

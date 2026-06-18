@@ -33,7 +33,6 @@ export class DashboardComponent implements OnInit {
   studyDelete = false;
   next_lesson = '';
   openDownloadModal = false;
-  isPioneer = false;
   selectedReport: any = null;
   dropdownOpen = false;
   monthlyReportData: any = null;
@@ -46,30 +45,11 @@ export class DashboardComponent implements OnInit {
   allReports: any[] = [];
   goals: any[] = [];
   randomizedGoals: any[] = [];
-  
-  // 600-Hour Goal (September to August)
-  showPioneerSection = false;
-  pioneerYearHours = 0;
-  pioneerYearGoal = 600;
-  pioneerYearProgress = 0;
-  hoursRemaining = 600;
-  serviceYearStart = '';
-  serviceYearEnd = '';
-  averageMonthlyHours = 0;
-  projectedTotal = 0;
-  
-  // New properties for enhanced features
+
+  // This-week stats shown in the metrics cards.
   weeklyHours: number = 0;
   dailyAverage: number = 0;
-  isOnTrack: boolean = true;
-  recommendationMessage: string = '';
-  
-  // Monthly goal properties
-  monthlyGoal: number = 50; // Default monthly goal
-  monthlyProgress: number = 0;
-  daysRemainingInMonth: number = 0;
-  recommendedDailyHours: number = 0;
-  
+
   // Add Report Modal properties
   showAddReportModal: boolean = false;
   reportDate: string = '';
@@ -93,9 +73,6 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.calculateServiceYear();
-    this.loadUserSettings();
-
     // Subscribe to real-time data streams (works offline with Firestore cache)
     this.subscribeToDataStreams();
 
@@ -121,14 +98,11 @@ export class DashboardComponent implements OnInit {
           this.reports.length > 0 ? this.reports[0].total_hours || 0 : 0;
         this.prevMonthHours =
           this.reports.length > 1 ? this.reports[1].total_hours || 0 : 0;
-        this.calculatePioneerYearHours();
         this.calculateWeeklyHours();
-        this.calculateMonthlyGoal();
-        this.generateRecommendation();
         this.loading = false;
       }
     });
-    
+
     // Subscribe to bible studies stream
     this.api.bibleStudies$.subscribe((studies) => {
       if (studies && studies.length >= 0) {
@@ -178,92 +152,6 @@ export class DashboardComponent implements OnInit {
     this.dailyAverage = this.weeklyHours / 7;
   }
   
-  calculateMonthlyGoal() {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-    
-    // Calculate days remaining in current month
-    const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
-    const daysInMonth = lastDayOfMonth.getDate();
-    const currentDay = now.getDate();
-    this.daysRemainingInMonth = daysInMonth - currentDay + 1; // Include today
-    
-    // Set monthly goal based on pioneer status
-    if (this.showPioneerSection) {
-      // For pioneers, use the calculated recommended monthly hours to reach 600-hour goal
-      // This ensures they stay on track for the service year
-      const recommendedMonthly = this.getRecommendedMonthlyHours();
-      // Use recommended monthly, but ensure it's at least 50 (standard pioneer monthly goal)
-      // If they're ahead, it might be less, but we'll show the recommended amount
-      this.monthlyGoal = recommendedMonthly > 0 ? recommendedMonthly : 50;
-    } else {
-      // For regular publishers, encourage 15 hours per month
-      this.monthlyGoal = 15;
-    }
-    
-    // Calculate monthly progress percentage
-    this.monthlyProgress = this.monthlyGoal > 0 
-      ? Math.min(100, (this.monthlyHours / this.monthlyGoal) * 100) 
-      : 0;
-    
-    // Calculate recommended daily hours to meet goal
-    if (this.daysRemainingInMonth > 0) {
-      const hoursNeeded = Math.max(0, this.monthlyGoal - this.monthlyHours);
-      this.recommendedDailyHours = hoursNeeded / this.daysRemainingInMonth;
-    } else {
-      this.recommendedDailyHours = 0;
-    }
-  }
-  
-  getMonthlyGoalStatus(): string {
-    if (this.monthlyProgress >= 100) {
-      return 'Completed';
-    } else if (this.monthlyProgress >= 75) {
-      return 'On Track';
-    } else if (this.monthlyProgress >= 50) {
-      return 'Good Progress';
-    } else {
-      return 'Needs Focus';
-    }
-  }
-  
-  getMonthlyGoalColor(): string {
-    if (this.monthlyProgress >= 100) {
-      return 'from-green-500 to-emerald-600';
-    } else if (this.monthlyProgress >= 75) {
-      return 'from-blue-500 to-indigo-600';
-    } else if (this.monthlyProgress >= 50) {
-      return 'from-amber-500 to-orange-600';
-    } else {
-      return 'from-orange-500 to-red-600';
-    }
-  }
-  
-  generateRecommendation() {
-    if (!this.showPioneerSection) {
-      this.recommendationMessage = 'Keep up the great work in your ministry!';
-      this.isOnTrack = true;
-      return;
-    }
-    
-    const monthsRemaining = this.getMonthsRemaining();
-    const recommendedMonthly = this.getRecommendedMonthlyHours();
-    const currentMonthlyAvg = this.averageMonthlyHours;
-    
-    if (this.hoursRemaining <= 0) {
-      this.recommendationMessage = '🎉 Congratulations! You\'ve reached your yearly goal!';
-      this.isOnTrack = true;
-    } else if (currentMonthlyAvg >= recommendedMonthly * 0.9) {
-      this.recommendationMessage = `Great progress! You're on track to meet your goal.`;
-      this.isOnTrack = true;
-    } else {
-      const hoursNeeded = recommendedMonthly - currentMonthlyAvg;
-      this.recommendationMessage = `Aim for ${recommendedMonthly.toFixed(0)} hours/month to stay on track.`;
-      this.isOnTrack = false;
-    }
-  }
-  
   getTrendPercentage(): number {
     if (this.prevMonthHours === 0) return 0;
     return ((this.monthlyHours - this.prevMonthHours) / this.prevMonthHours) * 100;
@@ -281,30 +169,6 @@ export class DashboardComponent implements OnInit {
     if (trend > 0) return 'text-green-600';
     if (trend < 0) return 'text-red-600';
     return 'text-gray-600';
-  }
-
-  loadUserSettings() {
-    this.settingsService.settings$.subscribe(settings => {
-      this.isPioneer = settings.isPioneer;
-      // Show section if user is pioneer (synced with configure modal toggle)
-      this.showPioneerSection = settings.isPioneer;
-      if (this.showPioneerSection && this.allReports.length > 0) {
-        this.calculatePioneerYearHours();
-      }
-      // Immediately recalculate monthly goal and status when settings change
-      this.calculateMonthlyGoal();
-      this.generateRecommendation();
-    });
-  }
-
-  toggleHidePioneerSection() {
-    // Toggle pioneer status in settings (this will sync with configure modal)
-    const newPioneerStatus = !this.isPioneer;
-    this.settingsService.setIsPioneer(newPioneerStatus);
-    // Immediately update calculations and status
-    this.calculateMonthlyGoal();
-    this.generateRecommendation();
-    // The loadUserSettings subscription will handle updating showPioneerSection
   }
 
   async loadBibLeStudies() {
@@ -340,10 +204,7 @@ export class DashboardComponent implements OnInit {
           this.reports.length > 0 ? this.reports[0].total_hours || 0 : 0;
         this.prevMonthHours =
           this.reports.length > 1 ? this.reports[1].total_hours || 0 : 0;
-        this.calculatePioneerYearHours();
         this.calculateWeeklyHours();
-        this.calculateMonthlyGoal();
-        this.generateRecommendation();
       }
       this.loading = false;
     } catch (error) {
@@ -390,144 +251,16 @@ export class DashboardComponent implements OnInit {
     this.navigationService.changeTab('goals');
   }
 
+  // Open today's practice verse in JW Library (falls back to the website).
+  openVerse() {
+    this.missionSvc.openVerse(this.practice?.verse);
+  }
+
   // Total number of practices in the rotation (for the "X of Y" label).
   get practiceTotal(): number {
     return this.missionSvc.count;
   }
 
-  /**
-   * Calculate the service year dates (September to August)
-   */
-  calculateServiceYear() {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth(); // 0-indexed (0 = January)
-
-    // If current month is September (8) or later, service year started this year
-    // Otherwise, it started last year
-    const serviceYearStartYear = currentMonth >= 8 ? currentYear : currentYear - 1;
-    const serviceYearEndYear = serviceYearStartYear + 1;
-
-    this.serviceYearStart = `September ${serviceYearStartYear}`;
-    this.serviceYearEnd = `August ${serviceYearEndYear}`;
-  }
-
-  /**
-   * Calculate total hours worked in the current service year (Sep - Aug)
-   */
-  calculatePioneerYearHours() {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth(); // 0-indexed (0 = January, 8 = September)
-
-    // Determine service year start
-    const serviceYearStartYear = currentMonth >= 8 ? currentYear : currentYear - 1;
-    const serviceYearStart = new Date(serviceYearStartYear, 8, 1, 0, 0, 0); // September 1st, 00:00:00
-    const serviceYearEnd = new Date(serviceYearStartYear + 1, 8, 0, 23, 59, 59); // August 31st, 23:59:59
-
-    // Filter reports within the service year
-    const serviceYearReports = this.allReports.filter(report => {
-      if (!report.report_date) return false;
-      
-      // Handle Firestore Timestamp or string date
-      let reportDate: Date;
-      if (report.report_date.toDate) {
-        // Firestore Timestamp
-        reportDate = report.report_date.toDate();
-      } else if (report.report_date.seconds) {
-        // Firestore Timestamp object
-        reportDate = new Date(report.report_date.seconds * 1000);
-      } else {
-        // String or Date
-        reportDate = new Date(report.report_date);
-      }
-      
-      const isInRange = reportDate >= serviceYearStart && reportDate <= serviceYearEnd;
-      
-      return isInRange;
-    });
-
-    // Calculate total hours
-    this.pioneerYearHours = serviceYearReports.reduce((total, report) => {
-      return total + (report.hours || 0);
-    }, 0);
-
-    // Calculate remaining hours and progress
-    this.hoursRemaining = Math.max(0, this.pioneerYearGoal - this.pioneerYearHours);
-    this.pioneerYearProgress = Math.min(100, (this.pioneerYearHours / this.pioneerYearGoal) * 100);
-
-    // Calculate average monthly hours and projection
-    const monthsElapsed = this.getMonthsElapsedInServiceYear();
-    this.averageMonthlyHours = monthsElapsed > 0 ? this.pioneerYearHours / monthsElapsed : 0;
-    this.projectedTotal = this.averageMonthlyHours * 12;
-    
-    // Calculate additional metrics (order matters - monthly goal needs hoursRemaining)
-    this.calculateWeeklyHours();
-    this.calculateMonthlyGoal(); // This uses getRecommendedMonthlyHours() which needs hoursRemaining
-    this.generateRecommendation();
-  }
-
-  /**
-   * Get number of months elapsed in current service year
-   */
-  getMonthsElapsedInServiceYear(): number {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth(); // 0-indexed
-
-    const serviceYearStartYear = currentMonth >= 8 ? currentYear : currentYear - 1;
-    const serviceYearStart = new Date(serviceYearStartYear, 8, 1);
-
-    // Calculate months difference
-    const monthsDiff = (now.getFullYear() - serviceYearStart.getFullYear()) * 12 
-                      + (now.getMonth() - serviceYearStart.getMonth());
-    
-    return Math.max(1, monthsDiff + 1); // At least 1 month
-  }
-
-  /**
-   * Get months remaining in service year
-   */
-  getMonthsRemaining(): number {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
-
-    const serviceYearStartYear = currentMonth >= 8 ? currentYear : currentYear - 1;
-    const serviceYearEnd = new Date(serviceYearStartYear + 1, 7, 31); // August 31st
-
-    const monthsDiff = (serviceYearEnd.getFullYear() - now.getFullYear()) * 12 
-                      + (serviceYearEnd.getMonth() - now.getMonth());
-    
-    return Math.max(0, monthsDiff + 1);
-  }
-
-  /**
-   * Get recommended monthly hours to meet goal
-   * This calculates how many hours per month are needed for the remaining months
-   * to reach the 600-hour pioneer goal by the end of the service year
-   */
-  getRecommendedMonthlyHours(): number {
-    if (!this.showPioneerSection) {
-      // For non-pioneers, return standard monthly goal
-      return 12;
-    }
-    
-    const monthsRemaining = this.getMonthsRemaining();
-    if (monthsRemaining === 0) {
-      // Service year ended or no months remaining
-      return 0;
-    }
-    
-    // Calculate hours needed per month to reach 600-hour goal
-    // This ensures they stay on track for the entire service year
-    const recommendedMonthly = Math.ceil(this.hoursRemaining / monthsRemaining);
-    
-    // Ensure minimum of 50 hours (standard pioneer monthly requirement)
-    // But if they're ahead, it might be less
-    return Math.max(0, recommendedMonthly);
-  }
-  
   // Helper method for Math.abs in template
   Math = Math;
   

@@ -68,44 +68,15 @@
             <i class="bi" [ngClass]="practice.passed ? 'bi-check-circle-fill' : 'bi-arrow-right-circle'"></i>
             {{ practice.passed ? 'Practice passed — review it' : 'Open Daily Practice' }}
           </button>
-        </div>
-      </div>
-    </div>
 
-    <!-- Annual Service Goal (pioneer) - slim -->
-    <div *ngIf="showPioneerSection" class="mb-6 sm:mb-8">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-5 py-4 flex items-center gap-3">
-          <div class="flex items-center justify-center w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex-shrink-0">
-            <i class="bi bi-trophy text-white text-xl"></i>
-          </div>
-          <div>
-            <h2 class="text-base sm:text-lg font-semibold text-white">Annual Service Goal</h2>
-            <p class="text-white/90 text-xs">{{ serviceYearStart }} &ndash; {{ serviceYearEnd }}</p>
-          </div>
-        </div>
-        <div class="p-5">
-          <div class="flex items-center justify-between text-sm mb-2">
-            <span class="text-gray-600 dark:text-gray-400">{{ pioneerYearHours }} / {{ pioneerYearGoal }} hrs</span>
-            <span class="font-semibold text-indigo-600 dark:text-indigo-400">{{ pioneerYearProgress.toFixed(0) }}%</span>
-          </div>
-          <div class="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-4">
-            <div class="h-full bg-gradient-to-r from-blue-600 to-indigo-700 rounded-full transition-all duration-500" [style.width.%]="pioneerYearProgress"></div>
-          </div>
-          <div class="grid grid-cols-3 gap-3">
-            <div class="text-center p-3 bg-gray-50 dark:bg-gray-700/40 rounded-lg">
-              <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ hoursRemaining }}</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">hrs left</p>
-            </div>
-            <div class="text-center p-3 bg-gray-50 dark:bg-gray-700/40 rounded-lg">
-              <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ getRecommendedMonthlyHours() }}</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">hrs/mo to goal</p>
-            </div>
-            <div class="text-center p-3 bg-gray-50 dark:bg-gray-700/40 rounded-lg">
-              <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ getMonthsRemaining() }}</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">months left</p>
-            </div>
-          </div>
+          <button
+            type="button"
+            (click)="openVerse()"
+            class="mt-2 w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-semibold text-sm border border-amber-500 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+          >
+            <i class="bi bi-book"></i>
+            Read verse
+          </button>
         </div>
       </div>
     </div>
@@ -138,7 +109,7 @@
           </div>
         </div>
         <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ weeklyHours.toFixed(1) }}</p>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Hrs this week ({{ dailyAverage.toFixed(1) }}/day)</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Hrs this week</p>
       </div>
 
       <!-- Bible Studies Card -->
@@ -164,44 +135,6 @@
       </div>
     </div>
 
-    <!-- Monthly Goal -->
-    <div class="mb-6 sm:mb-8 px-0">
-      <div class="bg-gradient-to-br rounded-2xl shadow-lg p-6 text-white overflow-hidden relative"
-           [ngClass]="getMonthlyGoalColor()">
-        <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-        <div class="relative z-10">
-          <div class="flex items-center justify-between mb-4">
-            <div>
-              <p class="text-sm font-medium text-white/90 mb-1">Monthly Goal</p>
-              <p class="text-3xl font-semibold">{{ monthlyHours }} / {{ monthlyGoal }}</p>
-              <p class="text-xs text-white/80 mt-1">{{ getMonthlyGoalStatus() }}</p>
-            </div>
-            <div class="flex items-center justify-center w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl">
-              <i class="bi bi-bullseye text-2xl"></i>
-            </div>
-          </div>
-          <div class="mt-4">
-            <div class="w-full h-2 bg-white/20 rounded-full overflow-hidden">
-              <div class="h-full bg-white rounded-full transition-all duration-500" [style.width.%]="monthlyProgress"></div>
-            </div>
-            <div class="flex items-center justify-between mt-2 text-xs text-white/80">
-              <span>{{ monthlyProgress.toFixed(0) }}% complete</span>
-              <span>{{ daysRemainingInMonth }} days left</span>
-            </div>
-            <div class="mt-2 text-xs text-white/90">
-              <i class="bi bi-lightbulb mr-1"></i>
-              <span *ngIf="recommendedDailyHours > 0">{{ recommendedDailyHours.toFixed(1) }} hrs/day needed</span>
-              <span *ngIf="recommendedDailyHours <= 0">Goal achieved!</span>
-            </div>
-            <div *ngIf="!showPioneerSection" class="mt-3 pt-3 border-t border-white/20 text-xs text-white/80">
-              <i class="bi bi-heart mr-1"></i>
-              We encourage you to reach 15 hours monthly, even if you're not a pioneer!
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Activity Chart (full width) -->
     <div class="mb-12 px-0">
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 sm:p-6">
@@ -223,7 +156,7 @@
 
 <!-- Add Report Modal -->
 <ng-container *ngIf="showAddReportModal">
-  <app-modal>
+  <app-modal (dismissed)="closeAddReportModal()">
     <div class="w-full">
       <!-- Modal Header -->
       <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">

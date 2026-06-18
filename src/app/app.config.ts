@@ -7,6 +7,7 @@ import { provideRouter } from '@angular/router';
 import { environment } from '../environments/environment';
 import { routes } from './app.routes';
 import { provideClientHydration } from '@angular/platform-browser';
+import { provideAnimations } from '@angular/platform-browser/animations';
 import {
   provideFirestore,
   initializeFirestore,
@@ -51,6 +52,7 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideClientHydration(),
+    provideAnimations(),
     provideFirebaseApp(() => getFirebaseApp()),
     // Use initializeFirestore with persistentLocalCache for offline support.
     // The multi-tab manager shares one durable IndexedDB cache across every tab

@@ -4,7 +4,9 @@
 
   <!-- Bottom sheet (leaves space at the top, never covers the full screen) -->
   <div
-    class="modal-container app-sheet-up relative w-full max-w-2xl mx-auto rounded-t-2xl shadow-2xl border border-b-0 max-h-[88vh] flex flex-col"
+    [appDragToClose]="dismissible"
+    (dismissed)="dismissed.emit()"
+    class="modal-container app-sheet-up relative w-full max-w-2xl mx-auto rounded-t-2xl shadow-2xl max-h-[88vh] flex flex-col"
     style="box-sizing: border-box;"
   >
     <!-- Drag handle -->

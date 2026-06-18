@@ -257,6 +257,7 @@
   <!-- Day detail bottom sheet -->
   <div
     *ngIf="selectedVerse"
+    [@bottomSheet]
     class="fixed inset-0 z-[10000] flex flex-col justify-end"
     role="dialog"
     aria-modal="true"
@@ -266,6 +267,8 @@
 
     <!-- Sheet -->
     <div
+      appDragToClose
+      (dismissed)="closeSelected()"
       class="mission-sheet relative w-full max-w-2xl mx-auto bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl max-h-[85vh] flex flex-col"
     >
       <!-- Drag handle -->

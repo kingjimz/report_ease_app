@@ -136,7 +136,7 @@
 
 <!-- Add Report Modal (matching dashboard) -->
 <ng-container *ngIf="showAddReportModal">
-  <app-modal>
+  <app-modal (dismissed)="closeAddReportModal()">
     <div class="w-full">
       <!-- Modal Header -->
       <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
@@ -332,6 +332,7 @@
 <!-- Delete Confirmation Modal -->
 <div
   *ngIf="showDeleteConfirmModal"
+  [@bottomSheet]
   class="fixed inset-0 z-[10000] flex flex-col justify-end"
 >
   <div
@@ -339,6 +340,8 @@
     (click)="closeDeleteConfirmModal()"
   ></div>
   <div
+    appDragToClose
+    (dismissed)="closeDeleteConfirmModal()"
     class="app-sheet-up relative w-full max-w-md mx-auto bg-white dark:bg-gray-800 rounded-t-2xl shadow-2xl px-6 pb-6 pt-3 max-h-[88vh] overflow-y-auto"
     (click)="$event.stopPropagation()"
   >

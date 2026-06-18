@@ -7,6 +7,8 @@ import { LoaderComponent } from '../loader/loader.component';
 import { ModalService } from '../../_services/modal.service';
 import { ModalComponent } from '../modal/modal.component';
 import { AlertsComponent } from '../alerts/alerts.component';
+import { bottomSheet } from '../../_animations/bottom-sheet.animation';
+import { DragToCloseDirective } from '../../_directives/drag-to-close.directive';
 import { Subscription } from 'rxjs';
 
 interface CalendarDay {
@@ -31,9 +33,10 @@ interface CalendarEvent {
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoaderComponent, ModalComponent, AlertsComponent],
+  imports: [CommonModule, FormsModule, LoaderComponent, ModalComponent, AlertsComponent, DragToCloseDirective],
   templateUrl: './calendar.component.html',
   styleUrls: ['./calendar.component.css'],
+  animations: [bottomSheet],
 })
 export class CalendarComponent implements OnInit, OnDestroy {
   isLoading = false;

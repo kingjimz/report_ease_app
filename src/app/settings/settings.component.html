@@ -1,6 +1,7 @@
 <!-- Delete Confirmation Modal -->
 <div
   *ngIf="showDeleteConfirm"
+  [@bottomSheet]
   class="fixed inset-0 z-[10000] flex flex-col justify-end"
 >
   <div
@@ -8,6 +9,8 @@
     (click)="closeDeleteConfirm()"
   ></div>
   <div
+    appDragToClose
+    (dismissed)="closeDeleteConfirm()"
     class="app-sheet-up relative w-full max-w-md mx-auto bg-white dark:bg-gray-800 rounded-t-2xl px-6 pb-6 pt-3 shadow-2xl max-h-[88vh] overflow-y-auto"
     (click)="$event.stopPropagation()"
   >
@@ -45,6 +48,7 @@
 <!-- Add/Edit Goal Modal -->
 <div
   *ngIf="showGoalModal"
+  [@bottomSheet]
   class="fixed inset-0 z-[10000] flex flex-col justify-end"
 >
   <div
@@ -52,6 +56,8 @@
     (click)="closeGoalModal()"
   ></div>
   <div
+    appDragToClose
+    (dismissed)="closeGoalModal()"
     class="app-sheet-up relative w-full max-w-lg mx-auto bg-white dark:bg-gray-800 rounded-t-2xl px-6 sm:px-8 pb-6 sm:pb-8 pt-3 shadow-2xl max-h-[88vh] overflow-y-auto"
     (click)="$event.stopPropagation()"
   >

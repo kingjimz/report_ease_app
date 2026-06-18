@@ -12,14 +12,17 @@ import { UtilService } from '../../_services/util.service';
 import { NavigationService } from '../../_services/navigation.service';
 import { NotificationService } from '../../_services/notification.service';
 import { VersionService } from '../../_services/version.service';
+import { bottomSheet } from '../../_animations/bottom-sheet.animation';
+import { DragToCloseDirective } from '../../_directives/drag-to-close.directive';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DragToCloseDirective],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
+  animations: [bottomSheet],
 })
 export class HeaderComponent implements OnInit, OnDestroy {
   dropdownOpen = false;

@@ -32,7 +32,7 @@
 
 <!-- Manual Report Modal -->
 <ng-container *ngIf="showManualReportModal">
-  <app-modal>
+  <app-modal (dismissed)="closeManualReportModal()">
     <div class="w-full">
       <!-- Modal Header -->
       <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
@@ -230,7 +230,7 @@
 
 <!-- Onboarding Modal -->
 <ng-container *ngIf="showOnboardingModal">
-  <app-modal>
+  <app-modal [dismissible]="false">
     <div class="w-full max-w-md mx-auto">
       <!-- Modal Header -->
       <div class="text-center mb-6">
@@ -264,7 +264,7 @@
               </div>
               <div class="flex-1">
                 <p class="font-semibold text-gray-900 dark:text-white">Yes, I'm a pioneer</p>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Track your 600-hour annual goal</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Your monthly report will include ministry hours</p>
               </div>
               <i 
                 *ngIf="onboardingPioneerChoice === true"
