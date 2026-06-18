@@ -11,6 +11,7 @@ import {
 import { GoogleAuthProvider } from 'firebase/auth';
 import { BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
+import { NetworkService } from './network.service';
 
 @Injectable({
   providedIn: 'root',
@@ -23,12 +24,16 @@ export class AuthService {
   constructor(
     private auth: Auth,
     private router: Router,
+    private networkService: NetworkService,
   ) {
     onAuthStateChanged(this.auth, (user) => {
       this.userSubject.next(user);
       if (user) {
         this.router.navigate(['/']);
-      } else {
+      } else if (this.networkService.isOnline) {
+        // Only redirect to login when online. Offline, a transient null (e.g.
+        // the session token can't be refreshed without network) must not eject
+        // a previously logged-in user from a working cached page.
         this.router.navigate(['/login']);
       }
     });

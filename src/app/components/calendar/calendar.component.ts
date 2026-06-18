@@ -262,14 +262,25 @@ export class CalendarComponent implements OnInit, OnDestroy {
     this.isLoading = false;
   }
 
-  // Merge live (windowed) reports into the full-history map, then rebuild events.
-  // Upsert by id: recent edits/additions win; full history loaded by loadReports
-  // is preserved. (A delete arriving via the stream from another device isn't
-  // removed here; the local delete path calls loadReports() which reseeds.)
+  // Merge live (windowed) reports into the full-history map, then recompute the
+  // whole view. Upsert by id: recent edits/additions win; full history loaded by
+  // loadReports is preserved. (A delete arriving via the stream from another
+  // device isn't removed here; the local delete path prunes the map directly.)
   private upsertReports(reports: any[]) {
     for (const r of reports) {
       if (r && r.id) this.rawReportsById.set(r.id, r);
     }
+    this.recomputeFromMap();
+  }
+
+  // Single source of truth for the calendar view: rebuild events AND the monthly
+  // aggregates from the current map, then publish the aggregates. Every local
+  // mutation (add/update/delete) calls this so the calendar reacts immediately,
+  // online or offline, without a cache re-read that could race the pending write.
+  private recomputeFromMap() {
+    const all = Array.from(this.rawReportsById.values());
+    this.reports = this.util.aggregateReportsByMonth(all);
+    this.api.updateAggregatedData(this.reports);
     this.rebuildEvents();
   }
 
@@ -329,11 +340,16 @@ export class CalendarComponent implements OnInit, OnDestroy {
     };
 
     try {
-      await this.api.createReport(report);
+      const newId = await this.api.createReport(report);
       this.noChangeDetected = false;
       this.selectedDate = null;
       this.modalService.closeModal();
-      await this.loadReports();
+      // Optimistically add to the local view so the calendar reacts at once
+      // (offline included). The live listener later reconciles under the same id.
+      if (newId) {
+        this.rawReportsById.set(newId, { ...report, id: newId });
+        this.recomputeFromMap();
+      }
       this.reInitializeVariables();
     } catch (error) {
       console.error('Error saving report:', error);
@@ -382,7 +398,15 @@ export class CalendarComponent implements OnInit, OnDestroy {
       this.noChangeDetected = false;
       this.selectedDate = null;
       this.modalService.closeModal();
-      await this.loadReports();
+      // Optimistically apply the edit to the local view so the calendar reacts
+      // at once (offline included). The live listener reconciles afterward.
+      if (report.id) {
+        this.rawReportsById.set(report.id, {
+          ...this.rawReportsById.get(report.id),
+          ...report,
+        });
+        this.recomputeFromMap();
+      }
       this.reInitializeVariables();
     } catch (error) {
       console.error('Error updating report:', error);
@@ -410,14 +434,23 @@ export class CalendarComponent implements OnInit, OnDestroy {
     }
 
     this.isDeleting = true;
+    const deletedId = this.report_id;
 
     try {
-      await this.api.deleteReport(this.report_id);
+      await this.api.deleteReport(deletedId);
       this.showDeleteConfirmModal = false;
       // Close both modals: delete confirmation modal and main modal
       this.modalService.closeModal(); // Close delete confirmation modal
       this.closeAddReportModal(); // Close main modal (this also resets selectedDate)
-      await this.loadReports();
+      // Optimistically drop the report from the local view. We must NOT re-read
+      // from the Firestore cache here (loadReports): the delete is applied to
+      // the cache asynchronously, so a cache read races ahead of it and
+      // resurrects the report — which is what broke delete offline. The live
+      // listener only upserts, so it can't prune it either. Removing it from
+      // our map directly is immediate and correct, and stays consistent once
+      // the delete settles and syncs to the server.
+      this.rawReportsById.delete(deletedId);
+      this.recomputeFromMap();
       this.reInitializeVariables();
     } catch (error) {
       console.error('Error deleting report:', error);
@@ -584,16 +617,24 @@ export class CalendarComponent implements OnInit, OnDestroy {
         await this.api.updateReport(report);
         this.reportSuccess = true;
         this.reportAlertMessage = 'Report updated successfully!';
+        // Optimistically apply the edit so the calendar reacts immediately.
+        this.rawReportsById.set(report.id, {
+          ...this.rawReportsById.get(report.id),
+          ...report,
+        });
       } else {
         // Create new report
-        await this.api.createReport(report);
+        const newId = await this.api.createReport(report);
         this.reportSuccess = true;
         this.reportAlertMessage = 'Report added successfully! It will appear on your calendar.';
+        // Optimistically add so the calendar reacts immediately (offline too).
+        if (newId) this.rawReportsById.set(newId, { ...report, id: newId });
       }
-      
-      // Reload reports to update calendar
-      await this.loadReports();
-      
+
+      // Refresh the calendar view from the local map (no racy cache re-read).
+      // The live listener reconciles under the same id once the write syncs.
+      this.recomputeFromMap();
+
       // Close modal after 1.5 seconds
       setTimeout(() => {
         this.closeAddReportModal();

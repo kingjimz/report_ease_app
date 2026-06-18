@@ -59,25 +59,19 @@
         var isIOS = navigator.userAgent.match(/iPhone|iPad|iPod/i);
         
         if (isIOS) {
-          // Unregister any existing service workers that might be causing blank screen issues
+          // NOTE: We intentionally KEEP the service worker registered on iOS.
+          // It caches the app shell (HTML/JS/CSS) so the installed PWA can open
+          // and run while offline. Unregistering it here would defeat offline
+          // support entirely on iPhone/iPad. Stale-cache issues are handled by
+          // SwUpdateService (update checks) rather than by demolishing the SW.
           if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(registrations) {
-              for (var i = 0; i < registrations.length; i++) {
-                registrations[i].unregister().catch(function(err) {
-                  console.warn('Failed to unregister service worker on iOS:', err);
-                });
-              }
-            }).catch(function(err) {
-              console.warn('Error getting service worker registrations on iOS:', err);
-            });
-            
-            // Handle service worker errors gracefully on iOS
+            // Handle service worker errors gracefully on iOS without blocking load
             navigator.serviceWorker.addEventListener('error', function(event) {
               console.warn('Service worker error on iOS:', event);
               // Don't block app loading
             });
           }
-          
+
           // Check if Angular has bootstrapped after page load
           window.addEventListener('load', function() {
             var checkInterval = setInterval(function() {

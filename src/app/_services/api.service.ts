@@ -409,31 +409,35 @@ export class ApiService {
     }
   }
 
+  // Commit a Firestore write WITHOUT blocking the UI on server acknowledgment.
+  // With persistentLocalCache enabled, the mutation is written to the local
+  // cache the instant the op is issued, the onSnapshot listener reflects it
+  // immediately, and Firestore replays it to the server on its own when
+  // connectivity returns. The promise these ops return only resolves on SERVER
+  // ack — awaiting it hangs forever while offline (and navigator.onLine can be
+  // true on a throttled/flaky connection, e.g. DevTools "Offline"), leaving the
+  // caller's "saving" spinner stuck. So we fire the op, let the caller proceed,
+  // and only fall back to the retry queue if Firestore actually REJECTS it
+  // (e.g. a rules denial) — a rejected write never committed, so re-queuing it
+  // cannot create a duplicate.
+  private commitWrite(
+    op: Promise<unknown>,
+    type: 'create' | 'update' | 'delete',
+    collection: 'reports' | 'bibleStudies' | 'goals' | 'missionCompletions',
+    data: any,
+    context: string,
+  ): void {
+    op.catch((error) => {
+      console.error(`${context}: Firestore write rejected`, error);
+      this.queueForRetry(type, collection, data, context);
+    });
+  }
+
   // 🔹 Simplified methods - no need for manual fetching since we have real-time listeners
   async createReport(report: any) {
     try {
       const user = this.auth.currentUser;
       if (!user) throw new Error('User not logged in');
-
-      // If offline, queue the operation
-      if (!this.networkService.isOnline) {
-        await this.offlineStorage.queueOperation('create', 'reports', report);
-        // Update local state optimistically with properly formatted report
-        const tempId = `temp_${Date.now()}`;
-        const tempReport = {
-          ...report,
-          id: tempId,
-          // Ensure report_date is properly formatted for calendar display
-          report_date: report.report_date instanceof Date 
-            ? { seconds: Math.floor(report.report_date.getTime() / 1000) }
-            : report.report_date
-        };
-        const currentReports = this.reportSignal();
-        this.reportSignal.set([...currentReports, tempReport]);
-        this.reportsSubject.next([...currentReports, tempReport]);
-        console.log('Report queued for sync when online and added to calendar');
-        return;
-      }
 
       const reportsCollection = collection(
         this.fireStore,
@@ -441,11 +445,24 @@ export class ApiService {
         user.uid,
         'reports',
       );
-      await addDoc(reportsCollection, report);
-      // No need to call getReports() - real-time listener will update automatically
+      // Pre-generate the doc id locally so the caller can optimistically render
+      // the new report immediately (even offline) under the SAME id the live
+      // listener will later emit — so the optimistic row and the synced row
+      // reconcile instead of duplicating.
+      const newReportRef = doc(reportsCollection);
+      this.commitWrite(
+        setDoc(newReportRef, report),
+        'create',
+        'reports',
+        report,
+        'Report create',
+      );
+      return newReportRef.id;
+      // The real-time listener will reconcile automatically when the write syncs.
     } catch (error) {
       console.error('Error creating report:', error);
       await this.queueForRetry('create', 'reports', report, 'Report create');
+      return undefined;
     }
   }
 
@@ -455,18 +472,6 @@ export class ApiService {
       if (!user) throw new Error('User not logged in');
       if (!report?.id) throw new Error('Report ID is required');
 
-      // If offline, queue the operation
-      if (!this.networkService.isOnline) {
-        await this.offlineStorage.queueOperation('update', 'reports', report);
-        // Update local state optimistically
-        const currentReports = this.reportSignal();
-        const updatedReports = currentReports.map(r => r.id === report.id ? { ...r, ...report } : r);
-        this.reportSignal.set(updatedReports);
-        this.reportsSubject.next(updatedReports);
-        console.log('Report update queued for sync when online');
-        return;
-      }
-
       const reportDoc = doc(
         this.fireStore,
         'users',
@@ -475,7 +480,13 @@ export class ApiService {
         report.id,
       );
 
-      await updateDoc(reportDoc, { ...report });
+      this.commitWrite(
+        updateDoc(reportDoc, { ...report }),
+        'update',
+        'reports',
+        report,
+        'Report update',
+      );
       // Real-time listener will update automatically
     } catch (error) {
       console.error('Error updating report:', error);
@@ -489,18 +500,6 @@ export class ApiService {
       if (!user) throw new Error('User not logged in');
       if (!reportId) throw new Error('Report ID is required');
 
-      // If offline, queue the operation
-      if (!this.networkService.isOnline) {
-        await this.offlineStorage.queueOperation('delete', 'reports', { id: reportId });
-        // Update local state optimistically
-        const currentReports = this.reportSignal();
-        const filteredReports = currentReports.filter(r => r.id !== reportId);
-        this.reportSignal.set(filteredReports);
-        this.reportsSubject.next(filteredReports);
-        console.log('Report deletion queued for sync when online');
-        return;
-      }
-
       const reportDoc = doc(
         this.fireStore,
         'users',
@@ -509,7 +508,13 @@ export class ApiService {
         reportId,
       );
 
-      await deleteDoc(reportDoc);
+      this.commitWrite(
+        deleteDoc(reportDoc),
+        'delete',
+        'reports',
+        { id: reportId },
+        'Report delete',
+      );
       // Real-time listener will update automatically
     } catch (error) {
       console.error('Error deleting report:', error);
@@ -522,24 +527,19 @@ export class ApiService {
       const user = this.auth.currentUser;
       if (!user) throw new Error('User not logged in');
 
-      // If offline, queue the operation
-      if (!this.networkService.isOnline) {
-        await this.offlineStorage.queueOperation('create', 'bibleStudies', study);
-        // Update local state optimistically
-        const currentStudies = this.bibleStudySignal();
-        this.bibleStudySignal.set([...currentStudies, { ...study, id: `temp_${Date.now()}` }]);
-        this.bibleStudiesSubject.next([...currentStudies, { ...study, id: `temp_${Date.now()}` }]);
-        console.log('Study queued for sync when online');
-        return;
-      }
-
       const bibleStudiesCollection = collection(
         this.fireStore,
         'users',
         user.uid,
         'bibleStudies',
       );
-      await addDoc(bibleStudiesCollection, study);
+      this.commitWrite(
+        addDoc(bibleStudiesCollection, study),
+        'create',
+        'bibleStudies',
+        study,
+        'Study create',
+      );
       // Real-time listener will update automatically
     } catch (error) {
       console.error('Error adding study:', error);
@@ -553,18 +553,6 @@ export class ApiService {
       if (!user) throw new Error('User not logged in');
       if (!study?.id) throw new Error('Study ID is required');
 
-      // If offline, queue the operation
-      if (!this.networkService.isOnline) {
-        await this.offlineStorage.queueOperation('update', 'bibleStudies', study);
-        // Update local state optimistically
-        const currentStudies = this.bibleStudySignal();
-        const updatedStudies = currentStudies.map(s => s.id === study.id ? { ...s, ...study } : s);
-        this.bibleStudySignal.set(updatedStudies);
-        this.bibleStudiesSubject.next(updatedStudies);
-        console.log('Study update queued for sync when online');
-        return;
-      }
-
       const studyDoc = doc(
         this.fireStore,
         'users',
@@ -575,9 +563,13 @@ export class ApiService {
 
       // Use the same pattern as updateGoal for consistency
       const { id, ...updateData } = study;
-      await updateDoc(studyDoc, updateData);
-      console.log('Study updated successfully:', study.id);
-      console.log('Updated data:', updateData);
+      this.commitWrite(
+        updateDoc(studyDoc, updateData),
+        'update',
+        'bibleStudies',
+        study,
+        'Study update',
+      );
       // Real-time listener will update automatically
     } catch (error) {
       console.error('Error updating study:', error);
@@ -591,18 +583,6 @@ export class ApiService {
       if (!user) throw new Error('User not logged in');
       if (!study?.id) throw new Error('Study ID is required');
 
-      // If offline, queue the operation
-      if (!this.networkService.isOnline) {
-        await this.offlineStorage.queueOperation('delete', 'bibleStudies', { id: study.id });
-        // Update local state optimistically
-        const currentStudies = this.bibleStudySignal();
-        const filteredStudies = currentStudies.filter(s => s.id !== study.id);
-        this.bibleStudySignal.set(filteredStudies);
-        this.bibleStudiesSubject.next(filteredStudies);
-        console.log('Study deletion queued for sync when online');
-        return;
-      }
-
       const studyDoc = doc(
         this.fireStore,
         'users',
@@ -611,7 +591,13 @@ export class ApiService {
         study.id,
       );
 
-      await deleteDoc(studyDoc);
+      this.commitWrite(
+        deleteDoc(studyDoc),
+        'delete',
+        'bibleStudies',
+        { id: study.id },
+        'Study delete',
+      );
       // Real-time listener will update automatically
     } catch (error) {
       console.error('Error deleting study:', error);
@@ -624,24 +610,19 @@ export class ApiService {
       const user = this.auth.currentUser;
       if (!user) throw new Error('User not logged in');
 
-      // If offline, queue the operation
-      if (!this.networkService.isOnline) {
-        await this.offlineStorage.queueOperation('create', 'goals', goal);
-        // Update local state optimistically
-        const currentGoals = this.goalsSignal();
-        this.goalsSignal.set([...currentGoals, { ...goal, id: `temp_${Date.now()}` }]);
-        this.goalsSubject.next([...currentGoals, { ...goal, id: `temp_${Date.now()}` }]);
-        console.log('Goal queued for sync when online');
-        return;
-      }
-
       const goalsCollection = collection(
         this.fireStore,
         'users',
         user.uid,
         'goals',
       );
-      await addDoc(goalsCollection, goal);
+      this.commitWrite(
+        addDoc(goalsCollection, goal),
+        'create',
+        'goals',
+        goal,
+        'Goal create',
+      );
       // Real-time listener will update automatically
     } catch (error) {
       console.error('Error adding goal:', error);
@@ -655,20 +636,14 @@ export class ApiService {
       if (!user) throw new Error('User not logged in');
       if (!goal?.id) throw new Error('Goal ID is required');
 
-      // If offline, queue the operation
-      if (!this.networkService.isOnline) {
-        await this.offlineStorage.queueOperation('update', 'goals', goal);
-        // Update local state optimistically
-        const currentGoals = this.goalsSignal();
-        const updatedGoals = currentGoals.map(g => g.id === goal.id ? { ...g, ...goal } : g);
-        this.goalsSignal.set(updatedGoals);
-        this.goalsSubject.next(updatedGoals);
-        console.log('Goal update queued for sync when online');
-        return;
-      }
-
       const goalDoc = doc(this.fireStore, 'users', user.uid, 'goals', goal.id);
-      await updateDoc(goalDoc, { ...goal });
+      this.commitWrite(
+        updateDoc(goalDoc, { ...goal }),
+        'update',
+        'goals',
+        goal,
+        'Goal update',
+      );
       // Real-time listener will update automatically
     } catch (error) {
       console.error('Error updating goal:', error);
@@ -682,20 +657,14 @@ export class ApiService {
       if (!user) throw new Error('User not logged in');
       if (!goal?.id) throw new Error('Goal ID is required');
 
-      // If offline, queue the operation
-      if (!this.networkService.isOnline) {
-        await this.offlineStorage.queueOperation('delete', 'goals', { id: goal.id });
-        // Update local state optimistically
-        const currentGoals = this.goalsSignal();
-        const filteredGoals = currentGoals.filter(g => g.id !== goal.id);
-        this.goalsSignal.set(filteredGoals);
-        this.goalsSubject.next(filteredGoals);
-        console.log('Goal deletion queued for sync when online');
-        return;
-      }
-
       const goalDoc = doc(this.fireStore, 'users', user.uid, 'goals', goal.id);
-      await deleteDoc(goalDoc);
+      this.commitWrite(
+        deleteDoc(goalDoc),
+        'delete',
+        'goals',
+        { id: goal.id },
+        'Goal delete',
+      );
       // Real-time listener will update automatically
     } catch (error) {
       console.error('Error deleting goal:', error);
@@ -713,19 +682,6 @@ export class ApiService {
 
       const record = { ...data, id: dateId };
 
-      // If offline, queue the operation
-      if (!this.networkService.isOnline) {
-        await this.offlineStorage.queueOperation('create', 'missionCompletions', record);
-        // Update local state optimistically
-        const current = this.missionCompletionsSignal();
-        const filtered = current.filter((c) => c.id !== dateId);
-        const updated = [...filtered, record];
-        this.missionCompletionsSignal.set(updated);
-        this.missionCompletionsSubject.next(updated);
-        console.log('Mission completion queued for sync when online');
-        return;
-      }
-
       const missionDoc = doc(
         this.fireStore,
         'users',
@@ -734,7 +690,13 @@ export class ApiService {
         dateId,
       );
       const { id, ...writeData } = record;
-      await setDoc(missionDoc, writeData);
+      this.commitWrite(
+        setDoc(missionDoc, writeData),
+        'create',
+        'missionCompletions',
+        record,
+        'Mission complete',
+      );
       // Real-time listener will update automatically
     } catch (error) {
       console.error('Error marking mission complete:', error);
@@ -748,18 +710,6 @@ export class ApiService {
       if (!user) throw new Error('User not logged in');
       if (!dateId) throw new Error('Date ID is required');
 
-      // If offline, queue the operation
-      if (!this.networkService.isOnline) {
-        await this.offlineStorage.queueOperation('delete', 'missionCompletions', { id: dateId });
-        // Update local state optimistically
-        const current = this.missionCompletionsSignal();
-        const filtered = current.filter((c) => c.id !== dateId);
-        this.missionCompletionsSignal.set(filtered);
-        this.missionCompletionsSubject.next(filtered);
-        console.log('Mission completion deletion queued for sync when online');
-        return;
-      }
-
       const missionDoc = doc(
         this.fireStore,
         'users',
@@ -767,7 +717,13 @@ export class ApiService {
         'missionCompletions',
         dateId,
       );
-      await deleteDoc(missionDoc);
+      this.commitWrite(
+        deleteDoc(missionDoc),
+        'delete',
+        'missionCompletions',
+        { id: dateId },
+        'Mission unmark',
+      );
       // Real-time listener will update automatically
     } catch (error) {
       console.error('Error unmarking mission complete:', error);

@@ -22,24 +22,23 @@
       "resources": {
         "files": [
           "/assets/**",
-          "/*.(eot|svg|cur|jpg|png|webp|gif|otf|ttf|woff|woff2)"
+          "/media/**",
+          "/**/*.(eot|svg|cur|jpg|png|webp|gif|otf|ttf|woff|woff2)"
         ]
       }
     }
   ],
   "dataGroups": [
     {
-      "name": "api-cache",
+      "name": "google-fonts",
       "urls": [
-        "https://firestore.googleapis.com/**",
-        "https://*.firebaseapp.com/**",
-        "https://*.googleapis.com/**"
+        "https://fonts.googleapis.com/**",
+        "https://fonts.gstatic.com/**"
       ],
       "cacheConfig": {
-        "strategy": "freshness",
-        "maxAge": "1h",
-        "maxEntries": 100,
-        "timeout": "10s"
+        "strategy": "performance",
+        "maxAge": "30d",
+        "maxEntries": 30
       }
     }
   ]

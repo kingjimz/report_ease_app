@@ -489,7 +489,13 @@ export class ReportsComponent implements OnDestroy {
       .deleteStudy(study)
       .then(() => {
         this.closeStudyDetails();
-        this.refreshBibleStudies();
+        // Optimistically drop the study from the local view rather than
+        // re-reading (refreshBibleStudies): the delete is applied to the local
+        // cache/signal asynchronously, so an immediate re-read races ahead of
+        // it and resurrects the study offline. The listener keeps things
+        // consistent once the delete settles.
+        this.bibleStudies = this.bibleStudies.filter((s) => s.id !== study.id);
+        this.api.updateBibleStudies(this.bibleStudies);
       })
       .catch((error) => {
         console.error('Error deleting study:', error);

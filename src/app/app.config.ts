@@ -11,6 +11,7 @@ import {
   provideFirestore,
   initializeFirestore,
   persistentLocalCache,
+  persistentMultipleTabManager,
 } from '@angular/fire/firestore';
 
 //Firebase
@@ -51,10 +52,16 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideClientHydration(),
     provideFirebaseApp(() => getFirebaseApp()),
-    // Modified: Use initializeFirestore with persistentLocalCache for offline support
+    // Use initializeFirestore with persistentLocalCache for offline support.
+    // The multi-tab manager shares one durable IndexedDB cache across every tab
+    // and the installed PWA window, so persistence (and the offline mutation
+    // queue that replays on reconnect) stays reliably enabled instead of
+    // silently falling back to in-memory in a second context.
     provideFirestore(() =>
       initializeFirestore(getFirebaseApp(), {
-        localCache: persistentLocalCache(),
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager(),
+        }),
       }),
     ),
     provideAuth(() => getAuth()),
