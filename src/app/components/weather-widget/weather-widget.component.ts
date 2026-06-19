@@ -22,6 +22,7 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
   now: Date = new Date();
   weather: WeatherInfo | null = null;
   weatherLoading = true;
+  weatherRefreshing = false;
   aiTipText: string | null = null;
   aiTipLoading = false;
   aiTipError = false;
@@ -74,17 +75,44 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
    */
   private backgroundRefresh(): void {
     if (!this.locationEnabled) return;
-    this.weatherSvc.getLocationAndWeather().then((info) => {
-      if (info) {
-        this.weather = info;
-        this.refreshAiTip(true);
-      }
-    });
+    // Mirror the manual refresh indicator, but only when a network pull is
+    // genuinely due — a cache hit returns instantly and shouldn't flash it.
+    const fetching = this.weatherSvc.isRefreshDue();
+    if (fetching) this.weatherRefreshing = true;
+    this.weatherSvc
+      .getLocationAndWeather()
+      .then((info) => {
+        if (info) {
+          this.weather = info;
+          this.refreshAiTip(true);
+        }
+      })
+      .finally(() => {
+        if (fetching) this.weatherRefreshing = false;
+      });
   }
 
   /** Turn location on from the widget prompt; the subscription triggers the load. */
   enableLocation(): void {
     this.settings.setLocationEnabled(true);
+  }
+
+  /**
+   * Force a fresh weather pull on demand, bypassing the 15-minute cache. Spins
+   * the refresh icon while in flight, then re-derives the AI tip off the new data.
+   */
+  manualRefresh(): void {
+    if (!this.locationEnabled || this.weatherRefreshing) return;
+    this.weatherRefreshing = true;
+    this.weatherSvc
+      .getLocationAndWeather(true)
+      .then((info) => {
+        if (info) {
+          this.weather = info;
+          this.refreshAiTip(true);
+        }
+      })
+      .finally(() => (this.weatherRefreshing = false));
   }
 
   /** Show cached weather instantly, then refresh in the background. */

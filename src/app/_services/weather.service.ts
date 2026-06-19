@@ -61,6 +61,18 @@ export class WeatherService {
     private settings: SettingsService,
   ) {}
 
+  /**
+   * True when a background poll would actually hit the network: we're online and
+   * the cache is missing or older than the 15-minute window. Lets the UI show a
+   * "refreshing" indicator only when fresh data is genuinely being fetched, not
+   * on instant cache hits.
+   */
+  isRefreshDue(): boolean {
+    if (!this.network.isOnline) return false;
+    const cached = this.getCached();
+    return !cached || Date.now() - cached.fetchedAt >= REFRESH_MS;
+  }
+
   /** Last successfully cached snapshot, or null if none stored. */
   getCached(): WeatherInfo | null {
     try {
@@ -93,16 +105,20 @@ export class WeatherService {
     }
 
     const forecast = weather.forecast ?? [];
+    // Only feed the AI hours still ahead of now. The forecast's first entry is the
+    // current hour (e.g. 4 PM at 4:22), so without this the tip can quote a time
+    // that has already passed. This keeps the lookahead pointed at what's coming.
+    const upcoming = forecast.filter((h) => h.time > Date.now());
     const payload = {
       scene,
       partOfDay,
       temperature: weather.temperature,
       description: weather.description,
       city: weather.city,
-      // Only send a forecast line when we actually have one.
-      ...(forecast.length ? { forecastText: forecastText(forecast) } : {}),
+      // Only send a forecast line when we actually have upcoming hours.
+      ...(upcoming.length ? { forecastText: forecastText(upcoming) } : {}),
     };
-    const signature = this.aiSignature({ ...payload, forecast });
+    const signature = this.aiSignature({ ...payload, forecast: upcoming });
 
     console.log('[WeatherTip] getAiTip called', {
       online: this.network.isOnline,
@@ -202,8 +218,11 @@ export class WeatherService {
   /**
    * Returns current location + weather. Hydrates from cache first; only hits the
    * network when online and the cache is stale, so it stays cheap and offline-safe.
+   *
+   * Pass `force = true` to bypass the 15-minute freshness window and pull fresh
+   * data now (manual refresh). Offline still falls back to cache regardless.
    */
-  async getLocationAndWeather(): Promise<WeatherInfo | null> {
+  async getLocationAndWeather(force = false): Promise<WeatherInfo | null> {
     // Respect the user's location preference — no geolocation prompt when off.
     if (!this.settings.isLocationEnabled()) {
       return null;
@@ -213,7 +232,7 @@ export class WeatherService {
 
     const fresh =
       cached && Date.now() - cached.fetchedAt < REFRESH_MS;
-    if (fresh || !this.network.isOnline) {
+    if ((fresh && !force) || !this.network.isOnline) {
       return cached;
     }
 

@@ -52,9 +52,14 @@ export default {
 
     const prompt =
       `You are a helpful assistant for a Jehovah's Witness using a field-ministry app. ` +
-      `Write ONE short, warm, practical tip (max 18 words) advising what to wear or ` +
-      `bring for door-to-door ministry over the next few hours, accounting for any ` +
-      `change ahead. Plain text only: no emoji, no quotes, no markdown, one sentence.\n` +
+      `Write a short, warm, practical message (max 30 words) for door-to-door ministry ` +
+      `over the next few hours. The forecast lists only upcoming hours. If it shows a ` +
+      `notable change (rain, storms, clearing), begin with ONE sentence naming what to ` +
+      `expect and the soonest specific time it is likely, e.g. "Rain is likely around ` +
+      `7 PM." Then add ONE sentence advising what to wear or bring. If nothing notable ` +
+      `is ahead, give just the single advice sentence. Use the forecast times exactly ` +
+      `as given, and never mention a time earlier than the forecast. Plain text only: no emoji, ` +
+      `no quotes, no markdown, at most two sentences.\n` +
       `Conditions now: ${description}, ${temperature ?? 'unknown'} degrees Celsius, ` +
       `${partOfDay}, in ${city} (scene: ${scene}).` +
       (forecastText ? `\n${forecastText}` : '');
@@ -75,7 +80,7 @@ export default {
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 60,
+            maxOutputTokens: 100,
             topP: 0.9,
           },
         }),

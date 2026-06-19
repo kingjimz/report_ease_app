@@ -64,6 +64,17 @@
               <i class="bi bi-geo-alt text-[11px]"></i>
               <span class="truncate max-w-[11rem]">{{ weather.city }}</span>
             </p>
+            <button
+              type="button"
+              (click)="manualRefresh()"
+              [disabled]="weatherRefreshing"
+              [title]="weatherRefreshing ? 'Refreshing weather' : 'Refresh weather'"
+              [attr.aria-label]="weatherRefreshing ? 'Refreshing weather' : 'Refresh weather'"
+              class="mt-1 inline-flex items-center gap-1 text-white/75 hover:text-white text-[11px] transition-colors drop-shadow disabled:cursor-default"
+            >
+              <i class="bi bi-arrow-repeat text-[12px]" [class.animate-spin]="weatherRefreshing"></i>
+              <span>{{ weatherRefreshing ? 'Refreshing...' : 'Refresh' }}</span>
+            </button>
           </ng-container>
 
           <ng-template #weatherFallback>
