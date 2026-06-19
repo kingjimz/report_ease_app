@@ -349,6 +349,12 @@
   border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
+/* Glass panel for the AI tip now living inside the card. */
+.tip-panel {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
 /* Respect reduced-motion preferences */
 @media (prefers-reduced-motion: reduce) {
   .fx-sun::before,

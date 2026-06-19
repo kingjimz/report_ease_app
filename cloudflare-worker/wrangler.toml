@@ -2,10 +2,13 @@ name = "reportease-weather-tip"
 main = "src/worker.js"
 compatibility_date = "2025-06-01"
 
-# Optional vars (non-secret). Set GEMINI_API_KEY as a SECRET, not here:
-#   wrangler secret put GEMINI_API_KEY
+# Workers AI binding — runs models on Cloudflare, no external API key needed.
+[ai]
+binding = "AI"
+
 [vars]
 # Lock CORS to your app's origin in production, e.g. "https://reportease-app.web.app".
 # Leave as "*" while testing locally.
 ALLOWED_ORIGIN = "*"
-GEMINI_MODEL = "gemini-2.5-flash-lite"
+# Override the default Workers AI model if desired.
+AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fast"
