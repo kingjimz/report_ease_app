@@ -30,6 +30,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   userData: any;
   showConfigureModal = false;
   isPioneer = false;
+  locationEnabled = true;
   showSuccessMessage = false;
   successMessage = '';
   bibleStudies: any[] = [];
@@ -179,6 +180,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   loadSettings() {
     this.settingsService.settings$.subscribe(settings => {
       this.isPioneer = settings.isPioneer;
+      this.locationEnabled = settings.locationEnabled;
     });
   }
 
@@ -421,6 +423,16 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.showSuccessMessage = true;
     this.successMessage = `Pioneer status ${this.isPioneer ? 'enabled' : 'disabled'}. Dashboard updated!`;
     
+    setTimeout(() => {
+      this.showSuccessMessage = false;
+    }, 3000);
+  }
+
+  toggleLocation() {
+    this.settingsService.setLocationEnabled(this.locationEnabled);
+    this.showSuccessMessage = true;
+    this.successMessage = `Location ${this.locationEnabled ? 'enabled' : 'disabled'}. Dashboard updated!`;
+
     setTimeout(() => {
       this.showSuccessMessage = false;
     }, 3000);

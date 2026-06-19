@@ -327,6 +327,32 @@
           </div>
         </div>
 
+        <!-- Location / Weather Toggle -->
+        <div class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+          <div class="flex items-start justify-between">
+            <div class="flex-1 pr-3">
+              <div class="flex items-center space-x-2 mb-1">
+                <i class="bi bi-geo-alt text-blue-600 dark:text-blue-400 text-base"></i>
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Location</h3>
+              </div>
+              <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                Show local weather and a daily tip on your dashboard
+              </p>
+            </div>
+            <div class="flex items-center flex-shrink-0">
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="locationEnabled"
+                  (change)="toggleLocation()"
+                  class="sr-only peer"
+                />
+                <div class="w-11 h-6 bg-gray-300 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
         <!-- App Updates -->
         <div class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
           <div class="flex items-start justify-between">

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { NetworkService } from './network.service';
+import { SettingsService } from './settings.service';
 import { environment } from '../../environments/environment';
 
 export interface WeatherInfo {
@@ -42,6 +43,7 @@ export class WeatherService {
   constructor(
     private http: HttpClient,
     private network: NetworkService,
+    private settings: SettingsService,
   ) {}
 
   /** Last successfully cached snapshot, or null if none stored. */
@@ -166,6 +168,11 @@ export class WeatherService {
    * network when online and the cache is stale, so it stays cheap and offline-safe.
    */
   async getLocationAndWeather(): Promise<WeatherInfo | null> {
+    // Respect the user's location preference — no geolocation prompt when off.
+    if (!this.settings.isLocationEnabled()) {
+      return null;
+    }
+
     const cached = this.getCached();
 
     const fresh =
@@ -207,7 +214,7 @@ export class WeatherService {
         (pos) =>
           resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
         (err) => reject(err),
-        { timeout: 8000, maximumAge: 10 * 60 * 1000 },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 10 * 60 * 1000 },
       );
     });
   }
@@ -219,7 +226,8 @@ export class WeatherService {
     if (res?.latitude == null || res?.longitude == null) {
       throw new Error('IP location unavailable');
     }
-    return { lat: res.latitude, lon: res.longitude, city: res.city };
+    const city = [res.city, res.region].filter(Boolean).join(', ') || undefined;
+    return { lat: res.latitude, lon: res.longitude, city };
   }
 
   private async fetchWeather(
@@ -250,10 +258,39 @@ export class WeatherService {
         `https://api.bigdatacloud.net/data/reverse-geocode-client` +
         `?latitude=${coords.lat}&longitude=${coords.lon}&localityLanguage=en`;
       const res: any = await firstValueFrom(this.http.get(url));
-      return res?.city || res?.locality || res?.principalSubdivision || null;
+      // Municipality/city, then province — e.g. "Tanza, Cavite".
+      const locality = res?.city || res?.locality || null;
+      const province = this.extractProvince(res, locality);
+      if (locality && province && locality !== province) {
+        return `${locality}, ${province}`;
+      }
+      return locality || province || null;
     } catch {
       return null;
     }
+  }
+
+  /**
+   * The province (e.g. "Cavite"), not the region. bigdatacloud's
+   * `principalSubdivision` returns the region in some countries (the Philippines
+   * gives "Calabarzon"), so we instead take the administrative entry sitting one
+   * level above the city in `localityInfo.administrative` (sorted by adminLevel).
+   */
+  private extractProvince(res: any, locality: string | null): string | null {
+    const admins: any[] = res?.localityInfo?.administrative ?? [];
+    const cityLevel = admins.find((a) => a?.name === locality)?.adminLevel;
+    const parents = admins.filter(
+      (a) =>
+        typeof a?.adminLevel === 'number' &&
+        (cityLevel == null || a.adminLevel < cityLevel),
+    );
+    if (!parents.length) return res?.principalSubdivision || null;
+    // The city's immediate parent = the largest adminLevel still below the city.
+    const parent = parents.reduce((best, a) =>
+      a.adminLevel > best.adminLevel ? a : best,
+    );
+    // Strip any "(Region ...)" style suffix.
+    return parent?.name ? String(parent.name).replace(/\s*\(.*\)\s*$/, '').trim() : null;
   }
 }
 

@@ -3,6 +3,7 @@ import { BehaviorSubject } from 'rxjs';
 
 interface UserSettings {
   isPioneer: boolean;
+  locationEnabled: boolean;
 }
 
 @Injectable({
@@ -23,13 +24,19 @@ export class SettingsService {
     const stored = localStorage.getItem(this.STORAGE_KEY);
     if (stored) {
       try {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        return {
+          isPioneer: parsed.isPioneer ?? false,
+          // Default existing users to on so weather keeps working.
+          locationEnabled: parsed.locationEnabled ?? true,
+        };
       } catch (e) {
         console.error('Error parsing settings:', e);
       }
     }
     return {
-      isPioneer: false  // Default to false - will be set during onboarding
+      isPioneer: false, // Default to false - will be set during onboarding
+      locationEnabled: true, // Weather/location on by default
     };
   }
 
@@ -62,6 +69,22 @@ export class SettingsService {
    */
   isPioneer(): boolean {
     return this.getSettings().isPioneer;
+  }
+
+  /**
+   * Update location/weather access preference
+   */
+  setLocationEnabled(locationEnabled: boolean): void {
+    const settings = this.getSettings();
+    settings.locationEnabled = locationEnabled;
+    this.saveSettings(settings);
+  }
+
+  /**
+   * Check if location/weather is enabled
+   */
+  isLocationEnabled(): boolean {
+    return this.getSettings().locationEnabled;
   }
 }
 

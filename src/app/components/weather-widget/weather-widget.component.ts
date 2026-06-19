@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-import { AuthService } from '../../_services/auth.service';
+import { SettingsService } from '../../_services/settings.service';
 import {
   WeatherService,
   WeatherInfo,
@@ -19,83 +19,108 @@ import {
 })
 export class WeatherWidgetComponent implements OnInit, OnDestroy {
   now: Date = new Date();
-  userName = '';
   weather: WeatherInfo | null = null;
   weatherLoading = true;
   aiTipText: string | null = null;
   aiTipLoading = false;
+  aiTipError = false;
+  locationEnabled = true;
 
   private clockId: any = null;
-  private userSub?: Subscription;
+  private settingsSub?: Subscription;
 
   constructor(
-    private auth: AuthService,
     private weatherSvc: WeatherService,
+    private settings: SettingsService,
   ) {}
 
   ngOnInit(): void {
     // Live clock, ticking each second.
     this.clockId = setInterval(() => (this.now = new Date()), 1000);
 
-    // Resolve a friendly name: displayName, else the local part of the email.
-    this.userSub = this.auth.user$.subscribe((user) => {
-      if (user?.displayName) {
-        this.userName = user.displayName.split(' ')[0];
-      } else if (user?.email) {
-        const local = user.email.split('@')[0];
-        this.userName = local.charAt(0).toUpperCase() + local.slice(1);
+    // React to the location preference (emits the current value immediately).
+    this.settingsSub = this.settings.settings$.subscribe((s) => {
+      const wasEnabled = this.locationEnabled;
+      this.locationEnabled = s.locationEnabled;
+      if (this.locationEnabled) {
+        // Load on first run or when newly turned on.
+        if (!wasEnabled || !this.weather) this.loadWeather();
       } else {
-        this.userName = '';
+        this.clearWeather();
       }
     });
+  }
 
-    // Show cached weather instantly, then refresh in the background.
+  /** Turn location on from the widget prompt; the subscription triggers the load. */
+  enableLocation(): void {
+    this.settings.setLocationEnabled(true);
+  }
+
+  /** Show cached weather instantly, then refresh in the background. */
+  private loadWeather(): void {
     this.weather = this.weatherSvc.getCached();
     this.weatherLoading = !this.weather;
     // If AI tips are enabled, show the loading state up front so the rule-based
     // tip doesn't flash before the AI response arrives.
     this.aiTipLoading = this.weatherSvc.aiEnabled && !!this.weather;
-    console.log('[WeatherTip] aiEnabled =', this.weatherSvc.aiEnabled);
     this.weatherSvc
       .getLocationAndWeather()
       .then((info) => {
-        console.log('[WeatherTip] weather resolved:', info);
         if (info) {
           this.weather = info;
           this.refreshAiTip();
         } else {
-          console.warn('[WeatherTip] No weather (geolocation/offline?) — AI tip skipped.');
           this.aiTipLoading = false;
         }
       })
       .finally(() => (this.weatherLoading = false));
   }
 
-  /** Ask the AI service for a tip; falls back to the rule-based tip on null. */
+  /** Drop the view state when location is turned off (cache stays in storage). */
+  private clearWeather(): void {
+    this.weather = null;
+    this.weatherLoading = false;
+    this.aiTipText = null;
+    this.aiTipLoading = false;
+    this.aiTipError = false;
+  }
+
+  /** User-triggered re-analyze when the AI tip failed to load. */
+  reanalyzeTip(): void {
+    this.refreshAiTip();
+  }
+
+  /**
+   * Ask the AI service for a tip. On null/error we flag aiTipError so the view
+   * can show a small re-analyze button; the rule-based tip stays visible meanwhile.
+   */
   private refreshAiTip(): void {
     if (!this.weather || !this.weatherSvc.aiEnabled) {
-      console.warn('[WeatherTip] refreshAiTip skipped', {
-        hasWeather: !!this.weather,
-        aiEnabled: this.weatherSvc.aiEnabled,
-      });
       this.aiTipLoading = false;
       return;
     }
     this.aiTipLoading = true;
+    this.aiTipError = false;
     const hour = this.now.getHours();
     const partOfDay =
       hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
     this.weatherSvc
       .getAiTip(this.weather, this.scene, partOfDay)
       .then((text) => {
-        if (text) this.aiTipText = text;
+        if (text) {
+          this.aiTipText = text;
+          this.aiTipError = false;
+        } else {
+          this.aiTipError = true;
+        }
       })
+      .catch(() => (this.aiTipError = true))
       .finally(() => (this.aiTipLoading = false));
   }
 
   ngOnDestroy(): void {
     if (this.clockId) clearInterval(this.clockId);
-    this.userSub?.unsubscribe();
+    this.settingsSub?.unsubscribe();
   }
 
   get greeting(): string {
