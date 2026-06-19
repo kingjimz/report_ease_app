@@ -6,8 +6,16 @@
 .weather-card {
   background: linear-gradient(160deg, #4ea3f7 0%, #7cc6ff 55%, #bfe3ff 100%);
 }
+.scene-clear-morning {
+  /* Soft dawn: cool blue overhead easing into a warm peach horizon. */
+  background: linear-gradient(160deg, #4f93d6 0%, #8fc0e8 45%, #ffd9a8 100%);
+}
 .scene-clear-day {
   background: linear-gradient(160deg, #2f8fe0 0%, #5fb0f2 50%, #a7d8ff 100%);
+}
+.scene-clear-evening {
+  /* Sunset: deep dusk up top falling to a warm orange band at the horizon. */
+  background: linear-gradient(160deg, #1f2452 0%, #6b3f7c 42%, #f0894e 100%);
 }
 .scene-clear-night {
   background: linear-gradient(160deg, #0b1026 0%, #1b2350 60%, #2a2f6b 100%);
@@ -284,6 +292,67 @@
   min-width: 3rem;
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* ---- Swipeable carousel (today ↔ 7-day) ---- */
+.weather-carousel {
+  /* Let vertical scroll through; we handle horizontal swipes ourselves. */
+  touch-action: pan-y;
+}
+.page-track {
+  transition: transform 0.35s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-track {
+    transition: none;
+  }
+}
+
+/* Page indicator dots, bottom-centre. */
+.page-dots {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  gap: 0.3rem;
+}
+/* Each dot is a button with generous padding so the tap target is comfortable
+   even though the visible dot stays small. */
+.page-dots button {
+  display: flex;
+  align-items: center;
+  padding: 8px 4px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.page-dots button::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.4);
+  transition:
+    width 0.2s ease,
+    background 0.2s ease;
+}
+.page-dots button.active::before {
+  width: 14px;
+  background: #fff;
+}
+
+/* A single day row on the 7-day page. */
+.daily-row {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Glass panel for the AI tip now living inside the card. */
+.tip-panel {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
 }
 
 /* Respect reduced-motion preferences */

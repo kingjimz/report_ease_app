@@ -1,0 +1,171 @@
+<!-- Hidden entirely when no chat endpoint is configured -->
+<ng-container *ngIf="chat.enabled">
+  <!-- Floating launcher button -->
+  <div
+    *ngIf="!open"
+    [ngClass]="barVisible ? 'bottom-24' : 'bottom-6'"
+    class="chat-launcher fixed right-4 z-[9990] flex items-center gap-2 transition-all duration-300"
+  >
+    <!-- "Need help?" label slides out from the button, then tucks away -->
+    <button
+      type="button"
+      (click)="toggle()"
+      [class.label-hidden]="!showLabel"
+      class="chat-label whitespace-nowrap rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-gray-800 shadow-lg dark:bg-gray-800 dark:text-gray-100"
+    >
+      Need help?
+    </button>
+    <button
+      type="button"
+      (click)="toggle()"
+      aria-label="Open help assistant"
+      class="chat-fab flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
+    >
+      <!-- Custom robot mascot -->
+      <svg
+        class="robot-icon h-8 w-8"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <!-- antenna -->
+        <line x1="12" y1="3.2" x2="12" y2="5" />
+        <circle cx="12" cy="2.2" r="1.1" fill="currentColor" stroke="none" />
+        <!-- head -->
+        <rect x="4.3" y="5" width="15.4" height="11.5" rx="3.4" />
+        <!-- ears -->
+        <line x1="4.3" y1="9.3" x2="2.4" y2="9.3" />
+        <line x1="19.7" y1="9.3" x2="21.6" y2="9.3" />
+        <!-- eyes -->
+        <circle class="robot-eye" cx="9" cy="10.4" r="1.35" fill="currentColor" stroke="none" />
+        <circle class="robot-eye" cx="15" cy="10.4" r="1.35" fill="currentColor" stroke="none" />
+        <!-- mouth grille -->
+        <rect x="8.5" y="13" width="7" height="1.9" rx="0.95" />
+        <line x1="11" y1="13" x2="11" y2="14.9" />
+        <line x1="13" y1="13" x2="13" y2="14.9" />
+        <!-- shoulders/body hint -->
+        <path d="M8.5 16.5 v1.2 a3.5 3.5 0 0 0 7 0 v-1.2" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Chat panel -->
+  <div
+    *ngIf="open"
+    class="fixed inset-0 z-[9990] sm:inset-auto sm:bottom-24 sm:right-4"
+  >
+    <!-- Backdrop (mobile): tap to close -->
+    <div
+      class="absolute inset-0 bg-black/30 sm:hidden"
+      (click)="toggle()"
+    ></div>
+
+    <div
+      class="chat-panel absolute inset-x-0 bottom-0 flex max-h-[80vh] flex-col rounded-t-2xl bg-white shadow-2xl dark:bg-gray-800 sm:static sm:h-[28rem] sm:w-96 sm:max-h-[80vh] sm:rounded-2xl"
+    >
+      <!-- Header -->
+      <div
+        class="flex items-center gap-2 rounded-t-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 text-white"
+      >
+        <i class="bi bi-chat-dots text-lg"></i>
+        <div class="min-w-0">
+          <p class="text-sm font-semibold leading-tight">Help Assistant</p>
+          <p class="text-[11px] text-white/80 leading-tight">
+            {{ chat.remaining }} of {{ chat.limit }} questions left today
+          </p>
+        </div>
+        <button
+          type="button"
+          (click)="reset()"
+          title="Start over"
+          aria-label="Start over"
+          class="ml-auto flex h-8 w-8 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/20"
+        >
+          <i class="bi bi-arrow-clockwise text-base"></i>
+        </button>
+        <button
+          type="button"
+          (click)="toggle()"
+          title="Close"
+          aria-label="Close"
+          class="flex h-8 w-8 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/20"
+        >
+          <i class="bi bi-x-lg text-base"></i>
+        </button>
+      </div>
+
+      <!-- Messages -->
+      <div
+        #scrollArea
+        class="chat-scroll flex-1 space-y-3 overflow-y-auto px-4 py-3"
+      >
+        <div
+          *ngFor="let m of chat.messages"
+          class="flex"
+          [ngClass]="m.role === 'user' ? 'justify-end' : 'justify-start'"
+        >
+          <div
+            class="max-w-[85%] whitespace-normal rounded-2xl px-3 py-2 text-sm"
+            [ngClass]="m.role === 'user'
+              ? 'bg-blue-600 text-white rounded-br-sm'
+              : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-bl-sm'"
+          >
+            {{ m.content }}
+          </div>
+        </div>
+
+        <!-- Typing indicator -->
+        <div *ngIf="chat.loading" class="flex justify-start">
+          <div
+            class="flex items-center gap-1 rounded-2xl rounded-bl-sm bg-gray-100 px-3 py-3 dark:bg-gray-700"
+          >
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+          </div>
+        </div>
+
+        <!-- Starter chips (only on a fresh thread) -->
+        <div *ngIf="showStarters" class="flex flex-col items-start gap-2 pt-1">
+          <button
+            *ngFor="let q of starters"
+            type="button"
+            (click)="sendStarter(q)"
+            [disabled]="chat.limitReached"
+            class="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-left text-xs text-blue-700 transition-colors hover:bg-blue-100 disabled:opacity-50 dark:border-blue-900/50 dark:bg-blue-900/30 dark:text-blue-200 dark:hover:bg-blue-900/50"
+          >
+            {{ q }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Input -->
+      <form
+        (ngSubmit)="sendDraft()"
+        class="flex items-center gap-2 border-t border-gray-200 px-3 py-2.5 dark:border-gray-700"
+      >
+        <input
+          type="text"
+          [(ngModel)]="draft"
+          name="draft"
+          [disabled]="chat.loading || chat.limitReached"
+          [placeholder]="chat.limitReached ? 'Daily limit reached — resets tomorrow' : 'Ask about the app...'"
+          autocomplete="off"
+          class="min-w-0 flex-1 rounded-full border border-gray-300 bg-gray-50 px-4 py-2 text-sm text-gray-800 outline-none focus:border-blue-500 disabled:opacity-60 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+        />
+        <button
+          type="submit"
+          [disabled]="chat.loading || chat.limitReached || !draft.trim()"
+          aria-label="Send"
+          class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-white transition-colors hover:bg-blue-700 disabled:opacity-40"
+        >
+          <i class="bi bi-send text-sm"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+</ng-container>

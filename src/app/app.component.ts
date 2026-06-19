@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { PwaInstallPromptComponent } from './components/pwa-install-prompt/pwa-install-prompt.component';
 import { NotificationPermissionToastComponent } from './components/notification-permission-toast/notification-permission-toast.component';
 import { AppUpdateToastComponent } from './components/app-update-toast/app-update-toast.component';
+import { ChatbotWidgetComponent } from './components/chatbot-widget/chatbot-widget.component';
 import { ThemeService } from './services/theme.service';
 import { NetworkService } from './_services/network.service';
 import { NotificationService } from './_services/notification.service';
@@ -17,7 +18,7 @@ import { Subscription } from 'rxjs';
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
-  imports: [RouterOutlet, CommonModule, PwaInstallPromptComponent, NotificationPermissionToastComponent, AppUpdateToastComponent],
+  imports: [RouterOutlet, CommonModule, PwaInstallPromptComponent, NotificationPermissionToastComponent, AppUpdateToastComponent, ChatbotWidgetComponent],
 })
 export class AppComponent implements OnInit, OnDestroy {
   isOnline = true;

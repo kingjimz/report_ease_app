@@ -6,9 +6,12 @@ import {
   WeatherService,
   WeatherInfo,
   WeatherScene,
+  ClearScene,
   ForecastHour,
+  DailyForecast,
   weatherScene,
   weatherTip,
+  describeWeather,
 } from '../../_services/weather.service';
 
 @Component({
@@ -27,6 +30,12 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
   aiTipLoading = false;
   aiTipError = false;
   locationEnabled = true;
+
+  /** Carousel page: 0 = today, 1 = 7-day forecast. */
+  page = 0;
+  private readonly LAST_PAGE = 1;
+  /** X coord where the current swipe began (null when not swiping). */
+  private touchStartX: number | null = null;
 
   private clockId: any = null;
   private settingsSub?: Subscription;
@@ -184,7 +193,13 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
 
     const hour = this.now.getHours();
     const partOfDay =
-      hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
+      hour < 6
+        ? 'night'
+        : hour < 12
+        ? 'morning'
+        : hour < 18
+        ? 'afternoon'
+        : 'evening';
     this.weatherSvc
       .getAiTip(this.weather, this.scene, partOfDay, force)
       .then((text) => {
@@ -222,15 +237,45 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Animated background scene. Uses the live weather when available; otherwise
-   * falls back to a time-of-day clear scene so the card is never blank.
+   * Animated background scene. The condition comes from the live weather, but
+   * day-vs-night tracks the live clock (not the fetched snapshot's is_day, which
+   * goes stale in the cache) so the wallpaper turns to night in the evening and
+   * back to day in the morning. Falls back to a clear scene when weather is off.
    */
   get scene(): WeatherScene {
     if (this.weather) {
-      return weatherScene(this.weather.weatherCode, this.weather.isDay);
+      return weatherScene(this.weather.weatherCode, this.clearScene);
     }
+    return this.clearScene;
+  }
+
+  /**
+   * Clear-sky wallpaper for the current local hour:
+   *   morning 5–10, day 11–15, evening 16–18, night 19–4.
+   * Driven by the live clock so the card shifts through the day on its own.
+   */
+  private get clearScene(): ClearScene {
     const hour = this.now.getHours();
-    return hour >= 6 && hour < 19 ? 'clear-day' : 'clear-night';
+    if (hour < 5) return 'clear-night';
+    if (hour < 11) return 'clear-morning';
+    if (hour < 16) return 'clear-day';
+    if (hour < 19) return 'clear-evening';
+    return 'clear-night';
+  }
+
+  /** True while the sun is up (morning through evening) for the sun/moon icon. */
+  private get isDaytime(): boolean {
+    const hour = this.now.getHours();
+    return hour >= 5 && hour < 19;
+  }
+
+  /**
+   * Current-conditions icon, recomputed against the live clock so the sun/moon
+   * matches the wallpaper instead of the (cache-stale) fetched snapshot.
+   */
+  get currentIcon(): string {
+    if (!this.weather) return '';
+    return describeWeather(this.weather.weatherCode, this.isDaytime).icon;
   }
 
   /**
@@ -252,5 +297,39 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
   get forecast(): ForecastHour[] {
     // Cap at 5 even if a stale cache holds more, so the strip stays consistent.
     return (this.weather?.forecast ?? []).slice(0, 5);
+  }
+
+  /** The next 7 days, for the second carousel page ([] when unavailable). */
+  get daily(): DailyForecast[] {
+    return (this.weather?.daily ?? []).slice(0, 7);
+  }
+
+  /** Move to the next page (today → 7-day), clamped. */
+  nextPage(): void {
+    if (this.page < this.LAST_PAGE) this.page++;
+  }
+
+  /** Move to the previous page (7-day → today), clamped. */
+  prevPage(): void {
+    if (this.page > 0) this.page--;
+  }
+
+  /** Jump straight to a page — used by the tappable indicator dots. */
+  goToPage(i: number): void {
+    if (i >= 0 && i <= this.LAST_PAGE) this.page = i;
+  }
+
+  onTouchStart(e: TouchEvent): void {
+    this.touchStartX = e.changedTouches[0]?.clientX ?? null;
+  }
+
+  /** A horizontal swipe past the threshold pages the carousel. */
+  onTouchEnd(e: TouchEvent): void {
+    if (this.touchStartX == null) return;
+    const dx = (e.changedTouches[0]?.clientX ?? this.touchStartX) - this.touchStartX;
+    this.touchStartX = null;
+    const SWIPE_THRESHOLD = 40; // px — ignore taps and tiny drags
+    if (dx <= -SWIPE_THRESHOLD) this.nextPage();
+    else if (dx >= SWIPE_THRESHOLD) this.prevPage();
   }
 }

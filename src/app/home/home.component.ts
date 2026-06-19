@@ -44,7 +44,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild(CalendarComponent) calendarComponent?: CalendarComponent;
   
   activeTab = 'dashboard';
-  showTab = true;
+  private _showTab = true;
   selectedTab: string = 'dashboard';
   showManualReportModal = false;
   showOnboardingModal = false;
@@ -90,6 +90,15 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Load Bible studies
     this.loadBibleStudies();
+  }
+
+  /** Bottom tab bar visibility; broadcast so the chat button can ride along. */
+  get showTab(): boolean {
+    return this._showTab;
+  }
+  set showTab(visible: boolean) {
+    this._showTab = visible;
+    this.navigationService.setTabBarVisible(visible);
   }
 
   ngOnInit() {
