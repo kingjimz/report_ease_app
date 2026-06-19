@@ -88,10 +88,9 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
     this.aiTipError = false;
   }
 
-  /** User-triggered re-analyze when the AI tip failed or got stuck. */
+  /** Re-analyze temporarily disabled — no API call on click. */
   reanalyzeTip(): void {
-    if (!this.canReanalyze) return;
-    this.refreshAiTip();
+    return;
   }
 
   /**

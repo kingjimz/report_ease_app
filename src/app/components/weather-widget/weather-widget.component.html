@@ -1,4 +1,4 @@
-<div class="mb-6 sm:mb-8">
+<div class="mb-3">
   <div
     class="weather-card scene-{{ scene }} relative overflow-hidden rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 text-white p-5 sm:p-6"
   >
@@ -105,7 +105,7 @@
       [disabled]="!canReanalyze"
       [title]="canReanalyze ? 'Re-analyze tip' : 'AI suggestion'"
       [attr.aria-label]="canReanalyze ? 'Re-analyze tip' : 'AI suggestion'"
-      class="ml-auto flex-shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full transition-colors"
+      class="ml-auto flex-shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full transition-colors pointer-events-none"
       [ngClass]="canReanalyze
         ? 'text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 cursor-pointer'
         : 'text-gray-400 dark:text-gray-500 cursor-default'"
