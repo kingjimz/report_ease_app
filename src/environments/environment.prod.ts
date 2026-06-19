@@ -3,6 +3,9 @@
 // This file replaces environment.ts during production builds (configured in angular.json)
 export const environment = {
   production: true,
+  // URL of the Cloudflare Worker that proxies Gemini for weather tips.
+  // Leave empty to disable AI tips (the app falls back to the rule-based tip).
+  weatherAiUrl: 'https://reportease-weather-tip.reportease.workers.dev',
   firebase: {
     // PRODUCTION Firebase credentials
     apiKey: 'AIzaSyAOZ6R5siNGVKJp76i8uQunU9mojsKvU64',

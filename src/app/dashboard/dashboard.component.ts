@@ -9,23 +9,17 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ModalComponent } from '../components/modal/modal.component';
 import { AlertsComponent } from '../components/alerts/alerts.component';
+import { WeatherWidgetComponent } from '../components/weather-widget/weather-widget.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [ChartComponent, CommonModule, FormsModule, ModalComponent, AlertsComponent],
+  imports: [ChartComponent, CommonModule, FormsModule, ModalComponent, AlertsComponent, WeatherWidgetComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
 export class DashboardComponent implements OnInit {
   reports: any[] = [];
-
-  get greeting(): string {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
-  }
 
   bibleStudies: any[] = [];
   studySelected: any = null;

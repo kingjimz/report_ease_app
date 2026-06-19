@@ -5,6 +5,9 @@
 // to the live database. Switch back to staging once that project has a Firestore DB.
 export const environment = {
   production: false,
+  // URL of the Cloudflare Worker that proxies Gemini for weather tips.
+  // Leave empty to disable AI tips (the app falls back to the rule-based tip).
+  weatherAiUrl: 'https://reportease-weather-tip.reportease.workers.dev',
   firebase: {
     // PRODUCTION Firebase credentials (shared with environment.prod.ts)
     apiKey: 'AIzaSyAOZ6R5siNGVKJp76i8uQunU9mojsKvU64',

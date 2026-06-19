@@ -1,0 +1,11 @@
+name = "reportease-weather-tip"
+main = "src/worker.js"
+compatibility_date = "2025-06-01"
+
+# Optional vars (non-secret). Set GEMINI_API_KEY as a SECRET, not here:
+#   wrangler secret put GEMINI_API_KEY
+[vars]
+# Lock CORS to your app's origin in production, e.g. "https://reportease-app.web.app".
+# Leave as "*" while testing locally.
+ALLOWED_ORIGIN = "*"
+GEMINI_MODEL = "gemini-2.5-flash-lite"

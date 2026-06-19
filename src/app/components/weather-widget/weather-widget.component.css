@@ -1,0 +1,262 @@
+:host {
+  display: block;
+}
+
+/* ---- Card base + per-scene background gradient ---- */
+.weather-card {
+  background: linear-gradient(160deg, #4ea3f7 0%, #7cc6ff 55%, #bfe3ff 100%);
+}
+.scene-clear-day {
+  background: linear-gradient(160deg, #2f8fe0 0%, #5fb0f2 50%, #a7d8ff 100%);
+}
+.scene-clear-night {
+  background: linear-gradient(160deg, #0b1026 0%, #1b2350 60%, #2a2f6b 100%);
+}
+.scene-clouds {
+  background: linear-gradient(160deg, #5b6b7d 0%, #8a9bb0 100%);
+}
+.scene-rain {
+  background: linear-gradient(160deg, #2f3d52 0%, #48586e 100%);
+}
+.scene-snow {
+  background: linear-gradient(160deg, #6b7a90 0%, #9fb0c4 100%);
+}
+.scene-fog {
+  background: linear-gradient(160deg, #7c8694 0%, #aab3bf 100%);
+}
+.scene-storm {
+  background: linear-gradient(160deg, #1c2230 0%, #383f4e 100%);
+}
+
+/* Effect layers fill the card and sit behind the content */
+.fx {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Readability scrim: darker toward the top-left where the text lives */
+.scrim {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.38) 0%,
+    rgba(0, 0, 0, 0.12) 45%,
+    rgba(0, 0, 0, 0) 80%
+  );
+}
+
+/* ---- Clear day: sun glow + slow rotating rays ---- */
+.fx-sun {
+  background: radial-gradient(
+    circle at 85% 18%,
+    rgba(255, 247, 214, 0.85) 0%,
+    rgba(255, 236, 170, 0.35) 14%,
+    rgba(255, 236, 170, 0) 38%
+  );
+}
+.fx-sun::before {
+  content: '';
+  position: absolute;
+  top: -60%;
+  right: -25%;
+  width: 130%;
+  height: 200%;
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 255, 255, 0) 0deg,
+    rgba(255, 255, 255, 0.16) 6deg,
+    rgba(255, 255, 255, 0) 12deg
+  );
+  -webkit-mask: radial-gradient(circle at 85% 18%, #000 0%, transparent 45%);
+  mask: radial-gradient(circle at 85% 18%, #000 0%, transparent 45%);
+  animation: spin 60s linear infinite;
+}
+
+/* ---- Clear night: twinkling starfield ---- */
+.fx-stars {
+  background-image:
+    radial-gradient(1.2px 1.2px at 20% 30%, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1px 1px at 60% 20%, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1.4px 1.4px at 80% 45%, rgba(255, 255, 255, 0.85), transparent),
+    radial-gradient(1px 1px at 35% 65%, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1.2px 1.2px at 50% 50%, rgba(255, 255, 255, 0.75), transparent),
+    radial-gradient(1px 1px at 90% 75%, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1.3px 1.3px at 15% 80%, rgba(255, 255, 255, 0.8), transparent);
+  animation: twinkle 4s ease-in-out infinite;
+}
+
+/* ---- Drifting clouds (shared by clouds/rain/snow/fog/storm) ---- */
+.fx-clouds span {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.28);
+  filter: blur(14px);
+}
+.fx-clouds span:nth-child(1) {
+  width: 160px;
+  height: 70px;
+  top: 8%;
+  left: -30%;
+  animation: drift 26s linear infinite;
+}
+.fx-clouds span:nth-child(2) {
+  width: 220px;
+  height: 90px;
+  top: 30%;
+  left: -45%;
+  background: rgba(255, 255, 255, 0.2);
+  animation: drift 38s linear infinite;
+  animation-delay: -8s;
+}
+.fx-clouds span:nth-child(3) {
+  width: 120px;
+  height: 55px;
+  top: 55%;
+  left: -25%;
+  background: rgba(255, 255, 255, 0.16);
+  animation: drift 32s linear infinite;
+  animation-delay: -18s;
+}
+
+/* ---- Rain: slanted streaks falling ---- */
+.fx-rain {
+  background-image: repeating-linear-gradient(
+    100deg,
+    transparent 0,
+    transparent 22px,
+    rgba(255, 255, 255, 0.35) 22px,
+    rgba(255, 255, 255, 0.35) 23px
+  );
+  -webkit-mask: repeating-linear-gradient(transparent 0, transparent 10px, #000 10px, #000 26px);
+  mask: repeating-linear-gradient(transparent 0, transparent 10px, #000 10px, #000 26px);
+  animation: rain 0.55s linear infinite;
+}
+
+/* ---- Snow: two layers of drifting flakes ---- */
+.fx-snow {
+  background-image:
+    radial-gradient(2px 2px at 10% 10%, rgba(255, 255, 255, 0.95), transparent),
+    radial-gradient(2px 2px at 40% 30%, rgba(255, 255, 255, 0.85), transparent),
+    radial-gradient(1.6px 1.6px at 70% 20%, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(2px 2px at 90% 40%, rgba(255, 255, 255, 0.8), transparent);
+  background-size: 200px 200px;
+  animation: snow 6s linear infinite;
+}
+.fx-snow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1.4px 1.4px at 25% 50%, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1.4px 1.4px at 55% 70%, rgba(255, 255, 255, 0.65), transparent),
+    radial-gradient(1.4px 1.4px at 85% 60%, rgba(255, 255, 255, 0.7), transparent);
+  background-size: 160px 160px;
+  animation: snow 9s linear infinite;
+}
+
+/* ---- Fog: soft horizontal bands drifting ---- */
+.fx-fog {
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.1) 12px,
+    rgba(255, 255, 255, 0) 24px
+  );
+  background-size: 100% 60px;
+  animation: fog 14s ease-in-out infinite;
+}
+
+/* ---- Storm: lightning flash ---- */
+.fx-lightning {
+  background: rgba(255, 255, 255, 0.85);
+  opacity: 0;
+  animation: flash 7s linear infinite;
+}
+
+/* ---- Keyframes ---- */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(180%);
+  }
+}
+@keyframes rain {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -6px 26px;
+  }
+}
+@keyframes snow {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 20px 200px;
+  }
+}
+@keyframes fog {
+  0%,
+  100% {
+    background-position: 0 0;
+    opacity: 0.7;
+  }
+  50% {
+    background-position: 0 30px;
+    opacity: 1;
+  }
+}
+@keyframes flash {
+  0%,
+  92%,
+  100% {
+    opacity: 0;
+  }
+  93% {
+    opacity: 0.9;
+  }
+  94% {
+    opacity: 0.1;
+  }
+  95% {
+    opacity: 0.8;
+  }
+  96% {
+    opacity: 0;
+  }
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .fx-sun::before,
+  .fx-stars,
+  .fx-clouds span,
+  .fx-rain,
+  .fx-snow,
+  .fx-snow::before,
+  .fx-fog,
+  .fx-lightning {
+    animation: none;
+  }
+  .fx-lightning {
+    display: none;
+  }
+}

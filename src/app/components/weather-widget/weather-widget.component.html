@@ -1,0 +1,88 @@
+<div class="mb-6 sm:mb-8">
+  <div
+    class="weather-card scene-{{ scene }} relative overflow-hidden rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 text-white p-5 sm:p-6"
+  >
+    <!-- Animated weather scene (pure CSS, offline-safe) -->
+    <div class="fx fx-sun" *ngIf="scene === 'clear-day'"></div>
+    <div class="fx fx-stars" *ngIf="scene === 'clear-night'"></div>
+
+    <div
+      class="fx fx-clouds"
+      *ngIf="scene === 'clouds' || scene === 'rain' || scene === 'snow' || scene === 'fog' || scene === 'storm'"
+    >
+      <span></span><span></span><span></span>
+    </div>
+
+    <div class="fx fx-rain" *ngIf="scene === 'rain' || scene === 'storm'"></div>
+    <div class="fx fx-snow" *ngIf="scene === 'snow'"></div>
+    <div class="fx fx-fog" *ngIf="scene === 'fog'"></div>
+    <div class="fx fx-lightning" *ngIf="scene === 'storm'"></div>
+
+    <!-- Scrim keeps the white text readable over any scene -->
+    <div class="fx scrim"></div>
+
+    <!-- Content -->
+    <div class="relative z-10">
+    <div class="flex items-start justify-between gap-4">
+      <!-- Greeting + date + time -->
+      <div class="min-w-0">
+        <h1 class="text-xl sm:text-2xl font-semibold truncate drop-shadow">
+          {{ greeting }}<span *ngIf="userName">, {{ userName }}</span>!
+        </h1>
+        <p class="text-white/85 text-xs sm:text-sm mt-1 drop-shadow">
+          {{ now | date: 'EEEE, MMMM d' }}
+        </p>
+        <p class="text-3xl sm:text-4xl font-bold tracking-tight mt-2 tabular-nums drop-shadow">
+          {{ now | date: 'h:mm' }}<span class="text-lg font-medium align-top ml-1">{{ now | date: 'a' }}</span>
+        </p>
+      </div>
+
+      <!-- Weather -->
+      <div class="flex-shrink-0 text-right">
+        <ng-container *ngIf="weather; else weatherFallback">
+          <i class="bi {{ weather.icon }} text-3xl sm:text-4xl leading-none drop-shadow"></i>
+          <p class="text-2xl sm:text-3xl font-semibold mt-1 tabular-nums drop-shadow">{{ weather.temperature }}&deg;</p>
+          <p class="text-white/85 text-xs drop-shadow">{{ weather.description }}</p>
+          <p class="text-white/75 text-[11px] flex items-center justify-end gap-1 mt-0.5 drop-shadow">
+            <i class="bi bi-geo-alt text-[11px]"></i>
+            <span class="truncate max-w-[8rem]">{{ weather.city }}</span>
+          </p>
+        </ng-container>
+
+        <ng-template #weatherFallback>
+          <div *ngIf="weatherLoading" class="text-white/80 text-xs flex items-center gap-1.5 drop-shadow">
+            <i class="bi bi-arrow-repeat animate-spin"></i> Loading weather...
+          </div>
+          <div *ngIf="!weatherLoading" class="text-white/75 text-xs flex items-center gap-1.5 drop-shadow">
+            <i class="bi bi-cloud-slash"></i> Weather unavailable
+          </div>
+        </ng-template>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <!-- Before-you-head-out recommendation (below the card) -->
+  <!-- AI tip loading shimmer -->
+  <div
+    *ngIf="aiTipLoading && !aiTipText"
+    class="mt-3 flex items-center gap-2 rounded-2xl bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700 px-4 py-3 text-xs sm:text-sm text-gray-500 dark:text-gray-400 animate-pulse"
+  >
+    <i class="bi bi-stars text-base flex-shrink-0"></i>
+    <span>Thinking of a tip for today...</span>
+  </div>
+
+  <!-- TESTING: AI tip only. Rule-based fallback temporarily disabled -->
+  <!-- (restore by changing *ngIf to: tip && !(aiTipLoading && !aiTipText)) -->
+  <div
+    *ngIf="aiTipText && tip"
+    class="mt-3 flex items-center gap-2 rounded-2xl bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700 px-4 py-3 text-xs sm:text-sm text-gray-700 dark:text-gray-200"
+  >
+    <i class="bi {{ tip.icon }} text-base text-blue-600 dark:text-blue-400 flex-shrink-0"></i>
+    <span>{{ tip.text }}</span>
+    <i
+      class="bi bi-stars text-[11px] text-gray-400 dark:text-gray-500 flex-shrink-0 ml-auto"
+      title="AI suggestion"
+    ></i>
+  </div>
+</div>
