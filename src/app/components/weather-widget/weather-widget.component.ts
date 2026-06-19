@@ -29,8 +29,15 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
   private clockId: any = null;
   private settingsSub?: Subscription;
   private aiTipTimer: any = null;
+  private refreshTimer: any = null;
   /** Treat the AI tip as stuck if it hasn't resolved within this window. */
   private readonly AI_TIP_STUCK_MS = 15000;
+  /**
+   * How often to check for fresh weather while the dashboard stays open.
+   * The service only hits the network once its 15-min cache expires, so polling
+   * every 5 min just catches that window promptly without extra calls.
+   */
+  private readonly REFRESH_POLL_MS = 5 * 60 * 1000;
 
   constructor(
     private weatherSvc: WeatherService,
@@ -50,6 +57,26 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
         if (!wasEnabled || !this.weather) this.loadWeather();
       } else {
         this.clearWeather();
+      }
+    });
+
+    // Background auto-refresh while the dashboard stays open.
+    this.refreshTimer = setInterval(
+      () => this.backgroundRefresh(),
+      this.REFRESH_POLL_MS,
+    );
+  }
+
+  /**
+   * Periodic silent refresh: pulls fresh weather (network only when the 15-min
+   * cache has expired) and updates the AI tip without flashing the loader.
+   */
+  private backgroundRefresh(): void {
+    if (!this.locationEnabled) return;
+    this.weatherSvc.getLocationAndWeather().then((info) => {
+      if (info) {
+        this.weather = info;
+        this.refreshAiTip(true);
       }
     });
   }
@@ -105,22 +132,28 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
    * Ask the AI service for a tip. On null/error/stuck we flag aiTipError so the
    * view shows a clickable re-analyze button; the rule-based tip stays visible.
    */
-  private refreshAiTip(): void {
+  private refreshAiTip(silent = false): void {
     if (!this.weather || !this.weatherSvc.aiEnabled) {
       this.aiTipLoading = false;
       return;
     }
-    this.aiTipLoading = true;
-    this.aiTipError = false;
 
-    // Guard against a hung request: surface the retry button if it never resolves.
-    clearTimeout(this.aiTipTimer);
-    this.aiTipTimer = setTimeout(() => {
-      if (this.aiTipLoading) {
-        this.aiTipLoading = false;
-        this.aiTipError = true;
-      }
-    }, this.AI_TIP_STUCK_MS);
+    // Silent (background) refreshes keep the current tip visible instead of
+    // flashing the loader; only show loading on the initial load or if no tip yet.
+    const showLoading = !silent || !this.aiTipText;
+
+    if (showLoading) {
+      this.aiTipLoading = true;
+      this.aiTipError = false;
+      // Guard against a hung request: surface the retry button if it never resolves.
+      clearTimeout(this.aiTipTimer);
+      this.aiTipTimer = setTimeout(() => {
+        if (this.aiTipLoading) {
+          this.aiTipLoading = false;
+          this.aiTipError = true;
+        }
+      }, this.AI_TIP_STUCK_MS);
+    }
 
     const hour = this.now.getHours();
     const partOfDay =
@@ -131,19 +164,25 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
         if (text) {
           this.aiTipText = text;
           this.aiTipError = false;
-        } else {
+        } else if (showLoading) {
+          // A failed background refresh keeps the existing tip silently.
           this.aiTipError = true;
         }
       })
-      .catch(() => (this.aiTipError = true))
+      .catch(() => {
+        if (showLoading) this.aiTipError = true;
+      })
       .finally(() => {
-        clearTimeout(this.aiTipTimer);
-        this.aiTipLoading = false;
+        if (showLoading) {
+          clearTimeout(this.aiTipTimer);
+          this.aiTipLoading = false;
+        }
       });
   }
 
   ngOnDestroy(): void {
     if (this.clockId) clearInterval(this.clockId);
+    if (this.refreshTimer) clearInterval(this.refreshTimer);
     clearTimeout(this.aiTipTimer);
     this.settingsSub?.unsubscribe();
   }
