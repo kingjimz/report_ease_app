@@ -91,16 +91,19 @@ export class CalendarComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.generateCalendar();
     this.generateWeekDays();
-    this.loadReports();
-    
-    // Subscribe to reports$ (the live, windowed stream) for immediate updates
-    // when recent reports are added/edited, including offline. These are merged
-    // into the full-history map rather than replacing it.
+
+    // Subscribe FIRST. reports$ is a BehaviorSubject, so it emits the current
+    // windowed reports synchronously here. On a tab switch the dashboard has
+    // already populated it, so the calendar renders its events immediately and
+    // loadReports() can skip the loader (no flash). These merge into the
+    // full-history map rather than replacing it.
     this.reportsSubscription = this.api.reports$.subscribe((reports) => {
       if (reports && reports.length > 0) {
         this.upsertReports(reports);
       }
     });
+
+    this.loadReports();
   }
 
   ngOnDestroy(): void {
@@ -246,7 +249,10 @@ export class CalendarComponent implements OnInit, OnDestroy {
   }
 
   async loadReports() {
-    this.isLoading = true;
+    // Only block with the loader on a genuine first load (nothing to show yet).
+    // When the live stream has already seeded the map (e.g. switching tabs),
+    // the events are on screen, so refresh quietly in the background instead.
+    this.isLoading = this.rawReportsById.size === 0;
     try {
       // Full history (cache-first, free) so the calendar can show any month,
       // not just the live window. Reseed the map from scratch on a full load.

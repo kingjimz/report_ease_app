@@ -28,6 +28,9 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
 
   private clockId: any = null;
   private settingsSub?: Subscription;
+  private aiTipTimer: any = null;
+  /** Treat the AI tip as stuck if it hasn't resolved within this window. */
+  private readonly AI_TIP_STUCK_MS = 15000;
 
   constructor(
     private weatherSvc: WeatherService,
@@ -85,14 +88,23 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
     this.aiTipError = false;
   }
 
-  /** User-triggered re-analyze when the AI tip failed to load. */
+  /** User-triggered re-analyze when the AI tip failed or got stuck. */
   reanalyzeTip(): void {
+    if (!this.canReanalyze) return;
     this.refreshAiTip();
   }
 
   /**
-   * Ask the AI service for a tip. On null/error we flag aiTipError so the view
-   * can show a small re-analyze button; the rule-based tip stays visible meanwhile.
+   * Clickable only when there is no live AI tip on screen — i.e. it errored or
+   * the load got stuck. While a fresh AI tip is displaying, it's just a marker.
+   */
+  get canReanalyze(): boolean {
+    return this.weatherSvc.aiEnabled && (this.aiTipError || !this.aiTipText);
+  }
+
+  /**
+   * Ask the AI service for a tip. On null/error/stuck we flag aiTipError so the
+   * view shows a clickable re-analyze button; the rule-based tip stays visible.
    */
   private refreshAiTip(): void {
     if (!this.weather || !this.weatherSvc.aiEnabled) {
@@ -101,6 +113,16 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
     }
     this.aiTipLoading = true;
     this.aiTipError = false;
+
+    // Guard against a hung request: surface the retry button if it never resolves.
+    clearTimeout(this.aiTipTimer);
+    this.aiTipTimer = setTimeout(() => {
+      if (this.aiTipLoading) {
+        this.aiTipLoading = false;
+        this.aiTipError = true;
+      }
+    }, this.AI_TIP_STUCK_MS);
+
     const hour = this.now.getHours();
     const partOfDay =
       hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
@@ -115,11 +137,15 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
         }
       })
       .catch(() => (this.aiTipError = true))
-      .finally(() => (this.aiTipLoading = false));
+      .finally(() => {
+        clearTimeout(this.aiTipTimer);
+        this.aiTipLoading = false;
+      });
   }
 
   ngOnDestroy(): void {
     if (this.clockId) clearInterval(this.clockId);
+    clearTimeout(this.aiTipTimer);
     this.settingsSub?.unsubscribe();
   }
 

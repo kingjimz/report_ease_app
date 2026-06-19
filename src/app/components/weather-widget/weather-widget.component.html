@@ -102,11 +102,11 @@
     <button
       type="button"
       (click)="reanalyzeTip()"
-      [disabled]="!aiTipError"
-      [title]="aiTipError ? 'Re-analyze tip' : 'AI suggestion'"
-      [attr.aria-label]="aiTipError ? 'Re-analyze tip' : 'AI suggestion'"
+      [disabled]="!canReanalyze"
+      [title]="canReanalyze ? 'Re-analyze tip' : 'AI suggestion'"
+      [attr.aria-label]="canReanalyze ? 'Re-analyze tip' : 'AI suggestion'"
       class="ml-auto flex-shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full transition-colors"
-      [ngClass]="aiTipError
+      [ngClass]="canReanalyze
         ? 'text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 cursor-pointer'
         : 'text-gray-400 dark:text-gray-500 cursor-default'"
     >
