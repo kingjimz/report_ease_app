@@ -77,6 +77,27 @@
         </ng-template>
       </div>
     </div>
+
+    <!-- Next-6-hours forecast strip (only when location is on and data exists) -->
+    <div
+      *ngIf="locationEnabled && forecast.length"
+      class="forecast-strip mt-4 flex gap-1.5 overflow-x-auto"
+    >
+      <div
+        *ngFor="let h of forecast"
+        class="forecast-cell flex flex-col items-center gap-1 rounded-xl px-2 py-2 text-center drop-shadow"
+      >
+        <span class="text-[10px] font-medium text-white/80 tabular-nums">{{ h.time | date: 'ha' }}</span>
+        <i class="bi {{ h.icon }} text-base leading-none"></i>
+        <span class="text-xs font-semibold tabular-nums">{{ h.temperature }}&deg;</span>
+        <span
+          *ngIf="h.precipProbability >= 20"
+          class="text-[10px] text-white/85 flex items-center gap-0.5 tabular-nums"
+        >
+          <i class="bi bi-droplet-half text-[9px]"></i>{{ h.precipProbability }}%
+        </span>
+      </div>
+    </div>
     </div>
   </div>
 
@@ -103,14 +124,14 @@
       type="button"
       (click)="reanalyzeTip()"
       [disabled]="!canReanalyze"
-      [title]="canReanalyze ? 'Re-analyze tip' : 'AI suggestion'"
-      [attr.aria-label]="canReanalyze ? 'Re-analyze tip' : 'AI suggestion'"
-      class="ml-auto flex-shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full transition-colors pointer-events-none"
+      [title]="canReanalyze ? 'Get a fresh tip' : 'AI suggestion'"
+      [attr.aria-label]="canReanalyze ? 'Get a fresh tip' : 'AI suggestion'"
+      class="ml-auto flex-shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full transition-colors"
       [ngClass]="canReanalyze
         ? 'text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 cursor-pointer'
         : 'text-gray-400 dark:text-gray-500 cursor-default'"
     >
-      <i class="bi bi-stars text-sm"></i>
+      <i class="bi bi-stars text-sm" [class.tip-pulse]="canReanalyze"></i>
     </button>
   </div>
   </ng-container>

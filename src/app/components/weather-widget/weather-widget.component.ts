@@ -6,6 +6,7 @@ import {
   WeatherService,
   WeatherInfo,
   WeatherScene,
+  ForecastHour,
   weatherScene,
   weatherTip,
 } from '../../_services/weather.service';
@@ -115,24 +116,22 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
     this.aiTipError = false;
   }
 
-  /** Re-analyze temporarily disabled — no API call on click. */
+  /** Force a fresh AI tip on demand, bypassing the daily cache. */
   reanalyzeTip(): void {
-    return;
+    if (!this.canReanalyze) return;
+    this.refreshAiTip(false, true);
   }
 
-  /**
-   * Clickable only when there is no live AI tip on screen — i.e. it errored or
-   * the load got stuck. While a fresh AI tip is displaying, it's just a marker.
-   */
+  /** Clickable whenever AI is on and a tip isn't already being fetched. */
   get canReanalyze(): boolean {
-    return this.weatherSvc.aiEnabled && (this.aiTipError || !this.aiTipText);
+    return this.weatherSvc.aiEnabled && !this.aiTipLoading;
   }
 
   /**
    * Ask the AI service for a tip. On null/error/stuck we flag aiTipError so the
    * view shows a clickable re-analyze button; the rule-based tip stays visible.
    */
-  private refreshAiTip(silent = false): void {
+  private refreshAiTip(silent = false, force = false): void {
     if (!this.weather || !this.weatherSvc.aiEnabled) {
       this.aiTipLoading = false;
       return;
@@ -159,7 +158,7 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
     const partOfDay =
       hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
     this.weatherSvc
-      .getAiTip(this.weather, this.scene, partOfDay)
+      .getAiTip(this.weather, this.scene, partOfDay, force)
       .then((text) => {
         if (text) {
           this.aiTipText = text;
@@ -213,7 +212,17 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
    */
   get tip(): { text: string; icon: string } | null {
     if (!this.weather) return null;
-    const base = weatherTip(this.scene, this.weather.temperature);
+    const base = weatherTip(
+      this.scene,
+      this.weather.temperature,
+      this.weather.forecast,
+    );
     return this.aiTipText ? { text: this.aiTipText, icon: base.icon } : base;
+  }
+
+  /** The next 5 hours, for the forecast strip ([] when unavailable). */
+  get forecast(): ForecastHour[] {
+    // Cap at 5 even if a stale cache holds more, so the strip stays consistent.
+    return (this.weather?.forecast ?? []).slice(0, 5);
   }
 }

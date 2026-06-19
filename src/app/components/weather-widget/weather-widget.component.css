@@ -25,7 +25,7 @@
   background: linear-gradient(160deg, #7c8694 0%, #aab3bf 100%);
 }
 .scene-storm {
-  background: linear-gradient(160deg, #1c2230 0%, #383f4e 100%);
+  background: linear-gradient(160deg, #0f1426 0%, #232a47 52%, #3b3556 100%);
 }
 
 /* Effect layers fill the card and sit behind the content */
@@ -132,6 +132,10 @@
   mask: repeating-linear-gradient(transparent 0, transparent 10px, #000 10px, #000 26px);
   animation: rain 0.55s linear infinite;
 }
+/* Softer, less "glitchy" rain in the storm scene (the glow carries the drama) */
+.scene-storm .fx-rain {
+  opacity: 0.5;
+}
 
 /* ---- Snow: two layers of drifting flakes ---- */
 .fx-snow {
@@ -167,11 +171,16 @@
   animation: fog 14s ease-in-out infinite;
 }
 
-/* ---- Storm: lightning flash ---- */
+/* ---- Storm: soft distant-lightning glow (top of the card, not a full flash) ---- */
 .fx-lightning {
-  background: rgba(255, 255, 255, 0.85);
+  background: radial-gradient(
+    ellipse 130% 75% at 50% -10%,
+    rgba(216, 226, 255, 0.55) 0%,
+    rgba(188, 203, 255, 0.18) 32%,
+    rgba(255, 255, 255, 0) 62%
+  );
   opacity: 0;
-  animation: flash 7s linear infinite;
+  animation: flash 8s ease-out infinite;
 }
 
 /* ---- Keyframes ---- */
@@ -226,22 +235,55 @@
 }
 @keyframes flash {
   0%,
-  92%,
+  88%,
   100% {
     opacity: 0;
   }
-  93% {
-    opacity: 0.9;
+  90% {
+    opacity: 0.75;
+  }
+  92% {
+    opacity: 0.25;
   }
   94% {
-    opacity: 0.1;
+    opacity: 0.6;
   }
-  95% {
-    opacity: 0.8;
-  }
-  96% {
+  98% {
     opacity: 0;
   }
+}
+
+/* ---- Re-analyze (stars) button: gentle zoom in/out to invite a tap ---- */
+.tip-pulse {
+  display: inline-block;
+  animation: tip-pulse 1.8s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes tip-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 1;
+  }
+}
+
+/* ---- Next-6-hours forecast strip ---- */
+.forecast-strip {
+  /* Hide the scrollbar but keep horizontal scroll on narrow screens. */
+  scrollbar-width: none;
+}
+.forecast-strip::-webkit-scrollbar {
+  display: none;
+}
+.forecast-cell {
+  flex: 1 0 0;
+  min-width: 3rem;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 /* Respect reduced-motion preferences */
@@ -258,5 +300,8 @@
   }
   .fx-lightning {
     display: none;
+  }
+  .tip-pulse {
+    animation: none;
   }
 }

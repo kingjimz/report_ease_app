@@ -48,14 +48,16 @@ export default {
     const temperature = Number.isFinite(body.temperature)
       ? Math.round(body.temperature)
       : null;
+    const forecastText = String(body.forecastText || '').slice(0, 300);
 
     const prompt =
       `You are a helpful assistant for a Jehovah's Witness using a field-ministry app. ` +
       `Write ONE short, warm, practical tip (max 18 words) advising what to wear or ` +
-      `bring before going outside for door-to-door ministry, based on this weather. ` +
-      `Plain text only: no emoji, no quotes, no markdown, one sentence.\n` +
-      `Conditions: ${description}, ${temperature ?? 'unknown'} degrees Celsius, ` +
-      `${partOfDay}, in ${city} (scene: ${scene}).`;
+      `bring for door-to-door ministry over the next few hours, accounting for any ` +
+      `change ahead. Plain text only: no emoji, no quotes, no markdown, one sentence.\n` +
+      `Conditions now: ${description}, ${temperature ?? 'unknown'} degrees Celsius, ` +
+      `${partOfDay}, in ${city} (scene: ${scene}).` +
+      (forecastText ? `\n${forecastText}` : '');
 
     const model = env.GEMINI_MODEL || FALLBACK_MODEL;
     const url =

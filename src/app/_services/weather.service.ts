@@ -14,6 +14,21 @@ export interface WeatherInfo {
   isDay: boolean;
   /** epoch ms of when this snapshot was fetched */
   fetchedAt: number;
+  /** Up to the next 5 hours of forecast (empty if unavailable). */
+  forecast?: ForecastHour[];
+}
+
+/** A single hour in the short-term forecast. */
+export interface ForecastHour {
+  /** epoch ms for this hour (for `| date:'ha'` labels) */
+  time: number;
+  /** °C, rounded */
+  temperature: number;
+  weatherCode: number;
+  /** Bootstrap Icon class, from describeWeather() */
+  icon: string;
+  /** chance of precipitation, 0–100 */
+  precipProbability: number;
 }
 
 interface Coords {
@@ -70,20 +85,24 @@ export class WeatherService {
     weather: WeatherInfo,
     scene: WeatherScene,
     partOfDay: string,
+    force = false,
   ): Promise<string | null> {
     if (!environment.weatherAiUrl) {
       console.warn('[WeatherTip] No weatherAiUrl set in environment — AI off.');
       return null;
     }
 
+    const forecast = weather.forecast ?? [];
     const payload = {
       scene,
       partOfDay,
       temperature: weather.temperature,
       description: weather.description,
       city: weather.city,
+      // Only send a forecast line when we actually have one.
+      ...(forecast.length ? { forecastText: forecastText(forecast) } : {}),
     };
-    const signature = this.aiSignature(payload);
+    const signature = this.aiSignature({ ...payload, forecast });
 
     console.log('[WeatherTip] getAiTip called', {
       online: this.network.isOnline,
@@ -92,9 +111,12 @@ export class WeatherService {
     });
 
     const cached = this.readAiCache();
-    if (cached && cached.signature === signature) {
+    if (!force && cached && cached.signature === signature) {
       console.log('[WeatherTip] Inputs unchanged — reusing cached tip:', cached.text);
       return cached.text;
+    }
+    if (force) {
+      console.log('[WeatherTip] Forced re-analyze — bypassing cache.');
     }
 
     if (cached) {
@@ -143,15 +165,29 @@ export class WeatherService {
     temperature: number;
     description: string;
     city: string;
+    forecast: ForecastHour[];
   }): string {
     const tempBand = Math.round(payload.temperature / 2) * 2; // 2°C bands
     return [
+      // Local date so the tip refreshes once a day even when conditions repeat,
+      // while still caching within the day (no extra quota churn).
+      this.localDate(),
       payload.scene,
       payload.partOfDay,
       tempBand,
       payload.description,
       payload.city,
+      // Coarse forecast digest so the tip only refreshes on meaningful change.
+      forecastDigest(payload.forecast),
     ].join('|');
+  }
+
+  /** Today's local date as YYYY-MM-DD (timezone-safe, no UTC drift). */
+  private localDate(): string {
+    const d = new Date();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${m}-${day}`;
   }
 
   private readAiCache(): AiTipCache | null {
@@ -235,7 +271,9 @@ export class WeatherService {
   ): Promise<Omit<WeatherInfo, 'city' | 'fetchedAt'>> {
     const url =
       `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}` +
-      `&longitude=${coords.lon}&current=temperature_2m,weather_code,is_day`;
+      `&longitude=${coords.lon}&current=temperature_2m,weather_code,is_day` +
+      `&hourly=temperature_2m,weather_code,precipitation_probability` +
+      `&forecast_hours=5&timezone=auto`;
     const res: any = await firstValueFrom(this.http.get(url));
     const current = res?.current;
     if (!current) throw new Error('No weather data');
@@ -249,7 +287,35 @@ export class WeatherService {
       description: map.description,
       icon: map.icon,
       isDay,
+      forecast: this.parseForecast(res?.hourly, isDay),
     };
+  }
+
+  /**
+   * Turn Open-Meteo's parallel hourly arrays into up to 5 ForecastHour entries.
+   * Icons reuse the current day/night flag (close enough over a 5-hour window).
+   * Returns [] when the payload is missing or malformed so callers degrade to
+   * current-only behaviour.
+   */
+  private parseForecast(hourly: any, isDay: boolean): ForecastHour[] {
+    const times: any[] = hourly?.time ?? [];
+    const temps: any[] = hourly?.temperature_2m ?? [];
+    const codes: any[] = hourly?.weather_code ?? [];
+    const precips: any[] = hourly?.precipitation_probability ?? [];
+    if (!times.length) return [];
+
+    const out: ForecastHour[] = [];
+    for (let i = 0; i < Math.min(5, times.length); i++) {
+      const code = Number(codes[i]);
+      out.push({
+        time: new Date(times[i]).getTime(),
+        temperature: Math.round(Number(temps[i])),
+        weatherCode: code,
+        icon: describeWeather(code, isDay).icon,
+        precipProbability: Math.round(Number(precips[i]) || 0),
+      });
+    }
+    return out;
   }
 
   private async fetchCity(coords: Coords): Promise<string | null> {
@@ -315,13 +381,44 @@ export function weatherScene(code: number, isDay: boolean): WeatherScene {
   return isDay ? 'clear-day' : 'clear-night';
 }
 
+/** A compact one-line forecast the AI can read, e.g. "Next 5h: 2PM 31° Rain 60%, ...". */
+export function forecastText(forecast: ForecastHour[]): string {
+  const parts = forecast.map((h) => {
+    const label = new Date(h.time)
+      .toLocaleTimeString('en-US', { hour: 'numeric' })
+      .replace(/\s/g, '');
+    const map = describeWeather(h.weatherCode, true);
+    return `${label} ${h.temperature}° ${map.description} ${h.precipProbability}%`;
+  });
+  return parts.length ? `Next 5h: ${parts.join(', ')}.` : '';
+}
+
+/**
+ * Coarse, cache-stable summary of the forecast: max precip in 20% bands, whether
+ * rain is imminent (≥50% within 3h), and the warmest hour in 2°C bands. The tip
+ * only re-fetches when one of these shifts, not every hour.
+ */
+export function forecastDigest(forecast: ForecastHour[]): string {
+  if (!forecast.length) return 'none';
+  const precips = forecast.map((h) => h.precipProbability);
+  const maxPrecipBand = Math.round(Math.max(...precips) / 20) * 20;
+  const rainSoon = forecast
+    .slice(0, 3)
+    .some((h) => h.precipProbability >= 50);
+  const maxTempBand =
+    Math.round(Math.max(...forecast.map((h) => h.temperature)) / 2) * 2;
+  return `p${maxPrecipBand}|r${rainSoon ? 1 : 0}|t${maxTempBand}`;
+}
+
 /**
  * A short, practical "before you head out" tip. Severe conditions take priority,
- * then temperature extremes, then a pleasant default. Temperature is in °C.
+ * then an incoming-rain lookahead, then temperature extremes, then a pleasant
+ * default. Temperature is in °C; `forecast` is the next few hours (optional).
  */
 export function weatherTip(
   scene: WeatherScene,
   temperature: number,
+  forecast: ForecastHour[] = [],
 ): { text: string; icon: string } {
   // Weather hazards first.
   if (scene === 'storm')
@@ -349,6 +446,16 @@ export function weatherTip(
     return {
       text: 'Low visibility. Take extra care if you are driving.',
       icon: 'bi-cloud-haze2',
+    };
+
+  // Dry now, but rain on the way in the next few hours? Pack an umbrella.
+  const rainAhead = forecast.some(
+    (h) => h.precipProbability >= 60 || h.weatherCode >= 51,
+  );
+  if (rainAhead)
+    return {
+      text: 'Dry now, but rain is expected later. Take an umbrella to be safe.',
+      icon: 'bi-umbrella',
     };
 
   // Then temperature extremes for otherwise clear/cloudy weather.
