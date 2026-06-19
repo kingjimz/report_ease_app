@@ -3,7 +3,10 @@
     class="weather-card scene-{{ scene }} relative overflow-hidden rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 text-white p-5 sm:p-6"
   >
     <!-- Animated weather scene (pure CSS, offline-safe) -->
-    <div class="fx fx-sun" *ngIf="scene === 'clear-day'"></div>
+    <div
+      class="fx fx-sun"
+      *ngIf="scene === 'clear-morning' || scene === 'clear-day' || scene === 'clear-evening'"
+    ></div>
     <div class="fx fx-stars" *ngIf="scene === 'clear-night'"></div>
 
     <div
@@ -21,8 +24,15 @@
     <!-- Scrim keeps the white text readable over any scene -->
     <div class="fx scrim"></div>
 
-    <!-- Content -->
-    <div class="relative z-10">
+    <!-- Content: swipeable carousel (today ↔ 7-day) -->
+    <div
+      class="weather-carousel relative z-10 overflow-hidden"
+      (touchstart)="onTouchStart($event)"
+      (touchend)="onTouchEnd($event)"
+    >
+    <div class="page-track flex" [style.transform]="'translateX(' + (page * -100) + '%)'">
+    <!-- Page 1: today -->
+    <div class="page w-full flex-shrink-0 pb-5">
     <div class="flex items-start justify-between gap-4">
       <!-- Greeting + date + time -->
       <div class="min-w-0">
@@ -57,7 +67,7 @@
 
         <ng-template #weatherBlock>
           <ng-container *ngIf="weather; else weatherFallback">
-            <i class="bi {{ weather.icon }} text-3xl sm:text-4xl leading-none drop-shadow"></i>
+            <i class="bi {{ currentIcon }} text-3xl sm:text-4xl leading-none drop-shadow"></i>
             <p class="text-2xl sm:text-3xl font-semibold mt-1 tabular-nums drop-shadow">{{ weather.temperature }}&deg;</p>
             <p class="text-white/85 text-xs drop-shadow">{{ weather.description }}</p>
             <p class="text-white/75 text-[11px] flex items-center justify-end gap-1 mt-0.5 drop-shadow">
@@ -92,7 +102,7 @@
     <!-- Next-6-hours forecast strip (only when location is on and data exists) -->
     <div
       *ngIf="locationEnabled && forecast.length"
-      class="forecast-strip mt-4 flex gap-1.5 overflow-x-auto"
+      class="forecast-strip mt-6 flex gap-1.5 overflow-x-auto"
     >
       <div
         *ngFor="let h of forecast"
@@ -102,12 +112,55 @@
         <i class="bi {{ h.icon }} text-base leading-none"></i>
         <span class="text-xs font-semibold tabular-nums">{{ h.temperature }}&deg;</span>
         <span
-          *ngIf="h.precipProbability >= 20"
           class="text-[10px] text-white/85 flex items-center gap-0.5 tabular-nums"
         >
           <i class="bi bi-droplet-half text-[9px]"></i>{{ h.precipProbability }}%
         </span>
       </div>
+    </div>
+    </div>
+
+    <!-- Page 2: 7-day forecast -->
+    <div class="page w-full flex-shrink-0 pb-5" *ngIf="locationEnabled && weather">
+      <div class="flex items-center justify-between gap-3">
+        <h2 class="text-base sm:text-lg font-semibold drop-shadow">7-Day Forecast</h2>
+        <span class="text-white/75 text-[11px] flex items-center gap-1 drop-shadow truncate max-w-[9rem]">
+          <i class="bi bi-geo-alt text-[11px]"></i>{{ weather.city }}
+        </span>
+      </div>
+      <div class="mt-3 flex flex-col gap-1.5">
+        <div
+          *ngFor="let d of daily; let i = index"
+          class="daily-row flex items-center gap-2 rounded-xl px-3 py-1.5 drop-shadow"
+        >
+          <span class="w-10 text-xs font-medium text-white/85">{{ i === 0 ? 'Today' : (d.time | date: 'EEE') }}</span>
+          <i class="bi {{ d.icon }} text-base leading-none"></i>
+          <span class="w-12 text-[11px] text-white/85 flex items-center gap-0.5 tabular-nums">
+            <i class="bi bi-droplet-half text-[9px]"></i>{{ d.precipProbability }}%
+          </span>
+          <span class="ml-auto text-xs font-semibold tabular-nums">
+            {{ d.tempMax }}&deg;<span class="text-white/55 font-normal ml-1">{{ d.tempMin }}&deg;</span>
+          </span>
+        </div>
+      </div>
+    </div>
+    </div>
+    <!-- /page-track -->
+
+    <!-- Page indicator dots (tappable: a reliable fallback if a swipe misses) -->
+    <div *ngIf="locationEnabled && weather" class="page-dots" role="tablist">
+      <button
+        type="button"
+        (click)="goToPage(0)"
+        [class.active]="page === 0"
+        aria-label="Show today"
+      ></button>
+      <button
+        type="button"
+        (click)="goToPage(1)"
+        [class.active]="page === 1"
+        aria-label="Show 7-day forecast"
+      ></button>
     </div>
     </div>
   </div>

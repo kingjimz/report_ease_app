@@ -2,8 +2,10 @@
  * Weather-tip proxy for ReportEase.
  *
  * Holds the Gemini API key server-side (as a Worker secret) and turns the
- * current weather into one short, practical "before you head out" tip for
- * door-to-door ministry. The browser never sees the key.
+ * current weather into one short, practical "before you head out" tip. The
+ * tip is framed around door-to-door ministry only in the morning and
+ * afternoon; in the evening and overnight it gives plain going-out advice
+ * with no ministry wording. The browser never sees the key.
  *
  * Secrets / vars (set with `wrangler secret put` or in the dashboard):
  *   GEMINI_API_KEY  (required) - your free Gemini Developer API key
@@ -50,16 +52,28 @@ export default {
       : null;
     const forecastText = String(body.forecastText || '').slice(0, 300);
 
+    // Field ministry happens in the morning and afternoon. In the evening and
+    // overnight, drop all ministry wording and give a plain "if you head out" tip.
+    const isMinistryTime = partOfDay === 'morning' || partOfDay === 'afternoon';
+
+    const intro = isMinistryTime
+      ? `You are a helpful assistant for a Jehovah's Witness using a field-ministry app. ` +
+        `Write a short, warm, practical message (max 30 words) for door-to-door ministry ` +
+        `over the next few hours. `
+      : `You are a helpful weather assistant. It is ${partOfDay}, outside of normal ` +
+        `field-ministry hours, so do NOT mention ministry, preaching, field service, ` +
+        `or going door to door. Write a short, warm, practical message (max 30 words) ` +
+        `for someone who might head out over the next few hours. `;
+
     const prompt =
-      `You are a helpful assistant for a Jehovah's Witness using a field-ministry app. ` +
-      `Write a short, warm, practical message (max 30 words) for door-to-door ministry ` +
-      `over the next few hours. The forecast lists only upcoming hours. If it shows a ` +
-      `notable change (rain, storms, clearing), begin with ONE sentence naming what to ` +
-      `expect and the soonest specific time it is likely, e.g. "Rain is likely around ` +
-      `7 PM." Then add ONE sentence advising what to wear or bring. If nothing notable ` +
-      `is ahead, give just the single advice sentence. Use the forecast times exactly ` +
-      `as given, and never mention a time earlier than the forecast. Plain text only: no emoji, ` +
-      `no quotes, no markdown, at most two sentences.\n` +
+      intro +
+      `The forecast lists only upcoming hours. If it shows a notable change (rain, ` +
+      `storms, clearing), begin with ONE sentence naming what to expect and the soonest ` +
+      `specific time it is likely, e.g. "Rain is likely around 7 PM." Then add ONE ` +
+      `sentence advising what to wear or bring if you head out. If nothing notable is ` +
+      `ahead, give just the single advice sentence. Use the forecast times exactly as ` +
+      `given, and never mention a time earlier than the forecast. Plain text only: no ` +
+      `emoji, no quotes, no markdown, at most two sentences.\n` +
       `Conditions now: ${description}, ${temperature ?? 'unknown'} degrees Celsius, ` +
       `${partOfDay}, in ${city} (scene: ${scene}).` +
       (forecastText ? `\n${forecastText}` : '');

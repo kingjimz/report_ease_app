@@ -16,6 +16,8 @@ export interface WeatherInfo {
   fetchedAt: number;
   /** Up to the next 5 hours of forecast (empty if unavailable). */
   forecast?: ForecastHour[];
+  /** Up to the next 7 daily forecasts (empty if unavailable). */
+  daily?: DailyForecast[];
 }
 
 /** A single hour in the short-term forecast. */
@@ -31,13 +33,30 @@ export interface ForecastHour {
   precipProbability: number;
 }
 
+/** A single day in the 7-day forecast. */
+export interface DailyForecast {
+  /** epoch ms for this day (for `| date:'EEE'` labels) */
+  time: number;
+  /** °C, rounded — daytime high */
+  tempMax: number;
+  /** °C, rounded — overnight low */
+  tempMin: number;
+  weatherCode: number;
+  /** Bootstrap Icon class, from describeWeather() */
+  icon: string;
+  /** max chance of precipitation that day, 0–100 */
+  precipProbability: number;
+}
+
 interface Coords {
   lat: number;
   lon: number;
   city?: string;
 }
 
-const CACHE_KEY = 're_weather_cache';
+// Bump the suffix when the cached shape changes (e.g. added daily forecast) so
+// older snapshots are discarded and a fresh, complete pull replaces them.
+const CACHE_KEY = 're_weather_cache_v2';
 const AI_TIP_CACHE_KEY = 're_weather_ai_tip';
 // Don't hit the network more than once every 15 minutes; the cache covers the rest.
 const REFRESH_MS = 15 * 60 * 1000;
@@ -290,15 +309,21 @@ export class WeatherService {
   ): Promise<Omit<WeatherInfo, 'city' | 'fetchedAt'>> {
     const url =
       `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}` +
-      `&longitude=${coords.lon}&current=temperature_2m,weather_code,is_day` +
-      `&hourly=temperature_2m,weather_code,precipitation_probability` +
-      `&forecast_hours=5&timezone=auto`;
+      `&longitude=${coords.lon}` +
+      `&current=temperature_2m,weather_code,is_day,precipitation,cloud_cover` +
+      `&hourly=temperature_2m,weather_code,precipitation_probability,precipitation,cloud_cover` +
+      `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
+      `&forecast_hours=5&forecast_days=7&timezone=auto`;
     const res: any = await firstValueFrom(this.http.get(url));
     const current = res?.current;
     if (!current) throw new Error('No weather data');
 
-    const code = current.weather_code as number;
     const isDay = current.is_day === 1;
+    const code = reconcileCode(
+      current.weather_code as number,
+      Number(current.precipitation) || 0,
+      Number(current.cloud_cover) || 0,
+    );
     const map = describeWeather(code, isDay);
     return {
       temperature: Math.round(current.temperature_2m),
@@ -307,7 +332,36 @@ export class WeatherService {
       icon: map.icon,
       isDay,
       forecast: this.parseForecast(res?.hourly, isDay),
+      daily: this.parseDaily(res?.daily),
     };
+  }
+
+  /**
+   * Turn Open-Meteo's parallel daily arrays into up to 7 DailyForecast entries.
+   * Daily icons use the daytime variant (these rows represent whole days).
+   * Returns [] when the payload is missing so callers degrade gracefully.
+   */
+  private parseDaily(daily: any): DailyForecast[] {
+    const times: any[] = daily?.time ?? [];
+    const maxs: any[] = daily?.temperature_2m_max ?? [];
+    const mins: any[] = daily?.temperature_2m_min ?? [];
+    const codes: any[] = daily?.weather_code ?? [];
+    const precips: any[] = daily?.precipitation_probability_max ?? [];
+    if (!times.length) return [];
+
+    const out: DailyForecast[] = [];
+    for (let i = 0; i < Math.min(7, times.length); i++) {
+      const code = Number(codes[i]);
+      out.push({
+        time: new Date(times[i]).getTime(),
+        tempMax: Math.round(Number(maxs[i])),
+        tempMin: Math.round(Number(mins[i])),
+        weatherCode: code,
+        icon: describeWeather(code, true).icon,
+        precipProbability: Math.round(Number(precips[i]) || 0),
+      });
+    }
+    return out;
   }
 
   /**
@@ -321,11 +375,17 @@ export class WeatherService {
     const temps: any[] = hourly?.temperature_2m ?? [];
     const codes: any[] = hourly?.weather_code ?? [];
     const precips: any[] = hourly?.precipitation_probability ?? [];
+    const precipMm: any[] = hourly?.precipitation ?? [];
+    const clouds: any[] = hourly?.cloud_cover ?? [];
     if (!times.length) return [];
 
     const out: ForecastHour[] = [];
     for (let i = 0; i < Math.min(5, times.length); i++) {
-      const code = Number(codes[i]);
+      const code = reconcileCode(
+        Number(codes[i]),
+        Number(precipMm[i]) || 0,
+        Number(clouds[i]) || 0,
+      );
       out.push({
         time: new Date(times[i]).getTime(),
         temperature: Math.round(Number(temps[i])),
@@ -381,7 +441,9 @@ export class WeatherService {
 
 /** A coarse visual category used to pick the animated card background. */
 export type WeatherScene =
+  | 'clear-morning'
   | 'clear-day'
+  | 'clear-evening'
   | 'clear-night'
   | 'clouds'
   | 'rain'
@@ -389,15 +451,27 @@ export type WeatherScene =
   | 'fog'
   | 'storm';
 
-/** Map a WMO weather code (+ day/night) to a background scene. */
-export function weatherScene(code: number, isDay: boolean): WeatherScene {
+/** The four clear-sky variants, in case the caller needs the time-of-day set. */
+export type ClearScene =
+  | 'clear-morning'
+  | 'clear-day'
+  | 'clear-evening'
+  | 'clear-night';
+
+/**
+ * Map a WMO weather code to a background scene. Active weather (rain, storm,
+ * etc.) wins; for a clear or mostly-clear sky the caller supplies the
+ * time-of-day variant via `clearScene` so the wallpaper can read as morning,
+ * day, evening, or night.
+ */
+export function weatherScene(code: number, clearScene: ClearScene): WeatherScene {
   if (code >= 95) return 'storm';
   if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return 'rain';
   if ((code >= 71 && code <= 77) || code === 85 || code === 86) return 'snow';
   if (code === 45 || code === 48) return 'fog';
   if (code === 2 || code === 3) return 'clouds';
-  // 0 (clear) and 1 (mostly clear) → sun or stars
-  return isDay ? 'clear-day' : 'clear-night';
+  // 0 (clear) and 1 (mostly clear) → the supplied time-of-day clear scene.
+  return clearScene;
 }
 
 /** A compact one-line forecast the AI can read, e.g. "Next 5h: 2PM 31° Rain 60%, ...". */
@@ -507,7 +581,29 @@ export function weatherTip(
 }
 
 /** Map a WMO weather code to a label + a Bootstrap Icon already bundled in the app. */
-function describeWeather(
+/**
+ * Global models overcall rain/thunderstorms over coarse grid cells, so the app
+ * can read "Thunderstorm" on a dry, cloudy day. When the model itself reports no
+ * precipitation, relabel by cloud cover instead of trusting a "wet" code.
+ * Returns a corrected WMO code; correcting once here keeps every downstream
+ * consumer (description, scene, icon, forecast, AI tip) honest with no changes.
+ */
+function reconcileCode(
+  code: number,
+  precipitationMm: number,
+  cloudCover: number,
+): number {
+  const isWetCode = code >= 51; // drizzle (51) through thunderstorm (99)
+  if (!isWetCode) return code; // clear/cloud/fog codes are trustworthy
+  if (precipitationMm > 0.1) return code; // genuinely precipitating — keep it
+  // Dry despite a wet code → describe the sky.
+  if (cloudCover >= 85) return 3; // Overcast
+  if (cloudCover >= 40) return 2; // Partly cloudy
+  if (cloudCover >= 15) return 1; // Mostly clear
+  return 0; // Clear sky
+}
+
+export function describeWeather(
   code: number,
   isDay: boolean,
 ): { description: string; icon: string } {
@@ -517,7 +613,7 @@ function describeWeather(
   if (code === 0) return { description: 'Clear sky', icon: sun };
   if (code === 1) return { description: 'Mostly clear', icon: partly };
   if (code === 2) return { description: 'Partly cloudy', icon: partly };
-  if (code === 3) return { description: 'Overcast', icon: 'bi-clouds' };
+  if (code === 3) return { description: 'Cloudy', icon: 'bi-clouds' };
   if (code === 45 || code === 48)
     return { description: 'Foggy', icon: 'bi-cloud-fog' };
   if (code >= 51 && code <= 57)
