@@ -33,6 +33,9 @@ export class ChatbotWidgetComponent
   private shouldScroll = false;
   private barSub?: Subscription;
   private labelTimers: any[] = [];
+  /** Scroll position captured when we lock the body (mobile full-screen panel). */
+  private savedScrollY = 0;
+  private scrollLocked = false;
   private static readonly LABEL_SEEN_KEY = 're_chat_label_seen';
 
   /** A few one-tap starters shown while the thread is fresh. */
@@ -58,6 +61,7 @@ export class ChatbotWidgetComponent
   ngOnDestroy(): void {
     this.barSub?.unsubscribe();
     this.labelTimers.forEach((t) => clearTimeout(t));
+    this.unlockBodyScroll();
   }
 
   /**
@@ -96,7 +100,45 @@ export class ChatbotWidgetComponent
 
   toggle(): void {
     this.open = !this.open;
-    if (this.open) this.shouldScroll = true;
+    if (this.open) {
+      this.shouldScroll = true;
+      this.lockBodyScroll();
+    } else {
+      this.unlockBodyScroll();
+    }
+  }
+
+  /**
+   * On mobile the panel is a full-screen overlay. Focusing the input pops the
+   * on-screen keyboard, which scrolls the underlying document to reveal the
+   * field — dragging the sticky app header out of view with no way back.
+   * Pinning the body in place while open keeps the header put; we restore the
+   * exact scroll position on close. Desktop shows a small floating box with no
+   * overlay, so we leave its scrolling alone.
+   */
+  private lockBodyScroll(): void {
+    if (this.scrollLocked) return;
+    if (typeof window === 'undefined' || window.innerWidth >= 640) return;
+    this.savedScrollY = window.scrollY;
+    const body = document.body;
+    body.style.position = 'fixed';
+    body.style.top = `-${this.savedScrollY}px`;
+    body.style.left = '0';
+    body.style.right = '0';
+    body.style.width = '100%';
+    this.scrollLocked = true;
+  }
+
+  private unlockBodyScroll(): void {
+    if (!this.scrollLocked) return;
+    const body = document.body;
+    body.style.position = '';
+    body.style.top = '';
+    body.style.left = '';
+    body.style.right = '';
+    body.style.width = '';
+    window.scrollTo(0, this.savedScrollY);
+    this.scrollLocked = false;
   }
 
   /** Only show starter chips before the user has asked anything. */
