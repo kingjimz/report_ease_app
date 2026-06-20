@@ -60,6 +60,18 @@ const CACHE_KEY = 're_weather_cache_v2';
 const AI_TIP_CACHE_KEY = 're_weather_ai_tip';
 // Don't hit the network more than once every 15 minutes; the cache covers the rest.
 const REFRESH_MS = 15 * 60 * 1000;
+// Keep AI tips glanceable — a hint to the Worker and a hard cap on our side.
+const TIP_MAX_WORDS = 20;
+
+/**
+ * Trim text to at most `max` words. Drops a trailing comma/semicolon left by the
+ * cut and appends an ellipsis so a clipped tip still reads as a complete thought.
+ */
+function capWords(text: string, max: number): string {
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length <= max) return text;
+  return words.slice(0, max).join(' ').replace(/[,;:]$/, '') + '…';
+}
 
 interface AiTipCache {
   /** YYYY-MM-DD + scene + temperature bucket — the conditions this tip was for. */
@@ -134,6 +146,8 @@ export class WeatherService {
       temperature: weather.temperature,
       description: weather.description,
       city: weather.city,
+      // Ask the Worker to keep tips terse; we also hard-cap on our side below.
+      maxWords: TIP_MAX_WORDS,
       // Only send a forecast line when we actually have upcoming hours.
       ...(upcoming.length ? { forecastText: forecastText(upcoming) } : {}),
     };
@@ -172,11 +186,13 @@ export class WeatherService {
         this.http.post(environment.weatherAiUrl, payload),
       );
       console.log('[WeatherTip] Response:', res);
-      const text = typeof res?.text === 'string' ? res.text.trim() : '';
-      if (!text) {
+      const raw = typeof res?.text === 'string' ? res.text.trim() : '';
+      if (!raw) {
         console.warn('[WeatherTip] Empty/invalid text in response.');
         return null;
       }
+      // Enforce the 20-word cap regardless of what the Worker returns.
+      const text = capWords(raw, TIP_MAX_WORDS);
       localStorage.setItem(
         AI_TIP_CACHE_KEY,
         JSON.stringify({ signature, text } as AiTipCache),
@@ -313,7 +329,7 @@ export class WeatherService {
       `&current=temperature_2m,weather_code,is_day,precipitation,cloud_cover` +
       `&hourly=temperature_2m,weather_code,precipitation_probability,precipitation,cloud_cover` +
       `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
-      `&forecast_hours=5&forecast_days=7&timezone=auto`;
+      `&forecast_hours=7&forecast_days=7&timezone=auto`;
     const res: any = await firstValueFrom(this.http.get(url));
     const current = res?.current;
     if (!current) throw new Error('No weather data');
@@ -365,10 +381,14 @@ export class WeatherService {
   }
 
   /**
-   * Turn Open-Meteo's parallel hourly arrays into up to 5 ForecastHour entries.
-   * Icons reuse the current day/night flag (close enough over a 5-hour window).
-   * Returns [] when the payload is missing or malformed so callers degrade to
-   * current-only behaviour.
+   * Turn Open-Meteo's parallel hourly arrays into ForecastHour entries. The
+   * first entry is the *current* hour (e.g. 10:00 at 10:39), and the snapshot is
+   * cached for up to 15 min — so we keep the whole window here and let callers
+   * drop already-passed hours relative to render time (the widget's `forecast`
+   * getter, the AI tip's own filter). Fetching 7 hours leaves a buffer so 5
+   * future cards remain even at the tail of the cache window. Icons reuse the
+   * current day/night flag (close enough over the window). Returns [] when the
+   * payload is missing or malformed so callers degrade to current-only.
    */
   private parseForecast(hourly: any, isDay: boolean): ForecastHour[] {
     const times: any[] = hourly?.time ?? [];
@@ -380,7 +400,7 @@ export class WeatherService {
     if (!times.length) return [];
 
     const out: ForecastHour[] = [];
-    for (let i = 0; i < Math.min(5, times.length); i++) {
+    for (let i = 0; i < Math.min(7, times.length); i++) {
       const code = reconcileCode(
         Number(codes[i]),
         Number(precipMm[i]) || 0,

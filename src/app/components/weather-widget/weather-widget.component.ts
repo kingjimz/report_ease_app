@@ -293,10 +293,15 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
     return this.aiTipText ? { text: this.aiTipText, icon: base.icon } : base;
   }
 
-  /** The next 5 hours, for the forecast strip ([] when unavailable). */
+  /** The next 5 *upcoming* hours, for the forecast strip ([] when unavailable). */
   get forecast(): ForecastHour[] {
-    // Cap at 5 even if a stale cache holds more, so the strip stays consistent.
-    return (this.weather?.forecast ?? []).slice(0, 5);
+    // Drop the in-progress hour and anything past it. The snapshot is cached for
+    // up to 15 min, so an hour that was "next" at fetch time can lapse before the
+    // next refresh — filtering against now (not fetch time) keeps the strip honest.
+    const now = Date.now();
+    return (this.weather?.forecast ?? [])
+      .filter((h) => h.time > now)
+      .slice(0, 5);
   }
 
   /** The next 7 days, for the second carousel page ([] when unavailable). */

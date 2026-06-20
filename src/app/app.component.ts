@@ -22,6 +22,8 @@ import { Subscription } from 'rxjs';
 })
 export class AppComponent implements OnInit, OnDestroy {
   isOnline = true;
+  /** Gates the help chatbot — hidden on login/register (no signed-in user). */
+  loggedIn = false;
   private networkSubscription?: Subscription;
 
   constructor(
@@ -55,6 +57,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.initializeNotifications();
 
     onAuthStateChanged(this.auth, (user) => {
+      this.loggedIn = !!user;
       // Don't redirect if user is on the install page
       const currentUrl = this.router.url;
       if (currentUrl === '/install') {
