@@ -156,8 +156,15 @@ export class ChatbotWidgetComponent
     await this.dispatch(question);
   }
 
-  reset(): void {
-    this.chat.reset();
+  /** Wipe the whole thread (persisted too) after a quick confirm. */
+  clearAll(): void {
+    if (this.chat.messages.length > 1) {
+      const ok =
+        typeof window === 'undefined' ||
+        window.confirm('Clear all chats? This cannot be undone.');
+      if (!ok) return;
+    }
+    this.chat.clearAll();
     this.shouldScroll = true;
   }
 

@@ -61,7 +61,7 @@ const AI_TIP_CACHE_KEY = 're_weather_ai_tip';
 // Don't hit the network more than once every 15 minutes; the cache covers the rest.
 const REFRESH_MS = 15 * 60 * 1000;
 // Keep AI tips glanceable — a hint to the Worker and a hard cap on our side.
-const TIP_MAX_WORDS = 20;
+const TIP_MAX_WORDS = 30;
 
 /**
  * Trim text to at most `max` words. Drops a trailing comma/semicolon left by the

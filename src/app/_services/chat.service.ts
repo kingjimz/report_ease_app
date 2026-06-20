@@ -21,15 +21,25 @@ const GREETING: ChatMessage = {
 const DAILY_LIMIT = 20;
 const USAGE_KEY = 're_chat_usage';
 
+/** Persisted conversation, so the thread survives reloads and app restarts. */
+const MESSAGES_KEY = 're_chat_messages';
+/**
+ * Hard cap on stored turns. Keeps localStorage small and, just as important,
+ * keeps the context we replay to the model bounded so old turns can't drag it
+ * into hallucinating about state that no longer exists.
+ */
+const MAX_STORED_MESSAGES = 50;
+
 /**
  * Talks to the Cloudflare Worker `/chat` route (Workers AI) with a system
- * prompt that scopes answers to this app only. Conversation is held in memory
- * (resets on reload). A per-device daily quota protects the shared AI budget.
+ * prompt that scopes answers to this app only. The conversation (including the
+ * AI's answers) is persisted to localStorage so it survives reloads, and can be
+ * wiped with clearAll(). A per-device daily quota protects the shared AI budget.
  */
 @Injectable({ providedIn: 'root' })
 export class ChatService {
-  /** The visible conversation, seeded with a friendly greeting. */
-  messages: ChatMessage[] = [{ ...GREETING }];
+  /** The visible conversation, restored from storage or seeded with a greeting. */
+  messages: ChatMessage[] = this.loadMessages();
   /** True while a reply is in flight, so the UI can show a typing indicator. */
   loading = false;
 
@@ -78,16 +88,19 @@ export class ChatService {
           `You've reached today's limit of ${DAILY_LIMIT} questions. ` +
           'It resets tomorrow.',
       });
+      this.persist();
       return;
     }
 
     this.messages.push({ role: 'user', content });
+    this.persist();
 
     if (!this.network.isOnline) {
       this.messages.push({
         role: 'assistant',
         content: "You're offline right now. Reconnect and ask me again.",
       });
+      this.persist();
       return;
     }
 
@@ -121,6 +134,7 @@ export class ChatService {
       });
     } finally {
       this.loading = false;
+      this.persist();
     }
   }
 
@@ -217,10 +231,49 @@ export class ChatService {
     }
   }
 
-  /** Clear the thread back to the opening greeting (does not refund usage). */
-  reset(): void {
+  /**
+   * Clear every stored chat back to the opening greeting and wipe the persisted
+   * thread. Starting from a clean slate keeps the model from being fed stale
+   * turns it could hallucinate around. Does not refund today's usage.
+   */
+  clearAll(): void {
     this.messages = [{ ...GREETING }];
     this.loading = false;
+    this.persist();
+  }
+
+  /** Back-compat alias for the "Start over" control. */
+  reset(): void {
+    this.clearAll();
+  }
+
+  /** Restore the saved thread, or seed a fresh greeting when none/invalid. */
+  private loadMessages(): ChatMessage[] {
+    try {
+      const raw = localStorage.getItem(MESSAGES_KEY);
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (Array.isArray(parsed) && parsed.length) {
+        const valid = parsed.filter(
+          (m: any) =>
+            (m?.role === 'user' || m?.role === 'assistant') &&
+            typeof m?.content === 'string',
+        );
+        if (valid.length) return valid.slice(-MAX_STORED_MESSAGES);
+      }
+    } catch {
+      /* corrupt/unavailable storage — fall back to a fresh greeting */
+    }
+    return [{ ...GREETING }];
+  }
+
+  /** Persist the (capped) thread so it survives reloads. */
+  private persist(): void {
+    try {
+      const trimmed = this.messages.slice(-MAX_STORED_MESSAGES);
+      localStorage.setItem(MESSAGES_KEY, JSON.stringify(trimmed));
+    } catch {
+      /* storage unavailable — thread just won't persist this session */
+    }
   }
 
   /** Local YYYY-MM-DD, so the cap resets at the user's own midnight. */
