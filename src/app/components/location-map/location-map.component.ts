@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 import * as L from 'leaflet';
 import { GeoService, LatLng, RouteStep } from '../../_services/geo.service';
 import { addBaseLayers } from '../../_utils/leaflet-layers';
+import { teleportToBody, restoreFromBody } from '../../_utils/fullscreen';
 
 /**
  * Read-only Leaflet map for the study details view. Shows the saved pin and a
@@ -27,9 +28,10 @@ import { addBaseLayers } from '../../_utils/leaflet-layers';
   imports: [CommonModule],
   template: `
     <div
+      #fsHost
       [ngClass]="
         isFullscreen
-          ? 'fixed inset-0 z-[10000] flex flex-col bg-white'
+          ? 'fixed inset-0 z-[10050] flex flex-col bg-white'
           : 'rounded-lg overflow-hidden border border-gray-200'
       "
     >
@@ -120,6 +122,7 @@ export class LocationMapComponent implements AfterViewInit, OnDestroy {
   @Input() distanceLabel: string | null = null;
 
   @ViewChild('mapEl') mapEl!: ElementRef<HTMLDivElement>;
+  @ViewChild('fsHost') fsHost!: ElementRef<HTMLElement>;
 
   /** Road distance + ETA when the route first loads, e.g. "3.2 km • 8 min drive". */
   routeLabel: string | null = null;
@@ -150,14 +153,26 @@ export class LocationMapComponent implements AfterViewInit, OnDestroy {
   private watchId: number | null = null;
   private firstFix = true;
   private spokenStepWayPoint = -1;
+  private fsPlaceholder: Comment | null = null;
 
   constructor(private geo: GeoService) {}
 
-  /** Expand/collapse the map to fill the screen, then resize Leaflet to fit. */
+  /**
+   * Expand/collapse the map to fill the screen. The map lives inside a
+   * transformed bottom-sheet modal, so we teleport it to <body> while
+   * fullscreen — otherwise `fixed` stays bound to the sheet and the modal
+   * scrolls/drags underneath. Then resize + recenter Leaflet.
+   */
   toggleFullscreen(): void {
     this.isFullscreen = !this.isFullscreen;
-    if (this.isFullscreen) this.map?.scrollWheelZoom.enable();
-    else this.map?.scrollWheelZoom.disable();
+    if (this.isFullscreen) {
+      this.map?.scrollWheelZoom.enable();
+      this.fsPlaceholder = teleportToBody(this.fsHost.nativeElement);
+    } else {
+      this.map?.scrollWheelZoom.disable();
+      restoreFromBody(this.fsHost.nativeElement, this.fsPlaceholder);
+      this.fsPlaceholder = null;
+    }
     setTimeout(() => {
       this.map?.invalidateSize();
       this.recenter();
@@ -303,6 +318,10 @@ export class LocationMapComponent implements AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.stopTracking();
     this.cancelSpeech();
+    // If closed while fullscreen, make sure body scroll is unlocked.
+    if (this.isFullscreen) {
+      restoreFromBody(this.fsHost.nativeElement, this.fsPlaceholder);
+    }
     this.map?.remove();
   }
 
@@ -431,7 +450,7 @@ function pinIcon(): L.DivIcon {
   return L.divIcon({
     className: '',
     html: `<svg width="32" height="40" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
-      <path d="M16 0C7.7 0 1 6.7 1 15c0 10.5 13.2 23.5 13.8 24.1a1.7 1.7 0 0 0 2.4 0C17.8 38.5 31 25.5 31 15 31 6.7 24.3 0 16 0z" fill="#059669"/>
+      <path d="M16 0C7.7 0 1 6.7 1 15c0 10.5 13.2 23.5 13.8 24.1a1.7 1.7 0 0 0 2.4 0C17.8 38.5 31 25.5 31 15 31 6.7 24.3 0 16 0z" fill="#dc2626"/>
       <circle cx="16" cy="15" r="6" fill="#ffffff"/>
     </svg>`,
     iconSize: [32, 40],

@@ -367,6 +367,20 @@ export class ReportsComponent implements OnDestroy {
     return pages;
   }
 
+  // Tap a top stat tile to jump to its section. Optionally set the Bible
+  // Studies filter (bs/rv) first so the list shows the matching records.
+  scrollToSection(id: string, filter?: 'all' | 'bs' | 'rv') {
+    if (filter) {
+      this.filterType = filter;
+      this.applyFilters();
+    }
+    setTimeout(() => {
+      document
+        .getElementById(id)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 0);
+  }
+
   editStudy(study: any) {
     this.isSelected = true;
     this.studySelected = study;

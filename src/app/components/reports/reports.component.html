@@ -24,41 +24,57 @@
           </button>
         </div>
 
-        <!-- Stat tiles -->
+        <!-- Stat tiles (tap to jump to the matching section) -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+          <button
+            type="button"
+            (click)="scrollToSection('reportsSection')"
+            class="text-left bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer"
+          >
             <div class="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-1">
               <i class="bi bi-journal-text"></i>
               <span class="text-2xl font-semibold">{{ reports.length }}</span>
             </div>
             <span class="text-xs text-gray-500 dark:text-gray-400">Total Reports</span>
-          </div>
-          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+          </button>
+          <button
+            type="button"
+            (click)="scrollToSection('studiesSection', 'bs')"
+            class="text-left bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer"
+          >
             <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 mb-1">
               <i class="bi bi-book"></i>
               <span class="text-2xl font-semibold">{{ numberOfBibleStudies }}</span>
             </div>
             <span class="text-xs text-gray-500 dark:text-gray-400">Active Bible Studies</span>
-          </div>
-          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+          </button>
+          <button
+            type="button"
+            (click)="scrollToSection('studiesSection', 'rv')"
+            class="text-left bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md hover:border-amber-300 transition-all cursor-pointer"
+          >
             <div class="flex items-center gap-2 text-amber-600 dark:text-amber-400 mb-1">
               <i class="bi bi-arrow-repeat"></i>
               <span class="text-2xl font-semibold">{{ numberOfReturnVisits }}</span>
             </div>
             <span class="text-xs text-gray-500 dark:text-gray-400">Return Visits</span>
-          </div>
-          <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+          </button>
+          <button
+            type="button"
+            (click)="scrollToSection('studiesSection')"
+            class="text-left bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md hover:border-gray-300 transition-all cursor-pointer"
+          >
             <div class="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-1">
               <i class="bi bi-check-circle"></i>
               <span class="text-2xl font-semibold">{{ numberOfCompletedStudies }}</span>
             </div>
             <span class="text-xs text-gray-500 dark:text-gray-400">Completed</span>
-          </div>
+          </button>
         </div>
       </div>
 
       <!-- Ministry Reports Section -->
-      <div *ngIf="reports && reports.length > 0" class="mb-4">
+      <div id="reportsSection" *ngIf="reports && reports.length > 0" class="mb-4 scroll-mt-20">
         <!-- Section Header -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center">
@@ -329,7 +345,7 @@
     </div>
 
     <!-- Bible Studies Section -->
-    <div class="container mx-auto px-2 pb-8">
+    <div id="studiesSection" class="container mx-auto px-2 pb-8 scroll-mt-20">
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <!-- Section Header -->
         <div class="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-5">
@@ -476,7 +492,7 @@
               <!-- Card Body -->
               <div class="p-4">
                 <!-- Address -->
-                <div class="mb-2.5 flex items-start space-x-2">
+                <div *ngIf="showAddressField" class="mb-2.5 flex items-start space-x-2">
                   <i class="bi bi-geo-alt text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0 text-sm"></i>
                   <p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">{{ study.address }}</p>
                 </div>
