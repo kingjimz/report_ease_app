@@ -53,14 +53,20 @@ export interface PickedLocation {
         <button
           type="button"
           (click)="toggleFullscreen()"
-          [title]="isFullscreen ? 'Exit full screen' : 'Full screen'"
-          class="absolute top-2 right-2 z-[1200] flex items-center justify-center w-8 h-8 bg-white/90 text-gray-700 rounded-md shadow hover:bg-white transition-colors"
+          [title]="isFullscreen ? 'Close full screen' : 'Full screen'"
+          [ngClass]="
+            isFullscreen
+              ? 'gap-1.5 px-3 h-9 bg-red-600 text-white hover:bg-red-700'
+              : 'w-8 h-8 bg-white/90 text-gray-700 hover:bg-white'
+          "
+          class="absolute top-2 right-2 z-[1200] flex items-center justify-center rounded-md shadow transition-colors text-sm font-semibold"
         >
           <i
             [class]="
               isFullscreen ? 'bi bi-fullscreen-exit' : 'bi bi-arrows-fullscreen'
             "
           ></i>
+          <span *ngIf="isFullscreen">Close</span>
         </button>
       </div>
       <div
