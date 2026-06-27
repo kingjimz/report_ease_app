@@ -97,6 +97,33 @@ export class GeoService {
   }
 
   /**
+   * Search an address/place name and return candidate coordinates, so the user
+   * can quickly locate a study's address instead of panning the map. Uses the
+   * free, no-key Nominatim (OpenStreetMap) endpoint. Returns [] on empty query
+   * or failure so callers degrade gracefully.
+   */
+  async forwardGeocode(
+    query: string,
+  ): Promise<Array<{ lat: number; lng: number; label: string }>> {
+    if (!query.trim()) return [];
+    try {
+      const url =
+        `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5` +
+        `&q=${encodeURIComponent(query)}`;
+      const res: any = await firstValueFrom(this.http.get(url));
+      return (res || [])
+        .map((r: any) => ({
+          lat: parseFloat(r.lat),
+          lng: parseFloat(r.lon),
+          label: r.display_name as string,
+        }))
+        .filter((r: any) => !isNaN(r.lat) && !isNaN(r.lng));
+    } catch {
+      return [];
+    }
+  }
+
+  /**
    * Great-circle distance between two points in kilometres (Haversine).
    */
   distanceKm(a: LatLng, b: LatLng): number {

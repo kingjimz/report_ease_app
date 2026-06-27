@@ -10,6 +10,7 @@ import {
   HostListener,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import * as L from 'leaflet';
 import { GeoService, LatLng } from '../../_services/geo.service';
 import { addBaseLayers } from '../../_utils/leaflet-layers';
@@ -34,7 +35,7 @@ export interface PickedLocation {
 @Component({
   selector: 'app-location-picker',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div
       #fsHost
@@ -44,6 +45,47 @@ export interface PickedLocation {
           : 'rounded-lg overflow-hidden border border-gray-300'
       "
     >
+      <!-- Search to quickly locate a study's address. -->
+      <div class="relative bg-white border-b border-gray-200">
+        <div class="flex items-center gap-2 p-2">
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (keydown.enter)="search(); $event.preventDefault()"
+            name="locationSearch"
+            placeholder="Search address or place…"
+            class="flex-1 min-w-0 py-1.5 px-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          />
+          <button
+            type="button"
+            (click)="search()"
+            [disabled]="searching || !searchQuery.trim()"
+            class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-colors disabled:opacity-50"
+          >
+            <span
+              *ngIf="searching"
+              class="animate-spin rounded-full h-3 w-3 border-t-2 border-white inline-block"
+            ></span>
+            <i *ngIf="!searching" class="bi bi-search"></i>
+            Search
+          </button>
+        </div>
+        <ul
+          *ngIf="searchResults.length"
+          class="absolute z-[1300] left-2 right-2 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto"
+        >
+          <li
+            *ngFor="let r of searchResults"
+            (click)="selectResult(r)"
+            class="px-3 py-2 text-xs text-gray-700 hover:bg-emerald-50 cursor-pointer border-b border-gray-100 last:border-0"
+          >
+            <i class="bi bi-geo-alt text-emerald-600 mr-1"></i>{{ r.label }}
+          </li>
+        </ul>
+        <p *ngIf="searchedEmpty" class="px-3 pb-2 text-xs text-gray-400">
+          No matches. Try a broader place name.
+        </p>
+      </div>
       <div class="relative" [ngClass]="isFullscreen ? 'flex-1 min-h-0' : ''">
         <div
           #mapEl
@@ -108,6 +150,12 @@ export class LocationPickerComponent implements AfterViewInit, OnDestroy {
   locating = false;
   hasPin = false;
   isFullscreen = false;
+
+  // Address search state
+  searchQuery = '';
+  searching = false;
+  searchedEmpty = false;
+  searchResults: Array<{ lat: number; lng: number; label: string }> = [];
 
   private map?: L.Map;
   private marker?: L.Marker;
@@ -192,6 +240,27 @@ export class LocationPickerComponent implements AfterViewInit, OnDestroy {
       restoreFromBody(this.fsHost.nativeElement, this.fsPlaceholder);
     }
     this.map?.remove();
+  }
+
+  async search(): Promise<void> {
+    if (!this.searchQuery.trim()) return;
+    this.searching = true;
+    this.searchedEmpty = false;
+    this.searchResults = await this.geo.forwardGeocode(this.searchQuery);
+    this.searchedEmpty = this.searchResults.length === 0;
+    this.searching = false;
+  }
+
+  // Pick a search result: fly the map there, drop the pin, emit with the
+  // result's label as the address (no extra reverse-geocode needed).
+  selectResult(r: { lat: number; lng: number; label: string }): void {
+    this.searchResults = [];
+    this.searchedEmpty = false;
+    this.searchQuery = r.label;
+    const coords: LatLng = { lat: r.lat, lng: r.lng };
+    this.map?.setView([coords.lat, coords.lng], 16);
+    this.placeMarker(coords);
+    this.locationChange.emit({ location: coords, address: r.label });
   }
 
   async useCurrentLocation(): Promise<void> {
