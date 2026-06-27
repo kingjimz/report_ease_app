@@ -12,3 +12,7 @@ binding = "AI"
 ALLOWED_ORIGIN = "*"
 # Override the default Workers AI model if desired.
 AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fast"
+
+# NOTE: ORS_API_KEY is a SECRET, not a var — never put it here (this file is
+# committed). Set it once with:  wrangler secret put ORS_API_KEY
+# It powers the /route endpoint (OpenRouteService driving directions).

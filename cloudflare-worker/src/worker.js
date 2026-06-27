@@ -4,11 +4,15 @@
  *
  *   POST /            -> weather "before you head out" tip
  *   POST /chat        -> app-scoped help chatbot (answers only about the app)
+ *   POST /route       -> driving route to a study pin (proxies OpenRouteService)
  *
  * Bindings / vars (see wrangler.toml):
  *   AI              (binding) - Workers AI; runs the model on Cloudflare
  *   ALLOWED_ORIGIN  (var)     - exact origin allowed via CORS. Defaults to "*".
  *   AI_MODEL        (var)     - text model id. Defaults to Llama 3.1 8B Instruct.
+ *   ORS_API_KEY     (secret)  - OpenRouteService key, kept server-side so it is
+ *                               never shipped to the browser. Set with:
+ *                               wrangler secret put ORS_API_KEY
  */
 
 const FALLBACK_MODEL = '@cf/meta/llama-3.1-8b-instruct-fast';
@@ -37,11 +41,82 @@ export default {
     }
 
     const path = new URL(request.url).pathname;
+    if (path.endsWith('/route')) return handleRoute(body, env, cors);
     return path.endsWith('/chat')
       ? handleChat(body, env, cors)
       : handleTip(body, env, cors);
   },
 };
+
+/* ------------------------------ Routing -------------------------------- */
+
+/**
+ * Proxy a driving-route request to OpenRouteService using the server-side
+ * ORS_API_KEY secret, and return a slimmed result the client can draw directly.
+ * Body: { from: {lat,lng}, to: {lat,lng} }.
+ */
+async function handleRoute(body, env, cors) {
+  const from = body.from;
+  const to = body.to;
+  if (
+    !env.ORS_API_KEY ||
+    !isCoord(from) ||
+    !isCoord(to)
+  ) {
+    return json({ error: 'Missing key or coordinates' }, 400, cors);
+  }
+
+  try {
+    const url =
+      `https://api.openrouteservice.org/v2/directions/driving-car` +
+      `?api_key=${env.ORS_API_KEY}` +
+      `&start=${from.lng},${from.lat}&end=${to.lng},${to.lat}`;
+    const res = await fetch(url);
+    if (!res.ok) return json({ error: 'Route lookup failed' }, 502, cors);
+
+    const data = await res.json();
+    const feature = data?.features?.[0];
+    const coords = feature?.geometry?.coordinates || [];
+    const summary = feature?.properties?.summary;
+    if (!coords.length || !summary) {
+      return json({ error: 'No route found' }, 502, cors);
+    }
+
+    // Flatten the per-segment turn-by-turn steps for in-app guidance.
+    // way_points[0] indexes into the geometry coordinates (the maneuver point).
+    const segments = feature?.properties?.segments || [];
+    const steps = [];
+    for (const seg of segments) {
+      for (const st of seg.steps || []) {
+        steps.push({
+          instruction: String(st.instruction || ''),
+          name: String(st.name || ''),
+          distanceM: Number(st.distance) || 0,
+          type: Number.isFinite(st.type) ? st.type : null,
+          wayPoint: Array.isArray(st.way_points) ? st.way_points[0] : 0,
+        });
+      }
+    }
+
+    return json(
+      {
+        // ORS gives [lon, lat]; hand the client {lat, lng}.
+        path: coords.map((c) => ({ lat: c[1], lng: c[0] })),
+        distanceKm: summary.distance / 1000,
+        durationMin: summary.duration / 60,
+        steps,
+      },
+      200,
+      cors,
+    );
+  } catch (err) {
+    return json({ error: 'Route lookup failed', detail: String(err) }, 502, cors);
+  }
+}
+
+function isCoord(c) {
+  return c && Number.isFinite(c.lat) && Number.isFinite(c.lng);
+}
 
 /* ----------------------------- Weather tip ----------------------------- */
 

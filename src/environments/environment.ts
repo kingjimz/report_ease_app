@@ -10,6 +10,11 @@ export const environment = {
   weatherAiUrl: 'https://reportease-weather-tip.reportease.workers.dev',
   // Same Worker, /chat route: app-scoped help chatbot. Empty disables the widget.
   chatAiUrl: 'https://reportease-weather-tip.reportease.workers.dev/chat',
+  // Worker /route endpoint for the in-app driving route line on study maps.
+  // The OpenRouteService key lives server-side as a Worker secret, so nothing
+  // sensitive ships in this bundle. Empty disables the route line (the
+  // straight-line distance still shows).
+  routeApiUrl: 'https://reportease-weather-tip.reportease.workers.dev/route',
   firebase: {
     // PRODUCTION Firebase credentials (shared with environment.prod.ts)
     apiKey: 'AIzaSyAOZ6R5siNGVKJp76i8uQunU9mojsKvU64',

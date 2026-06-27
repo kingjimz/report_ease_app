@@ -10,6 +10,12 @@ import { ModalService } from '../../_services/modal.service';
 import { SettingsService } from '../../_services/settings.service';
 import { bottomSheet } from '../../_animations/bottom-sheet.animation';
 import { DragToCloseDirective } from '../../_directives/drag-to-close.directive';
+import {
+  LocationPickerComponent,
+  PickedLocation,
+} from '../location-picker/location-picker.component';
+import { LocationMapComponent } from '../location-map/location-map.component';
+import { GeoService, LatLng } from '../../_services/geo.service';
 
 @Component({
   selector: 'app-reports',
@@ -21,6 +27,8 @@ import { DragToCloseDirective } from '../../_directives/drag-to-close.directive'
     LoaderComponent,
     AlertsComponent,
     DragToCloseDirective,
+    LocationPickerComponent,
+    LocationMapComponent,
   ],
   templateUrl: './reports.component.html',
   styleUrl: './reports.component.css',
@@ -52,6 +60,13 @@ export class ReportsComponent implements OnDestroy {
   showStudyModal = false;
   bible_study = '';
   address = '';
+  // Address text field is hidden for now; the map pin covers location. The pin
+  // still auto-fills `address` behind the scenes, so the data keeps saving.
+  showAddressField = false;
+  location: LatLng | null = null; // pin for the create modal
+  editLocation: LatLng | null = null; // pin while editing in details
+  showRepin = false; // toggles the re-pin map in details
+  distanceLabel: string | null = null; // "X km away" in details
   schedule = '';
   type = 'rv';
   isSuccess = false;
@@ -95,6 +110,7 @@ export class ReportsComponent implements OnDestroy {
     public util: UtilService,
     private modalService: ModalService,
     private settingsService: SettingsService,
+    private geo: GeoService,
   ) {}
 
   ngOnInit() {
@@ -355,12 +371,46 @@ export class ReportsComponent implements OnDestroy {
     this.isSelected = true;
     this.studySelected = study;
     this.next_lesson = study.lesson;
+    this.editLocation = study.location ?? null;
+    this.computeDistanceLabel(study);
     // Convert schedule to datetime-local format
     if (study.schedule) {
       const scheduleDate = this.parseScheduleToDate(study.schedule);
       this.editSchedule = scheduleDate ? this.formatDateForInput(scheduleDate) : '';
     } else {
       this.editSchedule = '';
+    }
+  }
+
+  // Pin picked in the create modal: store coords and auto-fill the address
+  // when the user hasn't typed one (manual edits/notes stick).
+  onLocationPicked(picked: PickedLocation) {
+    this.location = picked.location;
+    if (picked.address && !this.address.trim()) {
+      this.address = picked.address;
+    }
+  }
+
+  // Pin re-placed in the details view (used by updateStudy on save).
+  onEditLocationPicked(picked: PickedLocation) {
+    this.editLocation = picked.location;
+  }
+
+  // How far the study's pin is from the user right now. Respects the shared
+  // location preference; falls back to a hint when off/denied/unavailable.
+  private async computeDistanceLabel(study: any) {
+    this.distanceLabel = null;
+    if (!study?.location) return;
+    if (!this.geo.isLocationEnabled()) {
+      this.distanceLabel = 'Enable location to see distance';
+      return;
+    }
+    try {
+      const current = await this.geo.getCurrentCoords();
+      const km = this.geo.distanceKm(current, study.location);
+      this.distanceLabel = this.geo.formatDistance(km);
+    } catch {
+      this.distanceLabel = 'Enable location to see distance';
     }
   }
   
@@ -452,6 +502,9 @@ export class ReportsComponent implements OnDestroy {
     this.studySelected = null;
     this.isCopied = false;
     this.editSchedule = ''; // Reset schedule
+    this.editLocation = null;
+    this.showRepin = false;
+    this.distanceLabel = null;
   }
 
   deleteStudy(study: any) {
@@ -532,7 +585,7 @@ export class ReportsComponent implements OnDestroy {
     // Convert editSchedule to Date object for saving
     const scheduleDate = this.parseInputToDate(this.editSchedule);
     
-    const studyData = {
+    const studyData: any = {
       bible_study: study.bible_study,
       address: study.address,
       schedule: scheduleDate || this.editSchedule, // Save as Date if valid, otherwise as string
@@ -541,6 +594,10 @@ export class ReportsComponent implements OnDestroy {
       updated_at: new Date(),
       id: study.id,
     };
+    const location = this.editLocation ?? study.location;
+    if (location) {
+      studyData.location = location;
+    }
 
     this.api
       .updateStudy(studyData)
@@ -558,7 +615,7 @@ export class ReportsComponent implements OnDestroy {
     // Convert schedule to Date object if it's a datetime-local value
     const scheduleDate = this.parseInputToDate(this.schedule);
     
-    const data = {
+    const data: any = {
       bible_study: this.bible_study,
       address: this.address,
       schedule: scheduleDate || this.schedule, // Save as Date if valid, otherwise as string
@@ -566,11 +623,15 @@ export class ReportsComponent implements OnDestroy {
       lesson: this.next_lesson,
       updated_at: new Date(),
     };
+    if (this.location) {
+      data.location = this.location;
+    }
 
     try {
       await this.api.addStudy(data);
       this.bible_study = '';
       this.address = '';
+      this.location = null;
       this.schedule = '';
       this.type = 'rv';
       this.next_lesson = '';
@@ -590,6 +651,7 @@ export class ReportsComponent implements OnDestroy {
     this.showStudyModal = false;
     this.bible_study = '';
     this.address = '';
+    this.location = null;
     this.schedule = '';
     this.type = 'rv';
     this.next_lesson = '';

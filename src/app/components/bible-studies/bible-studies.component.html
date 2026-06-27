@@ -188,10 +188,9 @@
         </div>
 
         <div class="mb-4">
-          <label for="lesson" class="block text-sm font-medium text-gray-700"
-            >Address</label
-          >
+          <label class="block text-sm font-medium text-gray-700">Location</label>
           <input
+            *ngIf="showAddressField"
             type="text"
             id="address"
             name="address"
@@ -199,6 +198,12 @@
             class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             placeholder="Address"
           />
+          <div class="mt-2">
+            <app-location-picker
+              [location]="location"
+              (locationChange)="onLocationPicked($event)"
+            ></app-location-picker>
+          </div>
         </div>
 
         <div class="mb-4">

@@ -635,7 +635,7 @@
                 Basic Information
               </h4>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                <div *ngIf="showAddressField">
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     <i class="bi bi-geo-alt mr-1"></i>
                     Address
@@ -656,6 +656,50 @@
                     class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
                   />
                 </div>
+              </div>
+            </div>
+
+            <!-- Location -->
+            <div>
+              <h4 class="text-base font-semibold text-gray-900 mb-3 flex items-center">
+                <i class="bi bi-geo-alt text-emerald-600 mr-2"></i>
+                Location
+              </h4>
+
+              <!-- View mode: read-only map of the saved pin -->
+              <app-location-map
+                *ngIf="studySelected.location && !showRepin"
+                [location]="studySelected.location"
+                [distanceLabel]="distanceLabel"
+              ></app-location-map>
+
+              <p
+                *ngIf="!studySelected.location && !showRepin"
+                class="text-sm text-gray-500"
+              >
+                No pin saved yet. Add one so you can navigate back next time.
+              </p>
+
+              <!-- Edit mode: the same slot turns into the editable map -->
+              <div *ngIf="showRepin">
+                <app-location-picker
+                  [location]="editLocation"
+                  (locationChange)="onEditLocationPicked($event)"
+                ></app-location-picker>
+                <p class="mt-1 text-xs text-gray-500">
+                  Search the address or drop a pin, then Save Changes to keep it.
+                </p>
+              </div>
+
+              <div class="mt-2">
+                <button
+                  type="button"
+                  (click)="showRepin = !showRepin"
+                  class="text-sm font-medium text-emerald-700 hover:text-emerald-800"
+                >
+                  <i class="bi bi-pin-map mr-1"></i>
+                  {{ showRepin ? 'Done editing' : (studySelected.location ? 'Change pin' : 'Add a pin') }}
+                </button>
               </div>
             </div>
 
@@ -831,17 +875,26 @@
                 <div class="min-w-0 w-full">
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     <i class="bi bi-geo-alt mr-1"></i>
-                    Address *
+                    Location *
                   </label>
                   <textarea
+                    *ngIf="showAddressField"
                     [(ngModel)]="address"
                     name="address"
-                    required
                     rows="2"
                     class="w-full min-w-0 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm resize-none"
                     style="box-sizing: border-box; width: 100%;"
                     placeholder="Enter the address"
                   ></textarea>
+                  <p class="mt-1 text-xs text-gray-500">
+                    Drop a pin so you can find this place again on a map.
+                  </p>
+                  <div class="mt-2">
+                    <app-location-picker
+                      [location]="location"
+                      (locationChange)="onLocationPicked($event)"
+                    ></app-location-picker>
+                  </div>
                 </div>
                 <div class="min-w-0 w-full">
                   <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -900,7 +953,7 @@
               </button>
               <button
                 type="submit"
-                [disabled]="loading || !bible_study || !address || !schedule || !next_lesson"
+                [disabled]="loading || !bible_study || !schedule || !next_lesson"
                 class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all shadow-sm hover:shadow-md font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span

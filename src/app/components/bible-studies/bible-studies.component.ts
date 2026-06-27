@@ -4,11 +4,22 @@ import { ApiService } from '../../_services/api.service';
 import { FormsModule } from '@angular/forms';
 import { AlertsComponent } from '../alerts/alerts.component';
 import { ModalComponent } from '../modal/modal.component';
+import {
+  LocationPickerComponent,
+  PickedLocation,
+} from '../location-picker/location-picker.component';
+import { LatLng } from '../../_services/geo.service';
 
 @Component({
   selector: 'app-bible-studies',
   standalone: true,
-  imports: [CommonModule, FormsModule, AlertsComponent, ModalComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    AlertsComponent,
+    ModalComponent,
+    LocationPickerComponent,
+  ],
   templateUrl: './bible-studies.component.html',
   styleUrl: './bible-studies.component.css',
 })
@@ -18,6 +29,10 @@ export class BibleStudiesComponent {
   hoveredCard: number | null = null;
   bible_study = '';
   address = '';
+  // Address text field is hidden for now; the map pin covers location. The pin
+  // still auto-fills `address` behind the scenes, so the data keeps saving.
+  showAddressField = false;
+  location: LatLng | null = null;
   schedule: Date | null = null;
   type = 'rv';
   next_lesson = '';
@@ -32,6 +47,15 @@ export class BibleStudiesComponent {
 
   editStudy(study: any) {
     this.edit.emit(study);
+  }
+
+  // Pin picked on the map: store coords and auto-fill the address when the
+  // user hasn't typed one (so manual edits or notes like "blue gate" stick).
+  onLocationPicked(picked: PickedLocation) {
+    this.location = picked.location;
+    if (picked.address && !this.address.trim()) {
+      this.address = picked.address;
+    }
   }
 
   getInitials(name: string): string {
@@ -107,7 +131,7 @@ export class BibleStudiesComponent {
 
   async onSubmit() {
     this.isLoading = true;
-    const data = {
+    const data: any = {
       bible_study: this.bible_study,
       address: this.address,
       schedule: this.schedule,
@@ -115,10 +139,14 @@ export class BibleStudiesComponent {
       lesson: this.next_lesson,
       updated_at: new Date(),
     };
+    if (this.location) {
+      data.location = this.location;
+    }
     try {
       await this.api.addStudy(data);
       this.bible_study = '';
       this.address = '';
+      this.location = null;
       this.schedule = null;
       this.type = '';
       this.next_lesson = '';
