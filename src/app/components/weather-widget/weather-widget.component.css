@@ -20,20 +20,72 @@
 .scene-clear-night {
   background: linear-gradient(160deg, #0b1026 0%, #1b2350 60%, #2a2f6b 100%);
 }
-.scene-clouds {
+/* ---- Clouds: time-of-day variants ---- */
+.scene-clouds.tod-morning {
+  background: linear-gradient(160deg, #5a7a9a 0%, #8baec5 45%, #d4c4a8 100%);
+}
+.scene-clouds.tod-day {
   background: linear-gradient(160deg, #5b6b7d 0%, #8a9bb0 100%);
 }
-.scene-rain {
+.scene-clouds.tod-evening {
+  background: linear-gradient(160deg, #2a2550 0%, #5a4070 42%, #b87a50 100%);
+}
+.scene-clouds.tod-night {
+  background: linear-gradient(160deg, #141828 0%, #252e48 60%, #3a3f5c 100%);
+}
+
+/* ---- Rain: time-of-day variants ---- */
+.scene-rain.tod-morning {
+  background: linear-gradient(160deg, #3a5570 0%, #5e7d94 45%, #8a9a90 100%);
+}
+.scene-rain.tod-day {
   background: linear-gradient(160deg, #2f3d52 0%, #48586e 100%);
 }
-.scene-snow {
+.scene-rain.tod-evening {
+  background: linear-gradient(160deg, #1a1838 0%, #3a2d55 42%, #7a5a42 100%);
+}
+.scene-rain.tod-night {
+  background: linear-gradient(160deg, #0c1020 0%, #1a2238 60%, #262a40 100%);
+}
+
+/* ---- Snow: time-of-day variants ---- */
+.scene-snow.tod-morning {
+  background: linear-gradient(160deg, #7088a0 0%, #a0b8c8 45%, #d0c4b0 100%);
+}
+.scene-snow.tod-day {
   background: linear-gradient(160deg, #6b7a90 0%, #9fb0c4 100%);
 }
-.scene-fog {
+.scene-snow.tod-evening {
+  background: linear-gradient(160deg, #2e2850 0%, #5e4a78 42%, #907060 100%);
+}
+.scene-snow.tod-night {
+  background: linear-gradient(160deg, #141830 0%, #283050 60%, #3a4060 100%);
+}
+
+/* ---- Fog: time-of-day variants ---- */
+.scene-fog.tod-morning {
+  background: linear-gradient(160deg, #7a8e98 0%, #a8b8bf 45%, #c8bca8 100%);
+}
+.scene-fog.tod-day {
   background: linear-gradient(160deg, #7c8694 0%, #aab3bf 100%);
 }
-.scene-storm {
+.scene-fog.tod-evening {
+  background: linear-gradient(160deg, #2a2545 0%, #584870 42%, #9a7858 100%);
+}
+.scene-fog.tod-night {
+  background: linear-gradient(160deg, #121620 0%, #222838 60%, #343848 100%);
+}
+
+/* Storm already looks dark/dramatic, but shift slightly for time of day. */
+.scene-storm.tod-morning,
+.scene-storm.tod-day {
   background: linear-gradient(160deg, #0f1426 0%, #232a47 52%, #3b3556 100%);
+}
+.scene-storm.tod-evening {
+  background: linear-gradient(160deg, #100c20 0%, #2a1e40 42%, #4a3050 100%);
+}
+.scene-storm.tod-night {
+  background: linear-gradient(160deg, #080a14 0%, #141828 52%, #222040 100%);
 }
 
 /* Effect layers fill the card and sit behind the content */
@@ -324,9 +376,28 @@
   padding: 0 1px;      /* 1px gutter so borders never sit on the clip edge */
 }
 
+/* Inner carousel for page 1: home ↔ AI analysis slide. */
+.analysis-carousel {
+  width: 100%;
+  overflow: hidden;
+}
+.analysis-track {
+  display: flex;
+  width: 200%;
+  transition: transform 0.35s ease;
+}
+.analysis-subpage {
+  width: 50%;
+  flex-shrink: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 0 1px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .page-track,
-  .brgy-track {
+  .brgy-track,
+  .analysis-track {
     transition: none;
   }
 }
@@ -394,10 +465,27 @@
   border-radius: 9999px;
 }
 
-/* Glass panel for the AI tip now living inside the card. */
+/* Glass panel used inside the AI analysis detail view. */
 .tip-panel {
   background: rgba(255, 255, 255, 0.14);
   border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+/* AI Analyze Weather button on page 1. Gradient border + subtle glow
+   to visually distinguish it as an AI-powered action. */
+.ai-analyze-btn {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(59, 130, 246, 0.2) 100%);
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  transition: background 0.2s ease;
+}
+.ai-analyze-btn:active {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.35) 0%, rgba(59, 130, 246, 0.3) 100%);
+}
+/* "AI" pill badge. */
+.ai-badge {
+  background: rgba(139, 92, 246, 0.35);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(139, 92, 246, 0.45);
 }
 
 /* Respect reduced-motion preferences */

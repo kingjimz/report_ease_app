@@ -130,32 +130,62 @@ async function handleTip(body, env, cors) {
     ? Math.round(body.temperature)
     : null;
   const forecastText = String(body.forecastText || '').slice(0, 300);
+  const ministry = body.ministry || null;
 
   // Field ministry happens in the morning and afternoon. In the evening and
   // overnight, drop all ministry wording and give a plain "if you head out" tip.
   const isMinistryTime = partOfDay === 'morning' || partOfDay === 'afternoon';
 
+  // Build ministry instruction block when data is available during ministry hours.
+  const ministryInstruction =
+    isMinistryTime && ministry
+      ? `You also have ministry context. If the user's area has rain but a nearby ` +
+        `barangay with an active bible study or return visit is clear, recommend ` +
+        `conducting that study there. Name the person and barangay specifically. ` +
+        `If all locations have rain, advise preparing for studies indoors or writing ` +
+        `letters. If no study data is provided, give standard weather advice. `
+      : '';
+
   const system =
     (isMinistryTime
       ? `You are a helpful assistant for a Jehovah's Witness using a field-ministry app. ` +
-        `Write a short, warm, practical message (max 30 words) for door-to-door ministry ` +
-        `over the next few hours. `
+        `Write a short, warm, practical message (max 50 words) for ministry ` +
+        `over the next few hours. ` + ministryInstruction
       : `You are a helpful weather assistant. It is ${partOfDay}, outside of normal ` +
         `field-ministry hours, so do NOT mention ministry, preaching, field service, ` +
-        `or going door to door. Write a short, warm, practical message (max 30 words) ` +
+        `or going door to door. Write a short, warm, practical message (max 50 words) ` +
         `for someone who might head out over the next few hours. `) +
     `The forecast lists only upcoming hours. If it shows a notable change (rain, ` +
     `storms, clearing), begin with ONE sentence naming what to expect and the soonest ` +
     `specific time it is likely, e.g. "Rain is likely around 7 PM." Then add ONE ` +
-    `sentence advising what to wear or bring if you head out. If nothing notable is ` +
+    `sentence advising what to wear or bring or where to go. If nothing notable is ` +
     `ahead, give just the single advice sentence. Use the forecast times exactly as ` +
     `given, and never mention a time earlier than the forecast. Plain text only: no ` +
-    `emoji, no quotes, no markdown, at most two sentences.`;
+    `emoji, no quotes, no markdown, at most three sentences.`;
+
+  // Build ministry data line for the user message.
+  let ministryLine = '';
+  if (isMinistryTime && ministry) {
+    const matches = Array.isArray(ministry.studyMatches) ? ministry.studyMatches : [];
+    const clearStudies = matches
+      .filter((m) => !m.isRainy)
+      .map((m) => `${m.studyName} in ${m.barangayName}`)
+      .join(', ');
+    const rainyStudies = matches
+      .filter((m) => m.isRainy)
+      .map((m) => `${m.studyName} in ${m.barangayName}`)
+      .join(', ');
+    ministryLine =
+      `\nMinistry: User location rainy: ${!!ministry.userLocationRainy}. ` +
+      `Studies near clear areas: ${clearStudies || 'none'}. ` +
+      `Studies near rainy areas: ${rainyStudies || 'none'}.`;
+  }
 
   const user =
     `Conditions now: ${description}, ${temperature ?? 'unknown'} degrees Celsius, ` +
     `${partOfDay}, in ${city} (scene: ${scene}).` +
-    (forecastText ? `\n${forecastText}` : '');
+    (forecastText ? `\n${forecastText}` : '') +
+    ministryLine;
 
   return runModel(
     env,
@@ -164,7 +194,7 @@ async function handleTip(body, env, cors) {
       { role: 'system', content: system },
       { role: 'user', content: user },
     ],
-    { temperature: 0.7, max_tokens: 120 },
+    { temperature: 0.7, max_tokens: 160 },
   );
 }
 
@@ -173,7 +203,7 @@ async function handleTip(body, env, cors) {
 // The chatbot answers ONLY questions about using the ReportEase app. The whole
 // feature inventory lives here so answers stay grounded and never invented.
 const CHAT_SYSTEM_PROMPT =
-  `You are the in-app help assistant for "Field Service Tracker" (also called ` +
+  `You are "ServiceMate", the in-app assistant for "Field Service Tracker" (also called ` +
   `ReportEase), a mobile app that helps Jehovah's Witnesses track their field ` +
   `ministry. Answer ONLY questions about how to use this app and what it can do. ` +
   `\n\nWhat the app offers:\n` +

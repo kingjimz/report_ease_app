@@ -13,12 +13,12 @@
       [class.label-hidden]="!showLabel"
       class="chat-label whitespace-nowrap rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-gray-800 shadow-lg dark:bg-gray-800 dark:text-gray-100"
     >
-      Need help?
+      Ask ServiceMate
     </button>
     <button
       type="button"
       (click)="toggle()"
-      aria-label="Open help assistant"
+      aria-label="Open ServiceMate"
       class="chat-fab flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
     >
       <!-- Custom robot mascot -->
@@ -73,7 +73,7 @@
       >
         <i class="bi bi-chat-dots text-lg"></i>
         <div class="min-w-0">
-          <p class="text-sm font-semibold leading-tight">Help Assistant</p>
+          <p class="text-sm font-semibold leading-tight">ServiceMate</p>
           <p class="text-[11px] text-white/80 leading-tight">
             {{ chat.remaining }} of {{ chat.limit }} questions left today
           </p>

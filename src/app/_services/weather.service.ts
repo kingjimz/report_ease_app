@@ -43,6 +43,21 @@ export interface BarangayWeather {
   forecast: ForecastHour[];
 }
 
+/** A study/RV matched to a nearby barangay by proximity. */
+export interface StudyBarangayMatch {
+  studyName: string;
+  studyType: 'bs' | 'rv';
+  barangayName: string;
+  isRainy: boolean;
+}
+
+/** Context passed to the AI tip and rule-based fallback for ministry-aware advice. */
+export interface MinistryContext {
+  nearbyBarangays: { name: string; weatherCode: number; precipProbability: number }[];
+  studyMatches: StudyBarangayMatch[];
+  userLocationRainy: boolean;
+}
+
 /** A single hour in the short-term forecast. */
 export interface ForecastHour {
   /** epoch ms for this hour (for `| date:'ha'` labels) */
@@ -86,7 +101,7 @@ const AI_TIP_CACHE_KEY = 're_weather_ai_tip';
 // Don't hit the network more than once every 15 minutes; the cache covers the rest.
 const REFRESH_MS = 15 * 60 * 1000;
 // Keep AI tips glanceable — a hint to the Worker and a hard cap on our side.
-const TIP_MAX_WORDS = 30;
+const TIP_MAX_WORDS = 50;
 
 /**
  * Trim text to at most `max` words. Drops a trailing comma/semicolon left by the
@@ -154,6 +169,7 @@ export class WeatherService {
     scene: WeatherScene,
     partOfDay: string,
     force = false,
+    ministryContext?: MinistryContext,
   ): Promise<string | null> {
     if (!environment.weatherAiUrl) {
       console.warn('[WeatherTip] No weatherAiUrl set in environment — AI off.');
@@ -175,8 +191,13 @@ export class WeatherService {
       maxWords: TIP_MAX_WORDS,
       // Only send a forecast line when we actually have upcoming hours.
       ...(upcoming.length ? { forecastText: forecastText(upcoming) } : {}),
+      // Ministry context: nearby barangay weather + matched studies.
+      ...(ministryContext ? { ministry: ministryContext } : {}),
     };
-    const signature = this.aiSignature({ ...payload, forecast: upcoming });
+    const signature = this.aiSignature(
+      { ...payload, forecast: upcoming },
+      ministryContext,
+    );
 
     console.log('[WeatherTip] getAiTip called', {
       online: this.network.isOnline,
@@ -235,26 +256,31 @@ export class WeatherService {
    * Temperature is bucketed into 2°C bands so small fluctuations don't trigger
    * needless refreshes (and AI calls) while still tracking real changes.
    */
-  private aiSignature(payload: {
-    scene: WeatherScene;
-    partOfDay: string;
-    temperature: number;
-    description: string;
-    city: string;
-    forecast: ForecastHour[];
-  }): string {
+  private aiSignature(
+    payload: {
+      scene: WeatherScene;
+      partOfDay: string;
+      temperature: number;
+      description: string;
+      city: string;
+      forecast: ForecastHour[];
+    },
+    ctx?: MinistryContext,
+  ): string {
     const tempBand = Math.round(payload.temperature / 2) * 2; // 2°C bands
+    // Ministry digest: busts cache when study/weather alignment changes.
+    const mDigest = ctx?.studyMatches?.length
+      ? `${ctx.userLocationRainy ? 'R' : 'C'}|c${ctx.studyMatches.filter((m) => !m.isRainy).length}|r${ctx.studyMatches.filter((m) => m.isRainy).length}`
+      : 'no-studies';
     return [
-      // Local date so the tip refreshes once a day even when conditions repeat,
-      // while still caching within the day (no extra quota churn).
       this.localDate(),
       payload.scene,
       payload.partOfDay,
       tempBand,
       payload.description,
       payload.city,
-      // Coarse forecast digest so the tip only refreshes on meaningful change.
       forecastDigest(payload.forecast),
+      mDigest,
     ].join('|');
   }
 
@@ -700,6 +726,7 @@ export function weatherTip(
   scene: WeatherScene,
   temperature: number,
   forecast: ForecastHour[] = [],
+  ctx?: MinistryContext,
 ): { text: string; icon: string } {
   // Weather hazards first.
   if (scene === 'storm')
@@ -713,6 +740,26 @@ export function weatherTip(
       text: 'Freezing rain possible. Surfaces may be icy, so take great care.',
       icon: 'bi-thermometer-snow',
     };
+
+  // Ministry-aware redirect: rain here but a study location is clear.
+  if (ctx?.userLocationRainy && ctx.studyMatches.length) {
+    const clearMatch = ctx.studyMatches.find((m) => !m.isRainy);
+    if (clearMatch) {
+      const label = clearMatch.studyType === 'rv' ? 'return visit' : 'study';
+      return {
+        text: `Rain in your area, but clear in ${clearMatch.barangayName} where you have a ${label} with ${clearMatch.studyName}. Consider heading there.`,
+        icon: 'bi-signpost-2',
+      };
+    }
+    // All study locations also rainy.
+    if (ctx.studyMatches.every((m) => m.isRainy)) {
+      return {
+        text: 'Rain across all nearby areas. Good time to prepare for next week\'s studies or write letters.',
+        icon: 'bi-cloud-rain',
+      };
+    }
+  }
+
   if (scene === 'rain')
     return {
       text: 'Rain expected. Take an umbrella and keep literature in a waterproof bag.',
@@ -768,8 +815,43 @@ export function weatherTip(
   };
 }
 
+/**
+ * Match a user's active studies/RVs to the closest nearby barangay within
+ * `maxDistanceKm`. Each match is tagged `isRainy` so callers can recommend
+ * clear-weather alternatives without repeating the weather logic.
+ */
+export function matchStudiesToBarangays(
+  studies: any[],
+  barangays: BarangayWeather[],
+  maxDistanceKm = 3,
+): StudyBarangayMatch[] {
+  if (!barangays.length) return [];
+  const matches: StudyBarangayMatch[] = [];
+  for (const s of studies) {
+    if (s.completed || !s.location?.lat || !s.location?.lng) continue;
+    let closest: BarangayWeather | null = null;
+    let closestDist = Infinity;
+    for (const b of barangays) {
+      const d = haversineKm(s.location.lat, s.location.lng, b.lat, b.lon);
+      if (d < closestDist) {
+        closestDist = d;
+        closest = b;
+      }
+    }
+    if (closest && closestDist <= maxDistanceKm) {
+      matches.push({
+        studyName: s.bible_study || 'Unknown',
+        studyType: s.type === 'rv' ? 'rv' : 'bs',
+        barangayName: closest.name,
+        isRainy: closest.weatherCode >= 51 || closest.precipProbability >= 60,
+      });
+    }
+  }
+  return matches;
+}
+
 /** Great-circle distance in km between two lat/lon pairs. */
-function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+export function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;

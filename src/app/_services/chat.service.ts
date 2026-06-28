@@ -13,8 +13,8 @@ export interface ChatMessage {
 const GREETING: ChatMessage = {
   role: 'assistant',
   content:
-    "Hi! I'm your in-app helper. Ask me how to use Field Service Tracker — " +
-    'logging reports, the calendar, Bible studies, goals, and more.',
+    "Hi! I'm ServiceMate, your ministry companion. I can help you with logging reports, " +
+    'the calendar, Bible studies, goals, and navigating the app. How can I help you today?',
 };
 
 /** Questions a single user may ask per day; resets at local midnight. */

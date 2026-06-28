@@ -10,10 +10,14 @@ import {
   ForecastHour,
   DailyForecast,
   BarangayWeather,
+  MinistryContext,
+  StudyBarangayMatch,
   weatherScene,
   weatherTip,
   describeWeather,
+  matchStudiesToBarangays,
 } from '../../_services/weather.service';
+import { ApiService } from '../../_services/api.service';
 
 @Component({
   selector: 'app-weather-widget',
@@ -36,6 +40,12 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
   nearbyLoading = false;
   /** Name of the currently expanded barangay, or null when all collapsed. */
   expandedBarangay: string | null = null;
+  /** Whether the AI analysis slide is open on page 1. */
+  showAnalysis = false;
+
+  private activeStudies: any[] = [];
+  studyMatches: StudyBarangayMatch[] = [];
+  private studiesSub?: Subscription;
 
   /** Carousel page: 0 = today, 1 = 7-day forecast, 2 = nearby barangays. */
   page = 0;
@@ -59,6 +69,7 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
   constructor(
     private weatherSvc: WeatherService,
     private settings: SettingsService,
+    private api: ApiService,
   ) {}
 
   ngOnInit(): void {
@@ -75,6 +86,14 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
       } else {
         this.clearWeather();
       }
+    });
+
+    // Track active studies for ministry-aware tips.
+    this.studiesSub = this.api.bibleStudies$.subscribe((studies) => {
+      this.activeStudies = (studies ?? []).filter(
+        (s: any) => !s.completed && s.location?.lat && s.location?.lng,
+      );
+      this.recalcStudyMatches();
     });
 
     // Background auto-refresh while the dashboard stays open.
@@ -172,9 +191,38 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
         this.weather.longitude,
         this.weather.city,
       )
-      .then((results) => (this.nearbyBarangays = results))
+      .then((results) => {
+        this.nearbyBarangays = results;
+        this.recalcStudyMatches();
+      })
       .catch(() => {})
       .finally(() => (this.nearbyLoading = false));
+  }
+
+  /** Re-run proximity matching whenever studies or barangays update. */
+  private recalcStudyMatches(): void {
+    this.studyMatches = matchStudiesToBarangays(
+      this.activeStudies,
+      this.nearbyBarangays,
+    );
+  }
+
+  /** Build the ministry context passed to the AI tip and rule-based fallback. */
+  private buildMinistryContext(): MinistryContext | undefined {
+    if (!this.nearbyBarangays.length && !this.studyMatches.length) return undefined;
+    const userRainy = this.weather
+      ? this.weather.weatherCode >= 51 ||
+        (this.weather.forecast ?? []).some((h) => h.precipProbability >= 60)
+      : false;
+    return {
+      nearbyBarangays: this.nearbyBarangays.map((b) => ({
+        name: b.name,
+        weatherCode: b.weatherCode,
+        precipProbability: b.precipProbability,
+      })),
+      studyMatches: this.studyMatches,
+      userLocationRainy: userRainy,
+    };
   }
 
   /** The currently expanded barangay object, for the detail view. */
@@ -192,6 +240,19 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
   brgyForecast(b: BarangayWeather): ForecastHour[] {
     const now = Date.now();
     return (b.forecast ?? []).filter((h) => h.time > now).slice(0, 5);
+  }
+
+  /** Slide page 1 to the AI analysis view, triggering a tip fetch if needed. */
+  openAnalysis(): void {
+    this.showAnalysis = true;
+    if (!this.aiTipText && !this.aiTipLoading) {
+      this.refreshAiTip();
+    }
+  }
+
+  /** Slide back from AI analysis to the home view. */
+  closeAnalysis(): void {
+    this.showAnalysis = false;
   }
 
   /** Force a fresh AI tip on demand, bypassing the daily cache. */
@@ -242,7 +303,7 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
         ? 'afternoon'
         : 'evening';
     this.weatherSvc
-      .getAiTip(this.weather, this.scene, partOfDay, force)
+      .getAiTip(this.weather, this.scene, partOfDay, force, this.buildMinistryContext())
       .then((text) => {
         if (text) {
           this.aiTipText = text;
@@ -268,6 +329,7 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
     if (this.refreshTimer) clearInterval(this.refreshTimer);
     clearTimeout(this.aiTipTimer);
     this.settingsSub?.unsubscribe();
+    this.studiesSub?.unsubscribe();
   }
 
   get greeting(): string {
@@ -304,6 +366,16 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
     return 'clear-night';
   }
 
+  /** Time-of-day label applied as a CSS class so weather scenes shift with the clock. */
+  get timeOfDay(): string {
+    const hour = this.now.getHours();
+    if (hour < 5) return 'night';
+    if (hour < 11) return 'morning';
+    if (hour < 16) return 'day';
+    if (hour < 19) return 'evening';
+    return 'night';
+  }
+
   /** True while the sun is up (morning through evening) for the sun/moon icon. */
   private get isDaytime(): boolean {
     const hour = this.now.getHours();
@@ -330,6 +402,7 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
       this.scene,
       this.weather.temperature,
       this.weather.forecast,
+      this.buildMinistryContext(),
     );
     return this.aiTipText ? { text: this.aiTipText, icon: base.icon } : base;
   }
