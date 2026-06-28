@@ -1,24 +1,27 @@
 import { Component, Output, EventEmitter, Input, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
-import { trigger, transition, style, animate } from '@angular/animations';
 import { CommonModule } from '@angular/common';
-import { CalendarComponent } from '../calendar/calendar.component';
 import { NavigationService } from '../../_services/navigation.service';
 import { Subscription } from 'rxjs';
+import { bottomSheet } from '../../_animations/bottom-sheet.animation';
+import { DragToCloseDirective } from '../../_directives/drag-to-close.directive';
 
 @Component({
   standalone: true,
   selector: 'app-tab-card',
   templateUrl: './tab-card.component.html',
   styleUrls: ['./tab-card.component.css'],
-  imports: [CommonModule],
+  imports: [CommonModule, DragToCloseDirective],
+  animations: [bottomSheet],
 })
 export class TabCardComponent implements OnInit, OnChanges, OnDestroy {
   @Output() tabChange = new EventEmitter<string>();
   @Output() manualReportModalOpen = new EventEmitter<void>();
   @Output() addReportModalOpen = new EventEmitter<void>();
+  @Output() generateReportModalOpen = new EventEmitter<void>();
   @Input() selectedTab: string = 'dashboard';
 
   activeTab = 'dashboard';
+  showReportTypePicker = false;
   private navigationSubscription?: Subscription;
 
   tabs = [
@@ -86,7 +89,25 @@ export class TabCardComponent implements OnInit, OnChanges, OnDestroy {
   openManualReportModal() {
     this.manualReportModalOpen.emit();
   }
-  
+
+  openReportTypePicker() {
+    this.showReportTypePicker = true;
+  }
+
+  closeReportTypePicker() {
+    this.showReportTypePicker = false;
+  }
+
+  selectDailyReport() {
+    this.showReportTypePicker = false;
+    this.addReportModalOpen.emit();
+  }
+
+  selectMonthlyReport() {
+    this.showReportTypePicker = false;
+    this.generateReportModalOpen.emit();
+  }
+
   openAddReportModal() {
     this.addReportModalOpen.emit();
   }

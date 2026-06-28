@@ -343,10 +343,53 @@
   background: #fff;
 }
 
-/* A single day row on the 7-day page. */
+/* A single day row on the 7-day page and nearby barangays. */
 .daily-row {
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Wrapper for an expandable barangay card. The card itself carries the
+   glass background; the inner .daily-row becomes transparent so there
+   is no doubled border or padding. */
+.brgy-card {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.brgy-card .daily-row {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+/* Expanded detail pane inside a barangay card. */
+.brgy-detail {
+  background: rgba(255, 255, 255, 0.06);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Keep forecast cells inside the expanded card from overflowing */
+.brgy-detail .forecast-strip {
+  scrollbar-width: none;
+}
+.brgy-detail .forecast-strip::-webkit-scrollbar {
+  display: none;
+}
+
+/* Scrollable container for the nearby-barangays list so long lists
+   don't blow out the card height on smaller screens. */
+.nearby-scroll {
+  max-height: 320px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+.nearby-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.nearby-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 9999px;
 }
 
 /* Glass panel for the AI tip now living inside the card. */

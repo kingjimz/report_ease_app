@@ -176,242 +176,199 @@ export class UtilService {
 
     if (!ctx) return;
 
-    // High DPI scaling for better quality
-    const scale = window.devicePixelRatio || 2; // Use device pixel ratio or default to 2x
+    const scale = window.devicePixelRatio || 2;
     const width = 600;
-    const height = 400;
+    const height = 520;
 
-    // Set actual canvas size in memory (scaled up)
     canvas.width = width * scale;
     canvas.height = height * scale;
-
-    // Scale the canvas back down using CSS
     canvas.style.width = width + 'px';
     canvas.style.height = height + 'px';
-
-    // Scale the drawing context so everything draws at the higher resolution
     ctx.scale(scale, scale);
-
-    // Enable anti-aliasing and high-quality rendering
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 
-    // Create gradient background
-    const gradient = ctx.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, '#667eea');
-    gradient.addColorStop(1, '#764ba2');
-    ctx.fillStyle = gradient;
+    this.drawFieldServiceReport(ctx, width, height, report, isPioneer);
+
+    const image = canvas.toDataURL('image/png', 1.0);
+
+    const link = document.createElement('a');
+    link.href = image;
+    link.download = `Field-Service-Report-${report.month.replace(' ', '-')}.png`;
+    link.click();
+
+    return image;
+  }
+
+  private drawFieldServiceReport(
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    report: any,
+    isPioneer: boolean,
+  ) {
+    const fontFamily = 'Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    const margin = 40;
+    const contentWidth = width - margin * 2;
+
+    // White background
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, width, height);
 
-    // Main content card
-    const cardMargin = 20;
-    const cardX = cardMargin;
-    const cardY = cardMargin;
-    const cardWidth = width - cardMargin * 2;
-    const cardHeight = height - cardMargin * 2;
+    // Title
+    ctx.fillStyle = '#000000';
+    ctx.font = `700 22px ${fontFamily}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('FIELD SERVICE REPORT', width / 2, 40);
 
-    // Simple card background with shadow
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
-    ctx.fillRect(cardX + 4, cardY + 4, cardWidth, cardHeight);
+    // Name field with dotted line
+    let y = 80;
+    ctx.font = `700 15px ${fontFamily}`;
+    ctx.textAlign = 'left';
+    ctx.fillText('Name:', margin, y);
+    ctx.setLineDash([2, 3]);
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(margin + 55, y + 5);
+    ctx.lineTo(width - margin, y + 5);
+    ctx.stroke();
 
-    ctx.fillStyle = 'white';
-    ctx.fillRect(cardX, cardY, cardWidth, cardHeight);
+    // Month field with dotted line and filled value
+    y = 110;
+    ctx.fillText('Month:', margin, y);
+    ctx.beginPath();
+    ctx.moveTo(margin + 60, y + 5);
+    ctx.lineTo(width - margin, y + 5);
+    ctx.stroke();
+    ctx.setLineDash([]);
 
-    // Header section with accent color
-    const headerHeight = 60;
-    const headerGradient = ctx.createLinearGradient(
-      0,
-      cardY,
-      0,
-      cardY + headerHeight,
+    // Fill in month value
+    ctx.font = `400 14px ${fontFamily}`;
+    ctx.fillText(report.month, margin + 65, y);
+
+    // Table section
+    const tableTop = 140;
+    const tableLeft = margin;
+    const tableWidth = contentWidth;
+    const valueColWidth = 70;
+    const labelColWidth = tableWidth - valueColWidth;
+
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 1.5;
+
+    // Row 1: Ministry participation
+    const row1Height = 55;
+    ctx.strokeRect(tableLeft, tableTop, tableWidth, row1Height);
+    // Vertical divider
+    ctx.beginPath();
+    ctx.moveTo(tableLeft + labelColWidth, tableTop);
+    ctx.lineTo(tableLeft + labelColWidth, tableTop + row1Height);
+    ctx.stroke();
+
+    // Row 1 text
+    ctx.font = `400 13px ${fontFamily}`;
+    ctx.fillStyle = '#000000';
+    ctx.textAlign = 'left';
+    const row1Text1 = 'Check the box if you shared in any form';
+    const row1Text2 = 'of the ministry during the month';
+    ctx.fillText(row1Text1, tableLeft + 10, tableTop + 22);
+    ctx.fillText(row1Text2, tableLeft + 10, tableTop + 40);
+
+    // Checkbox for ministry participation
+    const checkboxSize = 18;
+    const checkboxX = tableLeft + labelColWidth + (valueColWidth - checkboxSize) / 2;
+    const checkboxY = tableTop + (row1Height - checkboxSize) / 2;
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(checkboxX, checkboxY, checkboxSize, checkboxSize);
+
+    // Fill checkbox if participated
+    if (report.is_joined_ministry === 'yes') {
+      ctx.fillStyle = '#000000';
+      ctx.font = `700 16px ${fontFamily}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('\u2713', checkboxX + checkboxSize / 2, checkboxY + checkboxSize / 2 + 1);
+    }
+
+    // Row 2: Bible studies
+    const row2Top = tableTop + row1Height;
+    const row2Height = 45;
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(tableLeft, row2Top, tableWidth, row2Height);
+    ctx.beginPath();
+    ctx.moveTo(tableLeft + labelColWidth, row2Top);
+    ctx.lineTo(tableLeft + labelColWidth, row2Top + row2Height);
+    ctx.stroke();
+
+    ctx.font = `400 13px ${fontFamily}`;
+    ctx.fillStyle = '#000000';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    const row2line1 = 'Number of different Bible studies conducted';
+    ctx.fillText(row2line1, tableLeft + 10, row2Top + row2Height / 2);
+
+    // Bible studies value
+    ctx.font = `600 15px ${fontFamily}`;
+    ctx.textAlign = 'center';
+    ctx.fillText(
+      report.bibleStudies.toString(),
+      tableLeft + labelColWidth + valueColWidth / 2,
+      row2Top + row2Height / 2,
     );
-    headerGradient.addColorStop(0, '#4f46e5');
-    headerGradient.addColorStop(1, '#7c3aed');
-    ctx.fillStyle = headerGradient;
-    ctx.fillRect(cardX, cardY, cardWidth, headerHeight);
 
-    // Header text with Poppins font
-    ctx.fillStyle = 'white';
-    ctx.font =
-      '700 24px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.textAlign = 'center';
+    // Row 3: Hours
+    const row3Top = row2Top + row2Height;
+    const row3Height = 55;
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(tableLeft, row3Top, tableWidth, row3Height);
+    ctx.beginPath();
+    ctx.moveTo(tableLeft + labelColWidth, row3Top);
+    ctx.lineTo(tableLeft + labelColWidth, row3Top + row3Height);
+    ctx.stroke();
+
+    ctx.font = `400 13px ${fontFamily}`;
+    ctx.fillStyle = '#000000';
+    ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    const centerX = width / 2;
-    ctx.fillText('Monthly Field Service Report', centerX, cardY + 38);
+    const row3Text1 = 'Hours (if auxiliary, regular, or special pioneer';
+    const row3Text2 = 'or field missionary)';
+    ctx.fillText(row3Text1, tableLeft + 10, row3Top + 22);
+    ctx.fillText(row3Text2, tableLeft + 10, row3Top + 40);
 
-    // Month badge
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-    const badgeWidth = 200;
-    const badgeHeight = 25;
-    const badgeX = centerX - badgeWidth / 2;
-    const badgeY = cardY + headerHeight + 15;
-    ctx.fillRect(badgeX, badgeY, badgeWidth, badgeHeight);
-
-    ctx.fillStyle = '#4f46e5';
-    ctx.font =
-      '600 16px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(report.month, centerX, badgeY + 17);
-
-    // Pioneer/Publisher text (no badge background)
-    const typeText = isPioneer
-      ? 'Pioneer Report Card'
-      : 'Publisher Report Card';
-    const typeBadgeY = badgeY + 35;
-    ctx.fillStyle = '#1e293b'; // Dark color for better visibility
-    ctx.font =
-      '600 14px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(typeText, centerX, typeBadgeY + 14);
-
-    // Report statistics section
-    let yPosition = cardY + headerHeight + 85;
-    const leftMargin = cardX + 50;
-    const rightMargin = cardX + cardWidth - 50;
-
-    // Statistics with different handling for pioneer vs publisher
-    if (isPioneer) {
-      // Pioneer - show all stats including hours
-      const stats = [
-        {
-          label: '⏱️ Hours',
-          value: report.hours !== undefined ? report.hours.toString() : 'N/A',
-        },
-        {
-          label: '📖 Bible Studies',
-          value: report.bibleStudies.toString(),
-        },
-        {
-          label: '🤝 Ministry Participation',
-          value: this.capitalizeFirstLetter(report.is_joined_ministry),
-        },
-      ];
-
-      stats.forEach((stat, index) => {
-        const statY = yPosition + index * 60;
-
-        // Label
-        ctx.fillStyle = '#475569';
-        ctx.font =
-          '400 18px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(stat.label, leftMargin, statY);
-
-        // Value
-        ctx.fillStyle = '#1e293b';
-        ctx.font =
-          '600 20px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(stat.value, rightMargin, statY);
-      });
-    } else {
-      // Publisher - show hours field with line instead of value
-      let currentY = yPosition;
-
-      // Hours field with line
-      ctx.fillStyle = '#475569';
-      ctx.font =
-        '400 18px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('⏱️ Hours', leftMargin, currentY);
-
-      // Draw horizontal line instead of value
-      ctx.strokeStyle = '#64748b';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      const lineStartX = rightMargin - 20;
-      ctx.moveTo(lineStartX, currentY);
-      ctx.lineTo(rightMargin, currentY);
-      ctx.stroke();
-
-      currentY += 60;
-
-      // Bible Studies
-      ctx.fillStyle = '#475569';
-      ctx.font =
-        '400 18px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('📖 Bible Studies', leftMargin, currentY);
-
-      ctx.fillStyle = '#1e293b';
-      ctx.font =
-        '600 20px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(report.bibleStudies.toString(), rightMargin, currentY);
-
-      currentY += 60;
-
-      // Ministry Participation
-      ctx.fillStyle = '#475569';
-      ctx.font =
-        '400 18px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('🤝 Ministry Participation', leftMargin, currentY);
-
-      ctx.fillStyle = '#1e293b';
-      ctx.font =
-        '600 20px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'middle';
+    // Hours value (only for pioneers)
+    if (isPioneer && report.hours !== undefined) {
+      ctx.font = `600 15px ${fontFamily}`;
+      ctx.textAlign = 'center';
       ctx.fillText(
-        this.capitalizeFirstLetter(report.is_joined_ministry),
-        rightMargin,
-        currentY,
+        report.hours.toString(),
+        tableLeft + labelColWidth + valueColWidth / 2,
+        row3Top + row3Height / 2,
       );
     }
 
-    // Footer section
-    const footerY = cardY + cardHeight - 40;
+    // Comments section
+    const commentsTop = row3Top + row3Height + 20;
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(tableLeft, commentsTop, tableWidth, 100);
 
-    // Decorative line
-    ctx.strokeStyle = '#e2e8f0';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(leftMargin, footerY - 15);
-    ctx.lineTo(rightMargin, footerY - 15);
-    ctx.stroke();
+    ctx.font = `700 13px ${fontFamily}`;
+    ctx.fillStyle = '#000000';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText('Comments:', tableLeft + 10, commentsTop + 10);
 
-    // Footer text with Poppins font
-    ctx.fillStyle = '#64748b';
-    ctx.font =
-      '400 12px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    // Footer
+    ctx.fillStyle = '#999999';
+    ctx.font = `400 10px ${fontFamily}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('Generated by Field Service Tracker', centerX, footerY);
-
-    // Timestamp
-    const now = new Date();
-    const timestamp = now.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-    ctx.fillStyle = '#94a3b8';
-    ctx.font =
-      '400 10px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(`Generated on ${timestamp}`, centerX, footerY + 15);
-
-    // Return the image data URL for sharing or downloading
-    const image = canvas.toDataURL('image/png', 1.0); // Maximum quality
-    
-    // Download the Image
-    const link = document.createElement('a');
-    link.href = image;
-    link.download = `${isPioneer ? 'Pioneer' : 'Publisher'}-report-${report.month.replace(' ', '-')}.png`;
-    link.click();
-    
-    return image; // Return image data URL for sharing
+    ctx.fillText('Generated by Field Service Tracker', width / 2, height - 15);
   }
 
   async shareReport(report: any, isPioneer: boolean): Promise<void> {
@@ -465,7 +422,7 @@ export class UtilService {
     // Convert data URL to blob
     const response = await fetch(imageDataUrl);
     const blob = await response.blob();
-    const file = new File([blob], `${isPioneer ? 'Pioneer' : 'Publisher'}-report-${report.month.replace(' ', '-')}.png`, {
+    const file = new File([blob], `Field-Service-Report-${report.month.replace(' ', '-')}.png`, {
       type: 'image/png',
     });
 
@@ -473,8 +430,8 @@ export class UtilService {
     if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
         await navigator.share({
-          title: `${isPioneer ? 'Pioneer' : 'Publisher'} Report - ${report.month}`,
-          text: `My ${isPioneer ? 'Pioneer' : 'Publisher'} Field Service Report for ${report.month}`,
+          title: `Field Service Report - ${report.month}`,
+          text: `Field Service Report for ${report.month}`,
           files: [file],
         });
       } catch (error: any) {
@@ -482,7 +439,7 @@ export class UtilService {
         if (error.name !== 'AbortError') {
           console.error('Error sharing:', error);
           // Fallback to download
-          this.downloadImageFromDataUrl(imageDataUrl, `${isPioneer ? 'Pioneer' : 'Publisher'}-report-${report.month.replace(' ', '-')}.png`);
+          this.downloadImageFromDataUrl(imageDataUrl, `Field-Service-Report-${report.month.replace(' ', '-')}.png`);
         }
       }
     } else {
@@ -495,7 +452,7 @@ export class UtilService {
         alert('Image copied to clipboard! You can paste it in your messenger or other apps.');
       } catch (clipboardError) {
         // If clipboard fails, just download
-        this.downloadImageFromDataUrl(imageDataUrl, `${isPioneer ? 'Pioneer' : 'Publisher'}-report-${report.month.replace(' ', '-')}.png`);
+        this.downloadImageFromDataUrl(imageDataUrl, `Field-Service-Report-${report.month.replace(' ', '-')}.png`);
       }
     }
   }
@@ -506,209 +463,19 @@ export class UtilService {
 
     if (!ctx) return '';
 
-    // High DPI scaling for better quality
     const scale = window.devicePixelRatio || 2;
     const width = 600;
-    const height = 400;
+    const height = 520;
 
     canvas.width = width * scale;
     canvas.height = height * scale;
     canvas.style.width = width + 'px';
     canvas.style.height = height + 'px';
     ctx.scale(scale, scale);
-
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 
-    // Create gradient background
-    const gradient = ctx.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, '#667eea');
-    gradient.addColorStop(1, '#764ba2');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, height);
-
-    // Main content card
-    const cardMargin = 20;
-    const cardX = cardMargin;
-    const cardY = cardMargin;
-    const cardWidth = width - cardMargin * 2;
-    const cardHeight = height - cardMargin * 2;
-
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
-    ctx.fillRect(cardX + 4, cardY + 4, cardWidth, cardHeight);
-
-    ctx.fillStyle = 'white';
-    ctx.fillRect(cardX, cardY, cardWidth, cardHeight);
-
-    // Header section
-    const headerHeight = 60;
-    const headerGradient = ctx.createLinearGradient(
-      0,
-      cardY,
-      0,
-      cardY + headerHeight,
-    );
-    headerGradient.addColorStop(0, '#4f46e5');
-    headerGradient.addColorStop(1, '#7c3aed');
-    ctx.fillStyle = headerGradient;
-    ctx.fillRect(cardX, cardY, cardWidth, headerHeight);
-
-    ctx.fillStyle = 'white';
-    ctx.font =
-      '700 24px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    const centerX = width / 2;
-    ctx.fillText('Monthly Field Service Report', centerX, cardY + 38);
-
-    // Month badge
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-    const badgeWidth = 200;
-    const badgeHeight = 25;
-    const badgeX = centerX - badgeWidth / 2;
-    const badgeY = cardY + headerHeight + 15;
-    ctx.fillRect(badgeX, badgeY, badgeWidth, badgeHeight);
-
-    ctx.fillStyle = '#4f46e5';
-    ctx.font =
-      '600 16px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(report.month, centerX, badgeY + 17);
-
-    const typeText = isPioneer
-      ? 'Pioneer Report Card'
-      : 'Publisher Report Card';
-    const typeBadgeY = badgeY + 35;
-    ctx.fillStyle = '#1e293b';
-    ctx.font =
-      '600 14px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(typeText, centerX, typeBadgeY + 14);
-
-    // Report statistics section
-    let yPosition = cardY + headerHeight + 85;
-    const leftMargin = cardX + 50;
-    const rightMargin = cardX + cardWidth - 50;
-
-    if (isPioneer) {
-      const stats = [
-        {
-          label: '⏱️ Hours',
-          value: report.hours !== undefined ? report.hours.toString() : 'N/A',
-        },
-        {
-          label: '📖 Bible Studies',
-          value: report.bibleStudies.toString(),
-        },
-        {
-          label: '🤝 Ministry Participation',
-          value: this.capitalizeFirstLetter(report.is_joined_ministry),
-        },
-      ];
-
-      stats.forEach((stat, index) => {
-        const statY = yPosition + index * 60;
-
-        ctx.fillStyle = '#475569';
-        ctx.font =
-          '400 18px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(stat.label, leftMargin, statY);
-
-        ctx.fillStyle = '#1e293b';
-        ctx.font =
-          '600 20px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(stat.value, rightMargin, statY);
-      });
-    } else {
-      let currentY = yPosition;
-
-      ctx.fillStyle = '#475569';
-      ctx.font =
-        '400 18px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('⏱️ Hours', leftMargin, currentY);
-
-      ctx.strokeStyle = '#64748b';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      const lineStartX = rightMargin - 20;
-      ctx.moveTo(lineStartX, currentY);
-      ctx.lineTo(rightMargin, currentY);
-      ctx.stroke();
-
-      currentY += 60;
-
-      ctx.fillStyle = '#475569';
-      ctx.font =
-        '400 18px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('📖 Bible Studies', leftMargin, currentY);
-
-      ctx.fillStyle = '#1e293b';
-      ctx.font =
-        '600 20px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(report.bibleStudies.toString(), rightMargin, currentY);
-
-      currentY += 60;
-
-      ctx.fillStyle = '#475569';
-      ctx.font =
-        '400 18px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('🤝 Ministry Participation', leftMargin, currentY);
-
-      ctx.fillStyle = '#1e293b';
-      ctx.font =
-        '600 20px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(
-        this.capitalizeFirstLetter(report.is_joined_ministry),
-        rightMargin,
-        currentY,
-      );
-    }
-
-    const footerY = cardY + cardHeight - 40;
-
-    ctx.strokeStyle = '#e2e8f0';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(leftMargin, footerY - 15);
-    ctx.lineTo(rightMargin, footerY - 15);
-    ctx.stroke();
-
-    ctx.fillStyle = '#64748b';
-    ctx.font =
-      '400 12px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('Generated by Field Service Tracker', centerX, footerY);
-
-    const now = new Date();
-    const timestamp = now.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-    ctx.fillStyle = '#94a3b8';
-    ctx.font =
-      '400 10px Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(`Generated on ${timestamp}`, centerX, footerY + 15);
+    this.drawFieldServiceReport(ctx, width, height, report, isPioneer);
 
     return canvas.toDataURL('image/png', 1.0);
   }

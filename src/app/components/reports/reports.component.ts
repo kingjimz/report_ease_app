@@ -95,15 +95,6 @@ export class ReportsComponent implements OnDestroy {
   reportSuccess: boolean = false;
   reportAlertMessage: string = '';
   
-  // Generate Report Modal properties
-  showGenerateReportModal: boolean = false;
-  generateReportDate: string = '';
-  generateReportHours: number = 0;
-  generateReportBibleStudies: number = 0;
-  generateReportJoinedMinistry: string = 'yes';
-  isGeneratingReport: boolean = false;
-  generateReportSuccess: boolean = false;
-  generateReportAlertMessage: string = '';
 
   constructor(
     public api: ApiService,
@@ -120,7 +111,6 @@ export class ReportsComponent implements OnDestroy {
     // Set default date to today for modals
     const today = new Date();
     this.reportDate = today.toISOString().split('T')[0];
-    this.generateReportDate = today.toISOString().split('T')[0];
     setTimeout(() => {
       this.loading = false;
     }, 1000);
@@ -927,89 +917,5 @@ export class ReportsComponent implements OnDestroy {
       this.isSubmittingReport = false;
     }
   }
-  
-  // Generate Report Modal Methods
-  openGenerateReportModal() {
-    const today = new Date();
-    this.generateReportDate = today.toISOString().split('T')[0];
-    this.generateReportHours = 0;
-    this.generateReportBibleStudies = 0;
-    this.generateReportJoinedMinistry = 'yes';
-    this.isGeneratingReport = false;
-    this.generateReportSuccess = false;
-    this.generateReportAlertMessage = '';
-    this.showGenerateReportModal = true;
-  }
-  
-  closeGenerateReportModal() {
-    this.showGenerateReportModal = false;
-    this.generateReportDate = '';
-    this.generateReportHours = 0;
-    this.generateReportBibleStudies = 0;
-    this.generateReportJoinedMinistry = 'yes';
-    this.generateReportSuccess = false;
-    this.generateReportAlertMessage = '';
-  }
-  
-  incrementGenerateHours() {
-    this.generateReportHours++;
-  }
-  
-  decrementGenerateHours() {
-    if (this.generateReportHours > 0) {
-      this.generateReportHours--;
-    }
-  }
-  
-  incrementGenerateBibleStudies() {
-    this.generateReportBibleStudies++;
-  }
-  
-  decrementGenerateBibleStudies() {
-    if (this.generateReportBibleStudies > 0) {
-      this.generateReportBibleStudies--;
-    }
-  }
-  
-  generateManualReport() {
-    if (!this.generateReportDate || !this.generateReportHours || !this.generateReportJoinedMinistry) {
-      this.generateReportSuccess = false;
-      this.generateReportAlertMessage = 'Please fill in all required fields.';
-      return;
-    }
 
-    this.isGeneratingReport = true;
-
-    // Parse the date to get month and year
-    const selectedDate = new Date(this.generateReportDate);
-    const monthName = selectedDate.toLocaleDateString('en-US', { month: 'long' });
-    const year = selectedDate.getFullYear();
-
-    // Prepare data for PNG generation (exactly matching reports component structure)
-    const reportData = {
-      month: `${monthName} ${year}`,
-      bibleStudies: this.generateReportBibleStudies,
-      is_joined_ministry: this.generateReportJoinedMinistry,
-      hours: this.isPioneer ? this.generateReportHours : undefined,
-      report_count: 1,
-    };
-
-    try {
-      // Generate PNG without saving to database
-      this.util.generatePNG(reportData, this.isPioneer);
-
-      this.generateReportSuccess = true;
-      this.generateReportAlertMessage = 'Report generated successfully! Check your downloads.';
-
-      setTimeout(() => {
-        this.closeGenerateReportModal();
-      }, 1500);
-    } catch (error) {
-      console.error('Error generating report:', error);
-      this.generateReportSuccess = false;
-      this.generateReportAlertMessage = 'Error generating report. Please try again.';
-    } finally {
-      this.isGeneratingReport = false;
-    }
-  }
 }

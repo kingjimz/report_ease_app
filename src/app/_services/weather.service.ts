@@ -18,6 +18,29 @@ export interface WeatherInfo {
   forecast?: ForecastHour[];
   /** Up to the next 7 daily forecasts (empty if unavailable). */
   daily?: DailyForecast[];
+  /** Latitude of the weather observation point. */
+  latitude?: number;
+  /** Longitude of the weather observation point. */
+  longitude?: number;
+}
+
+/** Weather snapshot for a single nearby barangay. */
+export interface BarangayWeather {
+  name: string;
+  lat: number;
+  lon: number;
+  /** Distance in km from the user's location */
+  distance: number;
+  temperature: number;
+  weatherCode: number;
+  icon: string;
+  description: string;
+  isDay: boolean;
+  tempMax: number;
+  tempMin: number;
+  precipProbability: number;
+  /** Next 5 hours of forecast for this barangay. */
+  forecast: ForecastHour[];
 }
 
 /** A single hour in the short-term forecast. */
@@ -56,7 +79,9 @@ interface Coords {
 
 // Bump the suffix when the cached shape changes (e.g. added daily forecast) so
 // older snapshots are discarded and a fresh, complete pull replaces them.
-const CACHE_KEY = 're_weather_cache_v2';
+const CACHE_KEY = 're_weather_cache_v5';
+const NEARBY_CACHE_KEY = 're_nearby_brgy_cache_v2';
+const NEARBY_REFRESH_MS = 30 * 60 * 1000;
 const AI_TIP_CACHE_KEY = 're_weather_ai_tip';
 // Don't hit the network more than once every 15 minutes; the cache covers the rest.
 const REFRESH_MS = 15 * 60 * 1000;
@@ -276,7 +301,7 @@ export class WeatherService {
       const weather = await this.fetchWeather(coords);
       const city = coords.city || (await this.fetchCity(coords)) || 'Your area';
 
-      const info: WeatherInfo = { ...weather, city, fetchedAt: Date.now() };
+      const info: WeatherInfo = { ...weather, city, fetchedAt: Date.now(), latitude: coords.lat, longitude: coords.lon };
       localStorage.setItem(CACHE_KEY, JSON.stringify(info));
       return info;
     } catch (err) {
@@ -417,45 +442,185 @@ export class WeatherService {
     return out;
   }
 
-  private async fetchCity(coords: Coords): Promise<string | null> {
+  /** Last successfully cached nearby-barangay snapshot, or null. */
+  getNearbyCache(): { fetchedAt: number; barangays: BarangayWeather[] } | null {
     try {
-      const url =
-        `https://api.bigdatacloud.net/data/reverse-geocode-client` +
-        `?latitude=${coords.lat}&longitude=${coords.lon}&localityLanguage=en`;
-      const res: any = await firstValueFrom(this.http.get(url));
-      // Municipality/city, then province — e.g. "Tanza, Cavite".
-      const locality = res?.city || res?.locality || null;
-      const province = this.extractProvince(res, locality);
-      if (locality && province && locality !== province) {
-        return `${locality}, ${province}`;
-      }
-      return locality || province || null;
+      const raw = localStorage.getItem(NEARBY_CACHE_KEY);
+      return raw ? JSON.parse(raw) : null;
     } catch {
       return null;
     }
   }
 
   /**
-   * The province (e.g. "Cavite"), not the region. bigdatacloud's
-   * `principalSubdivision` returns the region in some countries (the Philippines
-   * gives "Calabarzon"), so we instead take the administrative entry sitting one
-   * level above the city in `localityInfo.administrative` (sorted by adminLevel).
+   * Find barangays surrounding the user by probing offset points in 8 compass
+   * directions (~2 km each), reverse-geocoding via Nominatim (same API used by
+   * fetchCity), deduplicating by name, then fetching weather for each unique
+   * barangay from Open-Meteo. Results are cached for 30 min.
    */
-  private extractProvince(res: any, locality: string | null): string | null {
-    const admins: any[] = res?.localityInfo?.administrative ?? [];
-    const cityLevel = admins.find((a) => a?.name === locality)?.adminLevel;
-    const parents = admins.filter(
-      (a) =>
-        typeof a?.adminLevel === 'number' &&
-        (cityLevel == null || a.adminLevel < cityLevel),
-    );
-    if (!parents.length) return res?.principalSubdivision || null;
-    // The city's immediate parent = the largest adminLevel still below the city.
-    const parent = parents.reduce((best, a) =>
-      a.adminLevel > best.adminLevel ? a : best,
-    );
-    // Strip any "(Region ...)" style suffix.
-    return parent?.name ? String(parent.name).replace(/\s*\(.*\)\s*$/, '').trim() : null;
+  async fetchNearbyBarangayWeather(
+    lat: number,
+    lon: number,
+    currentCity: string,
+  ): Promise<BarangayWeather[]> {
+    const cached = this.getNearbyCache();
+    if (cached && Date.now() - cached.fetchedAt < NEARBY_REFRESH_MS) {
+      return cached.barangays;
+    }
+    if (!this.network.isOnline) return cached?.barangays ?? [];
+
+    try {
+      // ~0.018 deg lat ≈ 2 km; ~0.02 deg lon ≈ 2 km at PH latitudes.
+      // Probe 8 compass directions so we catch surrounding barangays.
+      const offsets = [
+        { dlat:  0.018, dlon:  0      }, // N
+        { dlat: -0.018, dlon:  0      }, // S
+        { dlat:  0,     dlon:  0.02   }, // E
+        { dlat:  0,     dlon: -0.02   }, // W
+        { dlat:  0.013, dlon:  0.014  }, // NE
+        { dlat: -0.013, dlon: -0.014  }, // SW
+        { dlat:  0.013, dlon: -0.014  }, // NW
+        { dlat: -0.013, dlon:  0.014  }, // SE
+      ];
+
+      const currentBrgy = currentCity.split(',')[0].trim().toLowerCase();
+
+      // Step 1: reverse-geocode each offset point to discover the barangay name.
+      const geoPromises = offsets.map(async (o) => {
+        try {
+          const pLat = lat + o.dlat;
+          const pLon = lon + o.dlon;
+          const url =
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2` +
+            `&lat=${pLat}&lon=${pLon}&zoom=18&addressdetails=1`;
+          const res: any = await firstValueFrom(this.http.get(url));
+          const addr = res?.address;
+          if (!addr) return null;
+
+          const barangay =
+            addr.quarter || addr.village || addr.neighbourhood ||
+            addr.suburb || addr.hamlet || null;
+          if (!barangay || barangay.toLowerCase() === currentBrgy) return null;
+
+          return { name: barangay, lat: pLat, lon: pLon };
+        } catch {
+          return null;
+        }
+      });
+
+      const geoResults = await Promise.all(geoPromises);
+
+      // Step 2: deduplicate by barangay name.
+      const seen = new Set<string>();
+      const unique: { name: string; lat: number; lon: number }[] = [];
+      for (const r of geoResults) {
+        if (!r) continue;
+        const key = r.name.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        unique.push(r);
+      }
+
+      if (!unique.length) return [];
+
+      // Step 3: fetch weather + hourly forecast for each unique barangay.
+      const weatherPromises = unique.map(async (loc): Promise<BarangayWeather | null> => {
+        try {
+          const wUrl =
+            `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}` +
+            `&current=temperature_2m,weather_code,is_day,precipitation,cloud_cover` +
+            `&hourly=temperature_2m,weather_code,precipitation_probability,precipitation,cloud_cover` +
+            `&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
+            `&forecast_hours=7&forecast_days=1&timezone=auto`;
+          const wRes: any = await firstValueFrom(this.http.get(wUrl));
+          const current = wRes?.current;
+          const daily = wRes?.daily;
+          if (!current) return null;
+
+          const isDay = current.is_day === 1;
+          const code = reconcileCode(
+            current.weather_code as number,
+            Number(current.precipitation) || 0,
+            Number(current.cloud_cover) || 0,
+          );
+          const map = describeWeather(code, isDay);
+
+          return {
+            name: loc.name,
+            lat: loc.lat,
+            lon: loc.lon,
+            distance: haversineKm(lat, lon, loc.lat, loc.lon),
+            temperature: Math.round(current.temperature_2m),
+            weatherCode: code,
+            icon: map.icon,
+            description: map.description,
+            isDay,
+            tempMax: daily?.temperature_2m_max?.[0] != null
+              ? Math.round(daily.temperature_2m_max[0])
+              : Math.round(current.temperature_2m),
+            tempMin: daily?.temperature_2m_min?.[0] != null
+              ? Math.round(daily.temperature_2m_min[0])
+              : Math.round(current.temperature_2m),
+            precipProbability: daily?.precipitation_probability_max?.[0] != null
+              ? Math.round(daily.precipitation_probability_max[0])
+              : 0,
+            forecast: this.parseForecast(wRes?.hourly, isDay),
+          };
+        } catch {
+          return null;
+        }
+      });
+
+      const results = (await Promise.all(weatherPromises)).filter(
+        (r): r is BarangayWeather => r !== null,
+      );
+      results.sort((a, b) => a.distance - b.distance);
+
+      localStorage.setItem(
+        NEARBY_CACHE_KEY,
+        JSON.stringify({ fetchedAt: Date.now(), barangays: results }),
+      );
+      return results;
+    } catch (err) {
+      console.warn('Failed to fetch nearby barangay weather:', err);
+      return cached?.barangays ?? [];
+    }
+  }
+
+  /**
+   * Reverse-geocode coordinates to a human-readable location using Nominatim
+   * (OpenStreetMap). Returns barangay-level accuracy for the Philippines,
+   * e.g. "Sanja Mayor, Tanza".
+   */
+  private async fetchCity(coords: Coords): Promise<string | null> {
+    try {
+      const url =
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2` +
+        `&lat=${coords.lat}&lon=${coords.lon}&zoom=18&addressdetails=1`;
+      const res: any = await firstValueFrom(this.http.get(url));
+      const addr = res?.address;
+      if (!addr) return null;
+
+      // Barangay: Nominatim puts PH barangays in "quarter", with
+      // sub-barangay zones in "neighbourhood"
+      const barangay =
+        addr.quarter || addr.village || addr.neighbourhood || addr.suburb || addr.hamlet || null;
+      // Municipality / city
+      const municipality =
+        addr.city || addr.town || addr.municipality || null;
+
+      if (barangay && municipality && barangay !== municipality) {
+        return `${barangay}, ${municipality}`;
+      }
+      // Fallback: municipality + province
+      const province = addr.state || addr.county || null;
+      if (municipality && province && municipality !== province) {
+        return `${municipality}, ${province}`;
+      }
+      return barangay || municipality || province || null;
+    } catch {
+      return null;
+    }
   }
 }
 
@@ -598,6 +763,19 @@ export function weatherTip(
     text: 'Pleasant weather. A great day to be out in the ministry.',
     icon: 'bi-emoji-smile',
   };
+}
+
+/** Great-circle distance in km between two lat/lon pairs. */
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 /** Map a WMO weather code to a label + a Bootstrap Icon already bundled in the app. */

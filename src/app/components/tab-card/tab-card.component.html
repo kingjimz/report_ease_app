@@ -16,7 +16,7 @@
     </div>
 
     <!-- Plus Icon Button -->
-    <div class="flex flex-col items-center cursor-pointer" (click)="openAddReportModal()">
+    <div class="flex flex-col items-center cursor-pointer" (click)="openReportTypePicker()">
       <div class="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200">
         <i class="bi bi-plus-lg text-white text-2xl spin-icon"></i>
       </div>
@@ -38,3 +38,50 @@
     </div>
   </div>
 </div>
+
+<!-- Report Type Picker -->
+<ng-container *ngIf="showReportTypePicker">
+  <div [@bottomSheet] class="fixed inset-0 z-[99999] flex flex-col justify-end">
+    <div class="app-sheet-fade absolute inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm" (click)="closeReportTypePicker()"></div>
+    <div appDragToClose (dismissed)="closeReportTypePicker()" class="app-sheet-up relative w-full max-w-md mx-auto bg-white rounded-t-2xl shadow-2xl px-6 pb-8 pt-3">
+      <div class="flex justify-center pb-4">
+        <span class="w-10 h-1.5 rounded-full bg-gray-300"></span>
+      </div>
+
+      <h3 class="text-lg font-bold text-gray-900 text-center mb-1">Add Report</h3>
+      <p class="text-sm text-gray-500 text-center mb-6">What type of report would you like to create?</p>
+
+      <div class="space-y-3">
+        <!-- Daily Report -->
+        <button
+          (click)="selectDailyReport()"
+          class="w-full flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all group"
+        >
+          <div class="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-xl group-hover:bg-blue-200 transition-colors">
+            <i class="bi bi-calendar-day text-blue-600 text-xl"></i>
+          </div>
+          <div class="text-left">
+            <p class="font-semibold text-gray-900 text-sm">Daily Report</p>
+            <p class="text-xs text-gray-500">Log your ministry activity for a specific day</p>
+          </div>
+          <i class="bi bi-chevron-right text-gray-400 ml-auto"></i>
+        </button>
+
+        <!-- Monthly Report -->
+        <button
+          (click)="selectMonthlyReport()"
+          class="w-full flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-xl hover:border-emerald-300 hover:bg-emerald-50 transition-all group"
+        >
+          <div class="flex items-center justify-center w-12 h-12 bg-emerald-100 rounded-xl group-hover:bg-emerald-200 transition-colors">
+            <i class="bi bi-calendar-month text-emerald-600 text-xl"></i>
+          </div>
+          <div class="text-left">
+            <p class="font-semibold text-gray-900 text-sm">Monthly Report</p>
+            <p class="text-xs text-gray-500">Generate a full report for a specific month</p>
+          </div>
+          <i class="bi bi-chevron-right text-gray-400 ml-auto"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</ng-container>

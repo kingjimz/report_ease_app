@@ -26,6 +26,7 @@
     (tabChange)="onTabChange($event)"
     (manualReportModalOpen)="onManualReportModalOpen()"
     (addReportModalOpen)="onAddReportModalOpen()"
+    (generateReportModalOpen)="onGenerateReportModalOpen()"
     [selectedTab]="selectedTab"
   ></app-tab-card>
 </div>
@@ -214,6 +215,159 @@
               class="animate-spin rounded-full h-4 w-4 border-t-2 border-white inline-block mr-2"
             ></span>
             {{ isSubmitting ? 'Generating...' : 'Generate Report' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </app-modal>
+</ng-container>
+
+<!-- Monthly Report Modal -->
+<ng-container *ngIf="showMonthlyReportModal">
+  <app-modal (dismissed)="closeMonthlyReportModal()">
+    <div class="w-full">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center space-x-2 min-w-0 flex-1">
+          <div class="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex-shrink-0">
+            <i class="bi bi-clipboard-plus text-white text-base"></i>
+          </div>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-base font-bold text-gray-900 dark:text-white truncate">Monthly Report</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">Generate a ministry service report for a specific month</p>
+          </div>
+        </div>
+        <button
+          (click)="closeMonthlyReportModal()"
+          class="flex items-center justify-center w-8 h-8 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex-shrink-0 ml-2"
+          title="Close"
+        >
+          <i class="bi bi-x-lg text-xs"></i>
+        </button>
+      </div>
+
+      <!-- Report Form -->
+      <form (ngSubmit)="generateMonthlyReport()" class="space-y-4">
+        <!-- Month Selection -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            Report Month *
+          </label>
+          <input
+            type="month"
+            [(ngModel)]="monthlyReportDate"
+            name="monthlyReportDate"
+            required
+            class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white cursor-pointer box-border"
+            style="box-sizing: border-box; width: 100%; max-width: 100%;"
+          />
+        </div>
+
+        <!-- Hours -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <i class="bi bi-clock mr-1"></i>
+            Hours *
+          </label>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              (click)="decrementMonthlyHours()"
+              class="flex items-center justify-center w-10 h-10 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors flex-shrink-0"
+            >
+              <i class="bi bi-dash-lg text-base"></i>
+            </button>
+            <input
+              type="number"
+              [(ngModel)]="monthlyHours"
+              name="monthlyHours"
+              min="0"
+              class="flex-1 min-w-0 text-center p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-lg font-bold bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            />
+            <button
+              type="button"
+              (click)="incrementMonthlyHours()"
+              class="flex items-center justify-center w-10 h-10 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors flex-shrink-0"
+            >
+              <i class="bi bi-plus-lg text-base"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Bible Studies -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <i class="bi bi-book mr-1"></i>
+            Bible Studies
+          </label>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              (click)="decrementMonthlyBibleStudies()"
+              class="flex items-center justify-center w-10 h-10 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors flex-shrink-0"
+            >
+              <i class="bi bi-dash-lg text-base"></i>
+            </button>
+            <input
+              type="number"
+              [(ngModel)]="monthlyBibleStudies"
+              name="monthlyBibleStudies"
+              min="0"
+              class="flex-1 min-w-0 text-center p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-lg font-bold bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            />
+            <button
+              type="button"
+              (click)="incrementMonthlyBibleStudies()"
+              class="flex items-center justify-center w-10 h-10 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors flex-shrink-0"
+            >
+              <i class="bi bi-plus-lg text-base"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Ministry Participation -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <i class="bi bi-people mr-1"></i>
+            Did you participate in the ministry? *
+          </label>
+          <select
+            [(ngModel)]="monthlyJoinedMinistry"
+            name="monthlyJoinedMinistry"
+            required
+            class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          >
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+
+        <!-- Alert Messages -->
+        <app-alerts
+          *ngIf="monthlyAlertMessage"
+          [isSuccess]="monthlySuccess"
+          [alertMessage]="monthlyAlertMessage"
+        ></app-alerts>
+
+        <!-- Modal Footer -->
+        <div class="flex justify-end gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
+          <button
+            type="button"
+            (click)="closeMonthlyReportModal()"
+            class="px-3 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium text-sm"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            [disabled]="isGeneratingMonthly || !monthlyReportDate || !monthlyJoinedMinistry || (isPioneer && !monthlyHours)"
+            class="px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all shadow-sm hover:shadow-md font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span
+              *ngIf="isGeneratingMonthly"
+              class="animate-spin rounded-full h-4 w-4 border-t-2 border-white inline-block mr-2"
+            ></span>
+            {{ isGeneratingMonthly ? 'Generating...' : 'Generate Report' }}
           </button>
         </div>
       </form>

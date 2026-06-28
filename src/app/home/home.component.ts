@@ -47,6 +47,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private _showTab = true;
   selectedTab: string = 'dashboard';
   showManualReportModal = false;
+  showMonthlyReportModal = false;
   showOnboardingModal = false;
   showTutorial = false;
   isAnyModalOpen = false;
@@ -63,6 +64,15 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   isSubmitting = false;
   isPioneer = false;
   bibleStudies: any[] = [];
+
+  // Monthly report form fields
+  monthlyReportDate = '';
+  monthlyHours = 0;
+  monthlyBibleStudies = 0;
+  monthlyJoinedMinistry = 'yes';
+  monthlySuccess = false;
+  monthlyAlertMessage = '';
+  isGeneratingMonthly = false;
 
   // Onboarding modal
   onboardingPioneerChoice: boolean | null = null;
@@ -120,6 +130,11 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         this.cdr.markForCheck();
       }, 0);
+    });
+
+    // Sync pioneer status from settings
+    this.settingsService.settings$.subscribe(settings => {
+      this.isPioneer = settings.isPioneer;
     });
 
     // Load persisted tab from localStorage
@@ -261,12 +276,29 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   onManualReportModalOpen() {
     this.showManualReportModal = true;
   }
+
+  onGenerateReportModalOpen() {
+    const today = new Date();
+    this.monthlyReportDate = today.toISOString().slice(0, 7);
+    this.monthlyHours = 0;
+    this.monthlyBibleStudies = 0;
+    this.monthlyJoinedMinistry = 'yes';
+    this.monthlySuccess = false;
+    this.monthlyAlertMessage = '';
+    this.isGeneratingMonthly = false;
+    this.showMonthlyReportModal = true;
+  }
   
   onAddReportModalOpen() {
     // Defer modal opening to next tick to avoid change detection error
     setTimeout(() => {
       let modalOpened = false;
       
+      // Close any stale modals on the reports component first
+      if (this.reportsComponent) {
+        this.reportsComponent.showAddReportModal = false;
+      }
+
       // Open the modal on the current tab without switching tabs
       if (this.activeTab === 'dashboard' && this.dashboardComponent) {
         // Use dashboard's own modal
@@ -439,6 +471,58 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       this.alertMessage = 'Error generating report. Please try again.';
     } finally {
       this.isSubmitting = false;
+    }
+  }
+
+  // Monthly report modal methods
+  closeMonthlyReportModal() {
+    this.showMonthlyReportModal = false;
+    this.monthlyReportDate = '';
+    this.monthlyHours = 0;
+    this.monthlyBibleStudies = 0;
+    this.monthlyJoinedMinistry = 'yes';
+    this.monthlySuccess = false;
+    this.monthlyAlertMessage = '';
+  }
+
+  incrementMonthlyHours() { this.monthlyHours++; }
+  decrementMonthlyHours() { if (this.monthlyHours > 0) this.monthlyHours--; }
+  incrementMonthlyBibleStudies() { this.monthlyBibleStudies++; }
+  decrementMonthlyBibleStudies() { if (this.monthlyBibleStudies > 0) this.monthlyBibleStudies--; }
+
+  generateMonthlyReport() {
+    if (!this.monthlyReportDate || !this.monthlyJoinedMinistry || (this.isPioneer && !this.monthlyHours)) {
+      this.monthlySuccess = false;
+      this.monthlyAlertMessage = 'Please fill in all required fields.';
+      return;
+    }
+
+    this.isGeneratingMonthly = true;
+
+    const [yearStr, monthStr] = this.monthlyReportDate.split('-');
+    const selectedDate = new Date(+yearStr, +monthStr - 1);
+    const monthName = selectedDate.toLocaleDateString('en-US', { month: 'long' });
+    const year = selectedDate.getFullYear();
+
+    const reportData = {
+      month: `${monthName} ${year}`,
+      bibleStudies: this.monthlyBibleStudies,
+      is_joined_ministry: this.monthlyJoinedMinistry,
+      hours: this.isPioneer ? this.monthlyHours : undefined,
+      report_count: 1,
+    };
+
+    try {
+      this.util.generatePNG(reportData, this.isPioneer);
+      this.monthlySuccess = true;
+      this.monthlyAlertMessage = 'Report generated successfully! Check your downloads.';
+      setTimeout(() => { this.closeMonthlyReportModal(); }, 1500);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      this.monthlySuccess = false;
+      this.monthlyAlertMessage = 'Error generating report. Please try again.';
+    } finally {
+      this.isGeneratingMonthly = false;
     }
   }
 

@@ -9,6 +9,7 @@ import {
   ClearScene,
   ForecastHour,
   DailyForecast,
+  BarangayWeather,
   weatherScene,
   weatherTip,
   describeWeather,
@@ -31,9 +32,14 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
   aiTipError = false;
   locationEnabled = true;
 
-  /** Carousel page: 0 = today, 1 = 7-day forecast. */
+  nearbyBarangays: BarangayWeather[] = [];
+  nearbyLoading = false;
+  /** Name of the currently expanded barangay, or null when all collapsed. */
+  expandedBarangay: string | null = null;
+
+  /** Carousel page: 0 = today, 1 = 7-day forecast, 2 = nearby barangays. */
   page = 0;
-  private readonly LAST_PAGE = 1;
+  private readonly LAST_PAGE = 2;
   /** X coord where the current swipe began (null when not swiping). */
   private touchStartX: number | null = null;
 
@@ -119,6 +125,7 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
         if (info) {
           this.weather = info;
           this.refreshAiTip(true);
+          this.loadNearbyBarangays();
         }
       })
       .finally(() => (this.weatherRefreshing = false));
@@ -137,6 +144,7 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
         if (info) {
           this.weather = info;
           this.refreshAiTip();
+          this.loadNearbyBarangays();
         } else {
           this.aiTipLoading = false;
         }
@@ -151,6 +159,33 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
     this.aiTipText = null;
     this.aiTipLoading = false;
     this.aiTipError = false;
+    this.nearbyBarangays = [];
+  }
+
+  /** Fetch weather for barangays surrounding the user's current location. */
+  private loadNearbyBarangays(): void {
+    if (!this.weather?.latitude || !this.weather?.longitude) return;
+    this.nearbyLoading = true;
+    this.weatherSvc
+      .fetchNearbyBarangayWeather(
+        this.weather.latitude,
+        this.weather.longitude,
+        this.weather.city,
+      )
+      .then((results) => (this.nearbyBarangays = results))
+      .catch(() => {})
+      .finally(() => (this.nearbyLoading = false));
+  }
+
+  /** Toggle the expanded detail view for a barangay row. */
+  toggleBarangay(name: string): void {
+    this.expandedBarangay = this.expandedBarangay === name ? null : name;
+  }
+
+  /** Return the next 5 upcoming forecast hours for a barangay. */
+  brgyForecast(b: BarangayWeather): ForecastHour[] {
+    const now = Date.now();
+    return (b.forecast ?? []).filter((h) => h.time > now).slice(0, 5);
   }
 
   /** Force a fresh AI tip on demand, bypassing the daily cache. */
