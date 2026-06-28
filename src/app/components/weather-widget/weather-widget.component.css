@@ -302,8 +302,31 @@
 .page-track {
   transition: transform 0.35s ease;
 }
+
+/* Inner carousel for the nearby-barangay list ↔ detail slide.
+   The track is 200% wide (two sub-pages); translateX(-50%)
+   slides exactly one sub-page into view. Each sub-page clips
+   its own content so borders/shadows never bleed across. */
+.brgy-carousel {
+  width: 100%;
+  overflow: hidden;
+}
+.brgy-track {
+  display: flex;
+  width: 200%;
+  transition: transform 0.35s ease;
+}
+.brgy-subpage {
+  width: 50%;          /* = 100% of the visible area */
+  flex-shrink: 0;
+  overflow: hidden;    /* clip card borders at the sub-page edge */
+  box-sizing: border-box;
+  padding: 0 1px;      /* 1px gutter so borders never sit on the clip edge */
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .page-track {
+  .page-track,
+  .brgy-track {
     transition: none;
   }
 }
@@ -349,31 +372,10 @@
   border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
-/* Wrapper for an expandable barangay card. The card itself carries the
-   glass background; the inner .daily-row becomes transparent so there
-   is no doubled border or padding. */
+/* Barangay list card row. */
 .brgy-card {
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.18);
-}
-.brgy-card .daily-row {
-  background: transparent;
-  border: none;
-  border-radius: 0;
-}
-
-/* Expanded detail pane inside a barangay card. */
-.brgy-detail {
-  background: rgba(255, 255, 255, 0.06);
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-/* Keep forecast cells inside the expanded card from overflowing */
-.brgy-detail .forecast-strip {
-  scrollbar-width: none;
-}
-.brgy-detail .forecast-strip::-webkit-scrollbar {
-  display: none;
 }
 
 /* Scrollable container for the nearby-barangays list so long lists

@@ -177,7 +177,13 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
       .finally(() => (this.nearbyLoading = false));
   }
 
-  /** Toggle the expanded detail view for a barangay row. */
+  /** The currently expanded barangay object, for the detail view. */
+  get expandedBrgy(): BarangayWeather | null {
+    if (!this.expandedBarangay) return null;
+    return this.nearbyBarangays.find((b) => b.name === this.expandedBarangay) ?? null;
+  }
+
+  /** Toggle between barangay list and full-card detail view. */
   toggleBarangay(name: string): void {
     this.expandedBarangay = this.expandedBarangay === name ? null : name;
   }

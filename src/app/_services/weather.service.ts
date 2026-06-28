@@ -80,7 +80,7 @@ interface Coords {
 // Bump the suffix when the cached shape changes (e.g. added daily forecast) so
 // older snapshots are discarded and a fresh, complete pull replaces them.
 const CACHE_KEY = 're_weather_cache_v5';
-const NEARBY_CACHE_KEY = 're_nearby_brgy_cache_v2';
+const NEARBY_CACHE_KEY = 're_nearby_brgy_cache_v3';
 const NEARBY_REFRESH_MS = 30 * 60 * 1000;
 const AI_TIP_CACHE_KEY = 're_weather_ai_tip';
 // Don't hit the network more than once every 15 minutes; the cache covers the rest.
@@ -522,6 +522,9 @@ export class WeatherService {
       }
 
       if (!unique.length) return [];
+
+      // Cap at 5 barangays to keep API calls and UI manageable.
+      if (unique.length > 5) unique.length = 5;
 
       // Step 3: fetch weather + hourly forecast for each unique barangay.
       const weatherPromises = unique.map(async (loc): Promise<BarangayWeather | null> => {
