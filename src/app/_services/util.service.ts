@@ -226,17 +226,32 @@ export class UtilService {
     let y = 80;
     ctx.font = `700 15px ${fontFamily}`;
     ctx.textAlign = 'left';
-    ctx.fillText('Name:', margin, y);
+    ctx.fillText('Name/Email:', margin, y);
     ctx.setLineDash([2, 3]);
     ctx.strokeStyle = '#000000';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(margin + 55, y + 5);
+    ctx.moveTo(margin + 100, y + 5);
     ctx.lineTo(width - margin, y + 5);
     ctx.stroke();
 
+    // Fill in the name value (signed-in user's email): bigger but not bold,
+    // auto-shrinking the font so a long email still fits on the line.
+    const nameValue = report.name || '';
+    const nameX = margin + 105;
+    const nameMaxWidth = width - margin - nameX;
+    let nameSize = 20;
+    ctx.font = `400 ${nameSize}px ${fontFamily}`;
+    while (nameSize > 11 && ctx.measureText(nameValue).width > nameMaxWidth) {
+      nameSize -= 1;
+      ctx.font = `400 ${nameSize}px ${fontFamily}`;
+    }
+    ctx.fillText(nameValue, nameX, y);
+
     // Month field with dotted line and filled value
     y = 110;
+    ctx.font = `700 15px ${fontFamily}`;
+    ctx.setLineDash([2, 3]);
     ctx.fillText('Month:', margin, y);
     ctx.beginPath();
     ctx.moveTo(margin + 60, y + 5);
@@ -244,8 +259,8 @@ export class UtilService {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Fill in month value
-    ctx.font = `400 14px ${fontFamily}`;
+    // Fill in month value: bigger but not bold.
+    ctx.font = `400 20px ${fontFamily}`;
     ctx.fillText(report.month, margin + 65, y);
 
     // Table section

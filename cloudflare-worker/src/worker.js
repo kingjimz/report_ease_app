@@ -139,11 +139,17 @@ async function handleTip(body, env, cors) {
   // Build ministry instruction block when data is available during ministry hours.
   const ministryInstruction =
     isMinistryTime && ministry
-      ? `You also have ministry context. If the user's area has rain but a nearby ` +
-        `barangay with an active bible study or return visit is clear, recommend ` +
-        `conducting that study there. Name the person and barangay specifically. ` +
-        `If all locations have rain, advise preparing for studies indoors or writing ` +
-        `letters. If no study data is provided, give standard weather advice. `
+      ? `You also have ministry context listing only studies near the user. ` +
+        `When rain, heavy rain, or a thunderstorm is expected: ` +
+        `(1) if a nearby study's barangay is clear, recommend conducting that ` +
+        `study in person there, naming the person and barangay specifically; ` +
+        `(2) if the study's area or all nearby areas are rainy or stormy, do not ` +
+        `tell them to skip it. Instead suggest the best way to still conduct it, ` +
+        `such as calling the person by phone or holding the bible study online ` +
+        `over a video call, naming the person; you may also suggest letter ` +
+        `writing as an option. Only suggest a study that appears ` +
+        `in the ministry data; if none are listed, give standard weather and ` +
+        `safety advice and do not invent a person or place. `
       : '';
 
   const system =

@@ -754,7 +754,7 @@ export function weatherTip(
     // All study locations also rainy.
     if (ctx.studyMatches.every((m) => m.isRainy)) {
       return {
-        text: 'Rain across all nearby areas. Good time to prepare for next week\'s studies or write letters.',
+        text: 'Rain across all nearby areas. Consider calling your studies by phone, holding them online over a video call, or writing letters.',
         icon: 'bi-cloud-rain',
       };
     }

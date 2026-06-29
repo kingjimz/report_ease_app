@@ -16,6 +16,7 @@ import {
 } from '../location-picker/location-picker.component';
 import { LocationMapComponent } from '../location-map/location-map.component';
 import { GeoService, LatLng } from '../../_services/geo.service';
+import { AuthService } from '../../_services/auth.service';
 
 @Component({
   selector: 'app-reports',
@@ -46,6 +47,7 @@ export class ReportsComponent implements OnDestroy {
   editSchedule = ''; // Add property for editing schedule (datetime-local format)
   openDownloadModal = false;
   isPioneer = false;
+  userEmail = '';
   selectedReport: any = null;
   dropdownOpen: { [key: number]: boolean } = {};
   monthlyReportData: any = null;
@@ -102,6 +104,7 @@ export class ReportsComponent implements OnDestroy {
     private modalService: ModalService,
     private settingsService: SettingsService,
     private geo: GeoService,
+    private authService: AuthService,
   ) {}
 
   ngOnInit() {
@@ -119,6 +122,10 @@ export class ReportsComponent implements OnDestroy {
   loadUserSettings() {
     this.settingsService.settings$.subscribe(settings => {
       this.isPioneer = settings.isPioneer;
+    });
+    // Use the signed-in user's email as the report name for now.
+    this.authService.user$.subscribe((user) => {
+      this.userEmail = user?.email ?? '';
     });
   }
 
@@ -665,6 +672,7 @@ export class ReportsComponent implements OnDestroy {
   downloadReport(report: any, index: number) {
     this.selectedReport = report;
     this.monthlyReportData = {
+      name: this.userEmail,
       month: `${report.month_name} ${report.year}`,
       bibleStudies: this.filterBibleStudies(this.bibleStudies).length,
       is_joined_ministry: report.is_joined_ministry,
@@ -679,6 +687,7 @@ export class ReportsComponent implements OnDestroy {
   async shareReport(report: any, index: number) {
     this.selectedReport = report;
     this.monthlyReportData = {
+      name: this.userEmail,
       month: `${report.month_name} ${report.year}`,
       bibleStudies: this.filterBibleStudies(this.bibleStudies).length,
       is_joined_ministry: report.is_joined_ministry,

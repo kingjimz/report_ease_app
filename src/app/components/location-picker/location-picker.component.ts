@@ -41,7 +41,7 @@ export interface PickedLocation {
       #fsHost
       [ngClass]="
         isFullscreen
-          ? 'fixed inset-0 z-[10050] flex flex-col bg-white'
+          ? 'fixed inset-0 z-[100000] flex flex-col bg-white'
           : 'rounded-lg overflow-hidden border border-gray-300'
       "
     >
