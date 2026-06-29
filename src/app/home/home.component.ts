@@ -64,6 +64,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   isSubmitting = false;
   isPioneer = false;
   bibleStudies: any[] = [];
+  userEmail = '';
 
   // Monthly report form fields
   monthlyReportDate = '';
@@ -135,6 +136,11 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     // Sync pioneer status from settings
     this.settingsService.settings$.subscribe(settings => {
       this.isPioneer = settings.isPioneer;
+    });
+
+    // Use the signed-in user's email as the report name.
+    this.auth.user$.subscribe((user) => {
+      this.userEmail = user?.email ?? '';
     });
 
     // Load persisted tab from localStorage
@@ -448,6 +454,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Prepare data for PNG generation (exactly matching reports component structure)
     const reportData = {
+      name: this.userEmail,
       month: `${monthName} ${year}`,
       bibleStudies: this.bibleStudiesCount, // Use the manual input count
       is_joined_ministry: this.joined_ministry, // Keep as string 'yes' or 'no'
@@ -505,6 +512,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     const year = selectedDate.getFullYear();
 
     const reportData = {
+      name: this.userEmail,
       month: `${monthName} ${year}`,
       bibleStudies: this.monthlyBibleStudies,
       is_joined_ministry: this.monthlyJoinedMinistry,
