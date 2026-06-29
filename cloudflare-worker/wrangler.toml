@@ -6,10 +6,12 @@ compatibility_date = "2025-06-01"
 [ai]
 binding = "AI"
 
-# Cron trigger: fire the daily push reminder at 22:00 UTC = 6 AM Philippine
-# time (UTC+8). Drives the scheduled() handler in src/worker.js.
+# Cron triggers (UTC; Cloudflare crons have no timezone). Both drive the
+# scheduled() handler in src/worker.js:
+#   "0 22 * * *" = 06:00 Philippine time -> morning ministry encouragement
+#   "0 10 * * *" = 18:00 Philippine time -> evening "log your hours" reminder
 [triggers]
-crons = ["0 22 * * *"]
+crons = ["0 22 * * *", "0 10 * * *"]
 
 [vars]
 # Lock CORS to your app's origin in production, e.g. "https://reportease-app.web.app".

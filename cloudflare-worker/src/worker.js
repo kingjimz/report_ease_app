@@ -57,12 +57,16 @@ export default {
   },
 
   /**
-   * Cron entry point. Configured in wrangler.toml to fire at 22:00 UTC
-   * (6 AM Philippine time). Sends the daily reminder push to every stored
-   * subscription, personalized per user, and prunes expired endpoints.
+   * Cron entry point. Two daily triggers (see wrangler.toml), both expressed in
+   * UTC because Cloudflare crons have no timezone:
+   *   "0 22 * * *" = 06:00 Philippine time -> morning ministry encouragement
+   *   "0 10 * * *" = 18:00 Philippine time -> evening "log your hours" reminder
+   * Sends the matching push to every stored subscription and prunes expired
+   * endpoints.
    */
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(sendDailyReminders(env));
+    const slot = event.cron === '0 10 * * *' ? 'evening' : 'morning';
+    ctx.waitUntil(sendDailyReminders(env, slot));
   },
 };
 
@@ -84,11 +88,23 @@ const MONTH_NAMES = [
 ];
 
 /**
- * Decide which reminder a user should receive. Mirrors the original
- * client-side logic: in the last 3 days of the month with no report yet, nudge
- * them to submit; otherwise send the daily ministry reminder.
+ * Decide which reminder a user gets for the given time slot:
+ *   morning -> encourage joining the ministry today.
+ *   evening -> remind them to log their ministry hours. In the last 3 days of
+ *              the month with no report yet, upgrade this to the stronger
+ *              "submit your monthly report" nudge.
  */
-function buildReminder(now, hasReport) {
+function buildReminder(now, hasReport, slot) {
+  if (slot === 'morning') {
+    return {
+      title: 'FSTracker Reminder!',
+      body: "Don't forget to join the ministry today. Your service is important!",
+      tag: 'daily-ministry-reminder',
+      url: '/',
+    };
+  }
+
+  // evening
   const isLast3Days = now.daysRemaining <= 3 && now.daysRemaining >= 0;
   if (isLast3Days && !hasReport) {
     const left = now.daysRemaining;
@@ -98,12 +114,14 @@ function buildReminder(now, hasReport) {
         `Don't forget to submit your ${MONTH_NAMES[now.month]} ${now.year} report! ` +
         `Only ${left} day${left !== 1 ? 's' : ''} left in the month.`,
       tag: 'report-reminder',
+      url: '/reports',
     };
   }
   return {
     title: 'FSTracker Reminder!',
-    body: "Don't forget to join the ministry. Your service is important!",
-    tag: 'daily-ministry-reminder',
+    body: "Don't forget to log the hours you spent in the ministry today.",
+    tag: 'log-hours-reminder',
+    url: '/reports',
   };
 }
 
@@ -122,14 +140,14 @@ function buildPayload(reminder) {
       requireInteraction: false,
       data: {
         onActionClick: {
-          default: { operation: 'openWindow', url: '/reports' },
+          default: { operation: 'openWindow', url: reminder.url || '/reports' },
         },
       },
     },
   });
 }
 
-async function sendDailyReminders(env) {
+async function sendDailyReminders(env, slot) {
   const serviceAccount = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT);
   const projectId = serviceAccount.project_id;
   const token = await getAccessToken(serviceAccount);
@@ -138,6 +156,10 @@ async function sendDailyReminders(env) {
   if (!subs.length) return;
 
   const now = phtNow();
+  // The report lookup only matters for the evening end-of-month upgrade, so
+  // skip it (and its Firestore reads) the rest of the time.
+  const isLast3Days = now.daysRemaining <= 3 && now.daysRemaining >= 0;
+  const needReports = slot === 'evening' && isLast3Days;
 
   // One report lookup per user, reused across that user's devices.
   const reportCache = new Map();
@@ -149,13 +171,13 @@ async function sendDailyReminders(env) {
 
   for (const { name, uid, subscription } of subs) {
     try {
-      if (!reportCache.has(uid)) {
+      if (needReports && !reportCache.has(uid)) {
         reportCache.set(
           uid,
           await hasReportForMonth(projectId, token, uid, now.year, now.month),
         );
       }
-      const reminder = buildReminder(now, reportCache.get(uid));
+      const reminder = buildReminder(now, reportCache.get(uid) === true, slot);
       const res = await sendWebPush(subscription, buildPayload(reminder), pushOpts);
       // 404/410 mean the endpoint is dead; drop it so we stop trying.
       if (res.status === 404 || res.status === 410) {
