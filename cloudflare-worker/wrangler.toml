@@ -6,13 +6,26 @@ compatibility_date = "2025-06-01"
 [ai]
 binding = "AI"
 
+# Cron trigger: fire the daily push reminder at 22:00 UTC = 6 AM Philippine
+# time (UTC+8). Drives the scheduled() handler in src/worker.js.
+[triggers]
+crons = ["0 22 * * *"]
+
 [vars]
 # Lock CORS to your app's origin in production, e.g. "https://reportease-app.web.app".
 # Leave as "*" while testing locally.
 ALLOWED_ORIGIN = "*"
 # Override the default Workers AI model if desired.
 AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fast"
+# VAPID public key (raw 65-byte P-256 point, base64url) from
+# `npx web-push generate-vapid-keys`. The matching value ships in the Angular
+# bundle (environment.vapidPublicKey). Safe to commit — it is public.
+VAPID_PUBLIC_KEY = "BOEQ3qlOzfcElN2jZWYanCgafn7CwNoljESAM9rD2adLKxp18QmI4QHlt6-Uj4-o33FFUJ5_LebcZ3_e1-sNDn4"
+# Contact URI required by the VAPID spec; use a real mailto you monitor.
+VAPID_SUBJECT = "mailto:admin@fstracker.app"
 
-# NOTE: ORS_API_KEY is a SECRET, not a var — never put it here (this file is
-# committed). Set it once with:  wrangler secret put ORS_API_KEY
-# It powers the /route endpoint (OpenRouteService driving directions).
+# SECRETS (never put these here — set with `wrangler secret put <NAME>`):
+#   ORS_API_KEY            - OpenRouteService key for the /route endpoint.
+#   VAPID_PRIVATE_KEY      - VAPID private scalar (base64url) from web-push.
+#   FIREBASE_SERVICE_ACCOUNT - the full service-account JSON (one line), used
+#                              to read Firestore for subscriptions and reports.

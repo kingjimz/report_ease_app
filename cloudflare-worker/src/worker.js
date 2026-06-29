@@ -15,6 +15,14 @@
  *                               wrangler secret put ORS_API_KEY
  */
 
+import { sendWebPush } from './webpush.js';
+import {
+  getAccessToken,
+  listAllPushSubscriptions,
+  hasReportForMonth,
+  deleteDocument,
+} from './firestore.js';
+
 const FALLBACK_MODEL = '@cf/meta/llama-3.1-8b-instruct-fast';
 
 export default {
@@ -41,12 +49,155 @@ export default {
     }
 
     const path = new URL(request.url).pathname;
+    if (path.endsWith('/push/test')) return handlePushTest(body, env, cors);
     if (path.endsWith('/route')) return handleRoute(body, env, cors);
     return path.endsWith('/chat')
       ? handleChat(body, env, cors)
       : handleTip(body, env, cors);
   },
+
+  /**
+   * Cron entry point. Configured in wrangler.toml to fire at 22:00 UTC
+   * (6 AM Philippine time). Sends the daily reminder push to every stored
+   * subscription, personalized per user, and prunes expired endpoints.
+   */
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(sendDailyReminders(env));
+  },
 };
+
+/* --------------------------- Push reminders ---------------------------- */
+
+/** Philippine local wall-clock (UTC+8, no DST), read via getUTC* helpers. */
+function phtNow() {
+  const d = new Date(Date.now() + 8 * 60 * 60 * 1000);
+  const year = d.getUTCFullYear();
+  const month = d.getUTCMonth(); // 0-based
+  const date = d.getUTCDate();
+  const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  return { year, month, date, daysInMonth, daysRemaining: daysInMonth - date };
+}
+
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+/**
+ * Decide which reminder a user should receive. Mirrors the original
+ * client-side logic: in the last 3 days of the month with no report yet, nudge
+ * them to submit; otherwise send the daily ministry reminder.
+ */
+function buildReminder(now, hasReport) {
+  const isLast3Days = now.daysRemaining <= 3 && now.daysRemaining >= 0;
+  if (isLast3Days && !hasReport) {
+    const left = now.daysRemaining;
+    return {
+      title: 'FSTracker Reminder!',
+      body:
+        `Don't forget to submit your ${MONTH_NAMES[now.month]} ${now.year} report! ` +
+        `Only ${left} day${left !== 1 ? 's' : ''} left in the month.`,
+      tag: 'report-reminder',
+    };
+  }
+  return {
+    title: 'FSTracker Reminder!',
+    body: "Don't forget to join the ministry. Your service is important!",
+    tag: 'daily-ministry-reminder',
+  };
+}
+
+/**
+ * Shape a payload the Angular service worker (ngsw) understands. ngsw reads
+ * `notification` to display it and `data.onActionClick` to route on tap.
+ */
+function buildPayload(reminder) {
+  return JSON.stringify({
+    notification: {
+      title: reminder.title,
+      body: reminder.body,
+      icon: '/assets/icons/fst-icon-192x192.png',
+      badge: '/assets/icons/fst-icon-192x192.png',
+      tag: reminder.tag,
+      requireInteraction: false,
+      data: {
+        onActionClick: {
+          default: { operation: 'openWindow', url: '/reports' },
+        },
+      },
+    },
+  });
+}
+
+async function sendDailyReminders(env) {
+  const serviceAccount = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT);
+  const projectId = serviceAccount.project_id;
+  const token = await getAccessToken(serviceAccount);
+
+  const subs = await listAllPushSubscriptions(projectId, token);
+  if (!subs.length) return;
+
+  const now = phtNow();
+
+  // One report lookup per user, reused across that user's devices.
+  const reportCache = new Map();
+  const pushOpts = {
+    vapidPublicKey: env.VAPID_PUBLIC_KEY,
+    vapidPrivateKey: env.VAPID_PRIVATE_KEY,
+    subject: env.VAPID_SUBJECT || 'mailto:admin@reportease.app',
+  };
+
+  for (const { name, uid, subscription } of subs) {
+    try {
+      if (!reportCache.has(uid)) {
+        reportCache.set(
+          uid,
+          await hasReportForMonth(projectId, token, uid, now.year, now.month),
+        );
+      }
+      const reminder = buildReminder(now, reportCache.get(uid));
+      const res = await sendWebPush(subscription, buildPayload(reminder), pushOpts);
+      // 404/410 mean the endpoint is dead; drop it so we stop trying.
+      if (res.status === 404 || res.status === 410) {
+        await deleteDocument(name, token);
+      }
+    } catch (err) {
+      console.error('Push failed for', uid, String(err));
+    }
+  }
+}
+
+/**
+ * Manual end-to-end test. POST { subscription } (the raw PushSubscription JSON)
+ * and the Worker sends one notification immediately so you can verify delivery
+ * without waiting for the cron tick.
+ */
+async function handlePushTest(body, env, cors) {
+  const subscription = body.subscription;
+  if (!subscription || !subscription.endpoint || !subscription.keys) {
+    return json({ error: 'Missing subscription' }, 400, cors);
+  }
+  if (!env.VAPID_PUBLIC_KEY || !env.VAPID_PRIVATE_KEY) {
+    return json({ error: 'VAPID keys not configured' }, 500, cors);
+  }
+
+  const payload = buildPayload({
+    title: '📋 Test Notification',
+    body: 'Push is working. You will get reminders even with the app closed.',
+    tag: 'test-notification',
+  });
+
+  try {
+    const res = await sendWebPush(subscription, payload, {
+      vapidPublicKey: env.VAPID_PUBLIC_KEY,
+      vapidPrivateKey: env.VAPID_PRIVATE_KEY,
+      subject: env.VAPID_SUBJECT || 'mailto:admin@reportease.app',
+    });
+    return json({ ok: res.ok, status: res.status }, res.ok ? 200 : 502, cors);
+  } catch (err) {
+    return json({ error: 'Send failed', detail: String(err) }, 502, cors);
+  }
+}
 
 /* ------------------------------ Routing -------------------------------- */
 

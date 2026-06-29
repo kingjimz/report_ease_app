@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Auth, onAuthStateChanged } from '@angular/fire/auth';
+import { SwPush } from '@angular/service-worker';
 import { Router, RouterOutlet } from '@angular/router';
 import { ApiService } from './_services/api.service';
 import { CommonModule } from '@angular/common';
@@ -28,6 +29,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   constructor(
     private auth: Auth,
+    private swPush: SwPush,
     private router: Router,
     private api: ApiService,
     private themeService: ThemeService,
@@ -132,49 +134,19 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Initialize notification system
+   * Wire push notification taps. Angular's service worker (ngsw) handles the
+   * `push` and `notificationclick` events natively, and surfaces taps through
+   * SwPush.notificationClicks. The reminder payload carries an /reports target,
+   * so route there on tap.
    */
   private initializeNotifications() {
-    // Handle service worker notification clicks if using service worker notifications
-    if ('serviceWorker' in navigator) {
-      // iOS compatibility: Add timeout to prevent blocking
-      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-      const timeout = isIOS ? 10000 : 5000; // Longer timeout for iOS
-      
-      // Try to register notification service worker for handling notification clicks
-      // This will only work if Angular's service worker doesn't conflict
-      const registrationPromise = navigator.serviceWorker.getRegistration();
-      const timeoutPromise = new Promise((resolve) => 
-        setTimeout(() => resolve(null), timeout)
-      );
-      
-      Promise.race([registrationPromise, timeoutPromise])
-        .then((registration: any) => {
-          if (registration) {
-            // Angular's service worker is registered, we'll use it for notifications
-            console.log('Using Angular service worker for notifications');
-          } else if (!isIOS) {
-            // No service worker registered, register our notification SW (skip on iOS to avoid conflicts)
-            navigator.serviceWorker.register('/notification-sw.js').catch((error) => {
-              console.log('Notification service worker registration failed:', error);
-            });
-          }
-        })
-        .catch((error) => {
-          console.warn('Service worker check failed (non-blocking):', error);
-        });
-
-      // Listen for service worker messages (for future use)
-      navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data && event.data.type === 'NOTIFICATION_CLICK') {
-          const action = event.data.action;
-          if (action === 'open' || !action) {
-            this.router.navigate(['/reports']);
-            window.focus();
-          }
-        }
-      });
+    if (!this.swPush.isEnabled) {
+      return; // dev mode or unsupported browser
     }
+    this.swPush.notificationClicks.subscribe(({ notification }) => {
+      const url = notification?.data?.onActionClick?.default?.url || '/reports';
+      this.router.navigateByUrl(url);
+    });
   }
 
   /**

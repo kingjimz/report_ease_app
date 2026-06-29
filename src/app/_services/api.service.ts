@@ -522,6 +522,59 @@ export class ApiService {
     }
   }
 
+  /**
+   * Derive a stable document id from a push endpoint so re-subscribing on the
+   * same device overwrites its record instead of creating duplicates.
+   */
+  private pushSubscriptionId(endpoint: string): string {
+    let hash = 0x811c9dc5; // FNV-1a 32-bit
+    for (let i = 0; i < endpoint.length; i++) {
+      hash ^= endpoint.charCodeAt(i);
+      hash = Math.imul(hash, 0x01000193);
+    }
+    return 'sub_' + (hash >>> 0).toString(16);
+  }
+
+  /**
+   * Persist a Web Push subscription under the signed-in user so the Cloudflare
+   * Worker can read it on its daily cron and push even while the app is closed.
+   */
+  async savePushSubscription(subscription: PushSubscription): Promise<void> {
+    const user = this.auth.currentUser;
+    if (!user) throw new Error('User not logged in');
+
+    const json = subscription.toJSON();
+    if (!json.endpoint || !json.keys) throw new Error('Invalid push subscription');
+
+    const ref = doc(
+      this.fireStore,
+      'users',
+      user.uid,
+      'pushSubscriptions',
+      this.pushSubscriptionId(json.endpoint),
+    );
+    await setDoc(ref, {
+      endpoint: json.endpoint,
+      keys: { p256dh: json.keys['p256dh'], auth: json.keys['auth'] },
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+      updatedAt: new Date().toISOString(),
+    });
+  }
+
+  /** Remove a device's push subscription (e.g. when the user disables it). */
+  async deletePushSubscription(endpoint: string): Promise<void> {
+    const user = this.auth.currentUser;
+    if (!user) return;
+    const ref = doc(
+      this.fireStore,
+      'users',
+      user.uid,
+      'pushSubscriptions',
+      this.pushSubscriptionId(endpoint),
+    );
+    await deleteDoc(ref);
+  }
+
   async addStudy(study: any) {
     try {
       const user = this.auth.currentUser;

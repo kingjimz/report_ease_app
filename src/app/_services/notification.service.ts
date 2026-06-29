@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
+import { SwPush } from '@angular/service-worker';
+import { BehaviorSubject } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { ApiService } from './api.service';
-import { BehaviorSubject, Observable } from 'rxjs';
 
 export interface NotificationPermission {
   granted: boolean;
@@ -8,52 +10,58 @@ export interface NotificationPermission {
   default: boolean;
 }
 
+/**
+ * Manages real Web Push notifications. Unlike the old timer-based approach
+ * (which only ran while the app was open), this registers a push subscription
+ * with the browser's push service and stores it in Firestore. The Cloudflare
+ * Worker then pushes reminders on a daily cron, so they arrive even when the
+ * app is fully closed — on Android, desktop browsers, and installed iOS PWAs
+ * (iOS 16.4+).
+ */
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class NotificationService {
   private permissionSubject = new BehaviorSubject<NotificationPermission>({
     granted: false,
     denied: false,
-    default: false
+    default: false,
   });
   public permission$ = this.permissionSubject.asObservable();
 
-  private notificationCheckInterval: any = null;
   private readonly NOTIFICATION_KEY = 'report_notification_enabled';
-  private readonly LAST_CHECK_KEY = 'last_notification_check';
-  private readonly LAST_DAILY_MINISTRY_REMINDER_KEY = 'last_daily_ministry_reminder';
   private readonly NOTIFICATION_TIME_KEY = 'notification_time';
 
-  constructor(private apiService: ApiService) {
-    // Only initialize if Notification API is available (not available on all iOS versions)
+  constructor(
+    private apiService: ApiService,
+    private swPush: SwPush,
+  ) {
     if (typeof window !== 'undefined' && 'Notification' in window) {
       this.checkPermissionStatus();
-      this.initializeNotifications();
+      // If push was already enabled, make sure a live subscription exists
+      // (browsers can rotate or drop endpoints).
+      if (Notification.permission === 'granted' && this.isNotificationEnabled()) {
+        this.subscribeToPush();
+      }
     } else {
       console.warn('Notification API not available in this browser/environment');
     }
   }
 
-  /**
-   * Check current notification permission status
-   */
+  /** Reflect the current browser permission into permission$. */
   private checkPermissionStatus() {
-    if (!('Notification' in window)) {
-      console.warn('This browser does not support notifications');
-      return;
-    }
-
+    if (!('Notification' in window)) return;
     const permission = Notification.permission;
     this.permissionSubject.next({
       granted: permission === 'granted',
       denied: permission === 'denied',
-      default: permission === 'default'
+      default: permission === 'default',
     });
   }
 
   /**
-   * Request notification permission from user
+   * Request permission from the user, then register a push subscription.
+   * Returns true once notifications are granted and a subscription is stored.
    */
   async requestPermission(): Promise<boolean> {
     if (!('Notification' in window)) {
@@ -61,23 +69,20 @@ export class NotificationService {
       return false;
     }
 
-    if (Notification.permission === 'granted') {
-      this.checkPermissionStatus();
-      return true;
-    }
-
     if (Notification.permission === 'denied') {
-      console.warn('Notification permission was previously denied');
       this.checkPermissionStatus();
       return false;
     }
 
     try {
-      const permission = await Notification.requestPermission();
+      const permission =
+        Notification.permission === 'granted'
+          ? 'granted'
+          : await Notification.requestPermission();
       this.checkPermissionStatus();
-      
+
       if (permission === 'granted') {
-        this.enableNotifications();
+        await this.enableNotifications();
         return true;
       }
       return false;
@@ -87,466 +92,132 @@ export class NotificationService {
     }
   }
 
-  /**
-   * Enable notifications and start checking for report submissions
-   */
-  enableNotifications() {
+  /** Mark notifications enabled and subscribe to push. */
+  async enableNotifications(): Promise<void> {
     localStorage.setItem(this.NOTIFICATION_KEY, 'true');
-    this.scheduleNotificationCheck();
+    await this.subscribeToPush();
   }
 
-  /**
-   * Disable notifications
-   */
-  disableNotifications() {
+  /** Mark notifications disabled and tear down the push subscription. */
+  async disableNotifications(): Promise<void> {
     localStorage.setItem(this.NOTIFICATION_KEY, 'false');
-    this.clearNotificationCheck();
+    await this.unsubscribeFromPush();
   }
 
-  /**
-   * Check if notifications are enabled
-   */
   isNotificationEnabled(): boolean {
     return localStorage.getItem(this.NOTIFICATION_KEY) === 'true';
   }
 
   /**
-   * Initialize notifications if permission is granted
+   * Subscribe to Web Push and persist the subscription for the Worker to use.
+   * No-op (with a console note) when the service worker is inactive — e.g. in
+   * `ng serve` dev mode, where Angular disables ngsw — or when no VAPID key is
+   * configured.
    */
-  private initializeNotifications() {
-    // Check if Notification API is available before accessing it
-    if (!('Notification' in window)) {
-      return;
+  private async subscribeToPush(): Promise<PushSubscription | null> {
+    if (!this.swPush.isEnabled) {
+      console.warn('Push not available: service worker is not enabled (dev mode?).');
+      return null;
     }
-    
-    if (Notification.permission === 'granted' && this.isNotificationEnabled()) {
-      this.scheduleNotificationCheck();
-    }
-  }
-
-  /**
-   * Schedule periodic checks for notifications
-   */
-  private scheduleNotificationCheck() {
-    // Clear any existing interval
-    this.clearNotificationCheck();
-
-    // Check immediately on first run
-    this.checkAndNotify();
-
-    // Schedule to check once per day at 6 AM
-    const now = new Date();
-    const nextCheck = new Date();
-    nextCheck.setHours(6, 0, 0, 0); // 6 AM
-    nextCheck.setMinutes(0);
-    nextCheck.setSeconds(0);
-    nextCheck.setMilliseconds(0);
-    
-    // If it's already past 6 AM today, schedule for tomorrow
-    if (nextCheck <= now) {
-      nextCheck.setDate(nextCheck.getDate() + 1);
-    }
-    
-    const msUntilNextCheck = nextCheck.getTime() - now.getTime();
-    console.log(`Scheduling daily notification check in ${Math.round(msUntilNextCheck / 1000 / 60)} minutes`);
-
-    // Set initial timeout for first check
-    setTimeout(() => {
-      this.checkAndNotify();
-      // Then check once per day at 6 AM
-      this.notificationCheckInterval = setInterval(() => {
-        this.checkAndNotify();
-      }, 24 * 60 * 60 * 1000); // 24 hours
-    }, msUntilNextCheck);
-  }
-
-  /**
-   * Clear notification check interval
-   */
-  private clearNotificationCheck() {
-    if (this.notificationCheckInterval) {
-      clearInterval(this.notificationCheckInterval);
-      this.notificationCheckInterval = null;
-    }
-  }
-
-  /**
-   * Check and send appropriate notifications
-   */
-  async checkAndNotify() {
-    if (!('Notification' in window) || Notification.permission !== 'granted') {
-      return;
-    }
-
-    if (!this.isNotificationEnabled()) {
-      return;
-    }
-
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-
-    // Only send notifications at or after 6 AM
-    if (currentHour < 6) {
-      console.log('Too early for notifications. Waiting until 6 AM.');
-      return;
+    if (!environment.vapidPublicKey) {
+      console.warn('Push not configured: environment.vapidPublicKey is empty.');
+      return null;
     }
 
     try {
-      const hasReport = await this.checkCurrentMonthReport();
-      const dayOfMonth = now.getDate();
-      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-      const daysRemaining = daysInMonth - dayOfMonth;
-      
-      // Check if we're in the last 3 days of the month
-      const isLast3Days = daysRemaining <= 3 && daysRemaining >= 0;
-      
-      if (isLast3Days && !hasReport) {
-        // Last 3 days of month and no report submitted - send report reminder
-        // Check if we've already sent a report reminder today
-        const lastCheck = localStorage.getItem(this.LAST_CHECK_KEY);
-        if (lastCheck) {
-          const lastCheckDate = new Date(parseInt(lastCheck, 10));
-          const today = new Date();
-          
-          // Check if it's the same day
-          if (
-            lastCheckDate.getDate() === today.getDate() &&
-            lastCheckDate.getMonth() === today.getMonth() &&
-            lastCheckDate.getFullYear() === today.getFullYear()
-          ) {
-            return; // Already sent report reminder today
-          }
-        }
-        this.sendReportReminder();
-        localStorage.setItem(this.LAST_CHECK_KEY, Date.now().toString());
-      } else {
-        // Every other day - send daily ministry reminder
-        // Check if we've already sent the daily ministry reminder today
-        const lastReminder = localStorage.getItem(this.LAST_DAILY_MINISTRY_REMINDER_KEY);
-        if (lastReminder) {
-          const lastReminderDate = new Date(parseInt(lastReminder, 10));
-          const today = new Date();
-          
-          // Check if it's the same day
-          if (
-            lastReminderDate.getDate() === today.getDate() &&
-            lastReminderDate.getMonth() === today.getMonth() &&
-            lastReminderDate.getFullYear() === today.getFullYear()
-          ) {
-            console.log('Daily ministry reminder already sent today');
-            return; // Already sent daily ministry reminder today
-          }
-        }
-        this.sendDailyMinistryReminder();
-        localStorage.setItem(this.LAST_DAILY_MINISTRY_REMINDER_KEY, Date.now().toString());
+      // Reuse an existing subscription if the browser already has one.
+      const reg = await navigator.serviceWorker.getRegistration();
+      const existing = await reg?.pushManager.getSubscription();
+      const sub =
+        existing ??
+        (await this.swPush.requestSubscription({
+          serverPublicKey: environment.vapidPublicKey,
+        }));
+
+      await this.apiService.savePushSubscription(sub);
+      return sub;
+    } catch (error) {
+      console.error('Failed to subscribe to push notifications:', error);
+      return null;
+    }
+  }
+
+  private async unsubscribeFromPush(): Promise<void> {
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      const sub = await reg?.pushManager.getSubscription();
+      if (sub) {
+        await this.apiService.deletePushSubscription(sub.endpoint);
+        await sub.unsubscribe();
       }
     } catch (error) {
-      console.error('Error checking notification status:', error);
+      console.error('Failed to unsubscribe from push:', error);
     }
   }
 
   /**
-   * Check if user has submitted a report for the current month
+   * Ensure a valid subscription is on file for an already-enabled user. Called
+   * after login once the service worker is ready.
    */
-  private async checkCurrentMonthReport(): Promise<boolean> {
-    return new Promise((resolve) => {
-      let subscription: any = null;
-      let resolved = false;
-
-      subscription = this.apiService.reports$.subscribe((reports) => {
-        if (resolved) return;
-        resolved = true;
-        
-        if (subscription) {
-          subscription.unsubscribe();
-        }
-        
-        if (!reports || reports.length === 0) {
-          resolve(false);
-          return;
-        }
-
-        const now = new Date();
-        const currentMonth = now.getMonth();
-        const currentYear = now.getFullYear();
-
-        // Check if there's a report for the current month
-        const hasCurrentMonthReport = reports.some((report: any) => {
-          if (!report.report_date) return false;
-
-          let reportDate: Date;
-          
-          // Handle Firestore Timestamp
-          if (report.report_date.toDate && typeof report.report_date.toDate === 'function') {
-            reportDate = report.report_date.toDate();
-          } else if (report.report_date.seconds) {
-            reportDate = new Date(report.report_date.seconds * 1000);
-          } else if (report.report_date instanceof Date) {
-            reportDate = report.report_date;
-          } else {
-            reportDate = new Date(report.report_date);
-          }
-
-          const reportMonth = reportDate.getMonth();
-          const reportYear = reportDate.getFullYear();
-
-          return reportMonth === currentMonth && reportYear === currentYear;
-        });
-
-        resolve(hasCurrentMonthReport);
-      });
-
-      // Timeout after 5 seconds if no data comes
-      setTimeout(() => {
-        if (!resolved && subscription) {
-          resolved = true;
-          subscription.unsubscribe();
-          resolve(false);
-        }
-      }, 5000);
-    });
-  }
-
-  /**
-   * Send daily ministry reminder
-   */
-  private sendDailyMinistryReminder() {
-    if (!('Notification' in window) || Notification.permission !== 'granted') {
-      return;
-    }
-
-    const title = 'FSTracker Reminder!';
-    const body = 'Don\'t forget to join the ministry. Your service is important!';
-
-    // Use service worker if available, otherwise use regular notification
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.ready.then((registration) => {
-        const options: any = {
-          body: body,
-          icon: '/assets/icons/fst-icon-192x192.png',
-          badge: '/assets/icons/fst-icon-192x192.png',
-          tag: 'daily-ministry-reminder',
-          requireInteraction: false,
-        };
-        registration.showNotification(title, options);
-      }).catch((error) => {
-        console.error('Error showing daily reminder via service worker:', error);
-        // Fallback to regular notification
-        this.showRegularNotification(title, body);
-      });
-    } else {
-      this.showRegularNotification(title, body);
+  async manualCheck(): Promise<void> {
+    if (
+      'Notification' in window &&
+      Notification.permission === 'granted' &&
+      this.isNotificationEnabled()
+    ) {
+      await this.subscribeToPush();
     }
   }
 
   /**
-   * Send a notification reminder to submit report (only in last 3 days of month)
+   * Send a real push end-to-end through the Cloudflare Worker so the user can
+   * confirm delivery (it arrives via the push service, exactly like the daily
+   * reminder). Falls back to a local notification when push is unavailable
+   * (e.g. dev mode) so testing still shows something.
    */
-  private sendReportReminder() {
-    if (!('Notification' in window) || Notification.permission !== 'granted') {
-      return;
-    }
-
-    const now = new Date();
-    const monthName = now.toLocaleDateString('en-US', { month: 'long' });
-    const year = now.getFullYear();
-    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-    const dayOfMonth = now.getDate();
-    const daysRemaining = daysInMonth - dayOfMonth;
-
-    const title = 'FSTracker Reminder!';
-    const body = `Don't forget to submit your ${monthName} ${year} report! Only ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} left in the month.`;
-
-    // Use service worker if available, otherwise use regular notification
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.ready.then((registration) => {
-        // Use type assertion for service worker notification options which support actions
-        const options: any = {
-          body: body,
-          icon: '/assets/icons/fst-icon-192x192.png',
-          badge: '/assets/icons/fst-icon-192x192.png',
-          tag: 'report-reminder',
-          requireInteraction: false,
-        };
-        registration.showNotification(title, options);
-      }).catch((error) => {
-        console.error('Error showing notification via service worker:', error);
-        // Fallback to regular notification
-        this.showRegularNotification(title, body);
-      });
-    } else {
-      this.showRegularNotification(title, body);
-    }
-  }
-
-  /**
-   * Show regular browser notification (fallback)
-   */
-  private showRegularNotification(title: string, body: string) {
-    // Check if Notification API is available
-    if (!('Notification' in window)) {
-      console.warn('Notification API not available, cannot show notification');
-      return;
-    }
-    
-    // Check if permission is granted
-    if (Notification.permission !== 'granted') {
-      console.warn('Notification permission not granted, cannot show notification');
-      return;
-    }
-    
-    try {
-      console.log('Creating regular notification:', { title, body });
-      const notification = new Notification(title, {
-        body: body,
-        icon: '/favicon.ico',
-        badge: '/favicon.ico',
-        tag: 'report-reminder',
-        requireInteraction: false
-      });
-
-      console.log('Notification created successfully');
-
-      notification.onclick = () => {
-        console.log('Notification clicked');
-        window.focus();
-        notification.close();
-        // Navigate to reports page
-        if (window.location.pathname !== '/reports') {
-          window.location.href = '/reports';
-        }
-      };
-
-      notification.onshow = () => {
-        console.log('Notification shown');
-      };
-
-      notification.onerror = (error) => {
-        console.error('Notification error:', error);
-      };
-
-      notification.onclose = () => {
-        console.log('Notification closed');
-      };
-    } catch (error) {
-      console.error('Error showing notification:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Manually trigger a notification check (useful for testing)
-   * Note: This respects the "already shown today" logic and won't show
-   * notifications that have already been shown today
-   */
-  async manualCheck() {
-    await this.checkAndNotify();
-  }
-
-  /**
-   * Send a test notification immediately (for testing purposes)
-   */
-  async sendTestNotification() {
+  async sendTestNotification(): Promise<void> {
     if (!('Notification' in window)) {
       throw new Error('This browser does not support notifications');
     }
-
     if (Notification.permission !== 'granted') {
-      throw new Error('Notification permission not granted. Current permission: ' + Notification.permission);
+      throw new Error('Notification permission not granted: ' + Notification.permission);
     }
 
-    const now = new Date();
-    const monthName = now.toLocaleDateString('en-US', { month: 'long' });
-    const year = now.getFullYear();
+    const reg = await navigator.serviceWorker.getRegistration();
+    const sub = await reg?.pushManager.getSubscription();
 
-    const title = '📋 Test Notification';
-    const body = `This is a test notification for ${monthName} ${year} report reminder.`;
-
-    console.log('Attempting to send test notification...');
-    console.log('Notification permission:', Notification.permission);
-
-    // In dev mode, service workers might not be active, so prefer regular notifications
-    // which work immediately without service worker setup
-    let useServiceWorker = false;
-    
-    if ('serviceWorker' in navigator) {
-      try {
-        // Check if service worker is already registered and active
-        const registration = await navigator.serviceWorker.getRegistration();
-        if (registration && registration.active) {
-          useServiceWorker = true;
-          console.log('Service worker is active, will try to use it');
-        } else {
-          console.log('Service worker not active, using regular notification (better for dev mode)');
-        }
-      } catch (error) {
-        console.warn('Error checking service worker:', error);
-      }
+    if (sub && environment.pushTestUrl) {
+      const res = await fetch(environment.pushTestUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subscription: sub.toJSON() }),
+      });
+      if (res.ok) return;
+      console.warn('Worker push test failed, falling back to local notification.');
     }
 
-    if (useServiceWorker) {
-      try {
-        // Use service worker for production (longer timeout for production)
-        const swPromise = navigator.serviceWorker.ready.then((registration) => {
-          const options: any = {
-            body: body,
-            icon: '/favicon.ico',
-            badge: '/favicon.ico',
-            tag: 'test-notification',
-            requireInteraction: false,
-            actions: [
-              {
-                action: 'open',
-                title: 'Submit Report'
-              },
-              {
-                action: 'dismiss',
-                title: 'Dismiss'
-              }
-            ],
-            data: {
-              url: '/reports'
-            }
-          };
-          console.log('Showing notification via service worker');
-          return registration.showNotification(title, options);
-        });
-
-        // Wait for service worker with longer timeout for production (5 seconds)
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Service worker timeout')), 5000)
-        );
-
-        await Promise.race([swPromise, timeoutPromise]);
-        console.log('Notification sent via service worker');
-        return;
-      } catch (error) {
-        console.warn('Service worker notification failed, using regular notification:', error);
-        // Fall through to regular notification
-      }
+    // Local fallback (dev mode or no subscription yet).
+    if (reg) {
+      await reg.showNotification('📋 Test Notification', {
+        body: 'Local test notification. Real push needs the deployed service worker.',
+        icon: '/assets/icons/fst-icon-192x192.png',
+        badge: '/assets/icons/fst-icon-192x192.png',
+        tag: 'test-notification',
+      });
+    } else {
+      new Notification('📋 Test Notification', {
+        body: 'Local test notification.',
+      });
     }
-
-    // Fallback to regular notification if service worker fails or isn't available
-    console.log('Using regular browser notification');
-    this.showRegularNotification(title, body);
   }
 
-  /**
-   * Set preferred notification time (for future use)
-   */
   setNotificationTime(hour: number, minute: number = 0) {
     localStorage.setItem(this.NOTIFICATION_TIME_KEY, JSON.stringify({ hour, minute }));
   }
 
-  /**
-   * Get preferred notification time
-   */
   getNotificationTime(): { hour: number; minute: number } {
     const stored = localStorage.getItem(this.NOTIFICATION_TIME_KEY);
-    if (stored) {
-      return JSON.parse(stored);
-    }
-    return { hour: 6, minute: 0 }; // Default: 6:00 AM
+    if (stored) return JSON.parse(stored);
+    return { hour: 6, minute: 0 };
   }
 }

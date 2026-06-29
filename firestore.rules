@@ -35,6 +35,13 @@ service cloud.firestore {
       match /missionCompletions/{completionId} {
         allow read, write: if isOwner(userId);
       }
+
+      // Web Push subscriptions. The owner manages their own devices from the
+      // client; the Cloudflare Worker reads these server-side with a service
+      // account (Admin credentials bypass these rules).
+      match /pushSubscriptions/{subId} {
+        allow read, write: if isOwner(userId);
+      }
     }
   }
 }

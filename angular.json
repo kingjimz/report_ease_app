@@ -29,11 +29,6 @@
                 "output": "/icons"
               },
               {
-                "glob": "notification-sw.js",
-                "input": "src",
-                "output": "/"
-              },
-              {
                 "glob": "_redirects",
                 "input": "public",
                 "output": "/"
