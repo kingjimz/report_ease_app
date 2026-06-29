@@ -45,8 +45,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
   notificationsEnabled = false;
   notificationPermission = 'default';
   isRequestingPermission = false;
-  isSendingTest = false;
-  testMessage = '';
   
   // Theme settings
   isDarkMode = false;
@@ -176,27 +174,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
           this.showSuccessMessage = false;
         }, 3000);
       }
-    }
-  }
-
-  /**
-   * Fire a real push through the Cloudflare Worker to confirm delivery. Arrives
-   * via the push service exactly like the daily reminder, so it validates the
-   * whole pipeline end to end.
-   */
-  async sendTestNotification() {
-    if (this.isSendingTest) return;
-    this.isSendingTest = true;
-    this.testMessage = '';
-    try {
-      await this.notificationService.sendTestNotification();
-      this.testMessage = 'Sent. It should arrive shortly.';
-    } catch (error) {
-      console.error('Test notification failed:', error);
-      this.testMessage = 'Could not send. Check that notifications are allowed.';
-    } finally {
-      this.isSendingTest = false;
-      setTimeout(() => (this.testMessage = ''), 5000);
     }
   }
 
