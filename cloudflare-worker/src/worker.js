@@ -20,6 +20,7 @@ import {
   getAccessToken,
   listAllPushSubscriptions,
   hasReportForMonth,
+  listBibleStudies,
   deleteDocument,
 } from './firestore.js';
 
@@ -59,8 +60,10 @@ export default {
   /**
    * Cron entry point. Two daily triggers (see wrangler.toml), both expressed in
    * UTC because Cloudflare crons have no timezone:
-   *   "0 22 * * *" = 06:00 Philippine time -> morning ministry encouragement
-   *   "0 10 * * *" = 18:00 Philippine time -> evening "log your hours" reminder
+   *   "0 22 * * *" = 06:00 Philippine time -> morning push: a scheduled-study
+   *                  reminder (with the study's time) if any is due today, else
+   *                  a general ministry encouragement
+   *   "0 10 * * *" = 18:00 Philippine time -> evening "log today's report" reminder
    * Sends the matching push to every stored subscription and prunes expired
    * endpoints.
    */
@@ -82,6 +85,53 @@ function phtNow() {
   return { year, month, date, daysInMonth, daysRemaining: daysInMonth - date };
 }
 
+/** Philippine wall-clock parts (UTC+8) for an arbitrary instant. */
+function phtParts(date) {
+  const d = new Date(date.getTime() + 8 * 60 * 60 * 1000);
+  return {
+    year: d.getUTCFullYear(),
+    month: d.getUTCMonth(),
+    date: d.getUTCDate(),
+    hours: d.getUTCHours(),
+    minutes: d.getUTCMinutes(),
+  };
+}
+
+/** "3:05 PM" from PHT parts. */
+function formatTimePHT(parts) {
+  const ampm = parts.hours >= 12 ? 'PM' : 'AM';
+  let h = parts.hours % 12;
+  if (h === 0) h = 12;
+  const mm = parts.minutes < 10 ? '0' + parts.minutes : String(parts.minutes);
+  return `${h}:${mm} ${ampm}`;
+}
+
+/**
+ * From a user's bibleStudies, the ones scheduled today (PHT), earliest first.
+ * Completed studies and missing/invalid schedules are skipped. `schedule` is
+ * stored as an absolute instant (Firestore Timestamp), so we compare its PHT
+ * calendar day to today's.
+ */
+function studiesScheduledToday(studies, now) {
+  const out = [];
+  for (const s of studies) {
+    if (s.completed || !s.schedule) continue;
+    const d = new Date(s.schedule);
+    if (Number.isNaN(d.getTime())) continue;
+    const p = phtParts(d);
+    if (p.year === now.year && p.month === now.month && p.date === now.date) {
+      out.push({
+        name: s.name,
+        type: s.type,
+        time: formatTimePHT(p),
+        sortKey: p.hours * 60 + p.minutes,
+      });
+    }
+  }
+  out.sort((a, b) => a.sortKey - b.sortKey);
+  return out;
+}
+
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
@@ -89,13 +139,32 @@ const MONTH_NAMES = [
 
 /**
  * Decide which reminder a user gets for the given time slot:
- *   morning -> encourage joining the ministry today.
- *   evening -> remind them to log their ministry hours. In the last 3 days of
+ *   morning -> if they have a study/return visit scheduled today, name it with
+ *              its time; otherwise a general "join the ministry today" nudge.
+ *   evening -> remind them to log today's ministry report. In the last 3 days of
  *              the month with no report yet, upgrade this to the stronger
  *              "submit your monthly report" nudge.
+ * `data` carries the per-user context: { studies, hasReport }.
  */
-function buildReminder(now, hasReport, slot) {
+function buildReminder(now, slot, data = {}) {
+  const { studies = [], hasReport = false } = data;
+
   if (slot === 'morning') {
+    if (studies.length) {
+      const first = studies[0];
+      const label = first.type === 'rv' ? 'return visit' : 'Bible study';
+      const who = first.name ? ` with ${first.name}` : '';
+      const body =
+        studies.length === 1
+          ? `You have a ${label}${who} scheduled today at ${first.time}. Enjoy your ministry!`
+          : `You have ${studies.length} studies scheduled today, starting${who} at ${first.time}. Have a great day in the ministry!`;
+      return {
+        title: 'FSTracker Reminder!',
+        body,
+        tag: 'daily-ministry-reminder',
+        url: '/',
+      };
+    }
     return {
       title: 'FSTracker Reminder!',
       body: "Don't forget to join the ministry today. Your service is important!",
@@ -119,7 +188,7 @@ function buildReminder(now, hasReport, slot) {
   }
   return {
     title: 'FSTracker Reminder!',
-    body: "Don't forget to log the hours you spent in the ministry today.",
+    body: "Don't forget to log your ministry report for today.",
     tag: 'log-hours-reminder',
     url: '/reports',
   };
@@ -156,13 +225,16 @@ async function sendDailyReminders(env, slot) {
   if (!subs.length) return;
 
   const now = phtNow();
-  // The report lookup only matters for the evening end-of-month upgrade, so
-  // skip it (and its Firestore reads) the rest of the time.
+  // The report lookup only matters for the evening end-of-month upgrade, and the
+  // study lookup only for the morning push, so each Firestore read is scoped to
+  // the slot that needs it.
   const isLast3Days = now.daysRemaining <= 3 && now.daysRemaining >= 0;
   const needReports = slot === 'evening' && isLast3Days;
+  const needStudies = slot === 'morning';
 
-  // One report lookup per user, reused across that user's devices.
+  // One lookup per user, reused across that user's devices.
   const reportCache = new Map();
+  const studyCache = new Map();
   const pushOpts = {
     vapidPublicKey: env.VAPID_PUBLIC_KEY,
     vapidPrivateKey: env.VAPID_PRIVATE_KEY,
@@ -177,7 +249,14 @@ async function sendDailyReminders(env, slot) {
           await hasReportForMonth(projectId, token, uid, now.year, now.month),
         );
       }
-      const reminder = buildReminder(now, reportCache.get(uid) === true, slot);
+      if (needStudies && !studyCache.has(uid)) {
+        const all = await listBibleStudies(projectId, token, uid);
+        studyCache.set(uid, studiesScheduledToday(all, now));
+      }
+      const reminder = buildReminder(now, slot, {
+        hasReport: reportCache.get(uid) === true,
+        studies: studyCache.get(uid) || [],
+      });
       const res = await sendWebPush(subscription, buildPayload(reminder), pushOpts);
       // 404/410 mean the endpoint is dead; drop it so we stop trying.
       if (res.status === 404 || res.status === 410) {

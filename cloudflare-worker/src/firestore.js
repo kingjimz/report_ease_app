@@ -187,6 +187,41 @@ export async function hasReportForMonth(projectId, token, uid, year, month) {
 }
 
 /**
+ * All Bible-study / return-visit entries for a user (the people they study
+ * with), from `users/{uid}/bibleStudies`. Returns the raw fields the morning
+ * reminder needs; date filtering and time formatting happen in the caller.
+ * `schedule` comes back as an ISO string (Firestore Timestamp) or whatever
+ * string was stored. Fails open to [] so a query error never blocks the push.
+ */
+export async function listBibleStudies(projectId, token, uid) {
+  const res = await fetch(`${baseUrl(projectId)}/users/${uid}:runQuery`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      structuredQuery: { from: [{ collectionId: 'bibleStudies' }] },
+    }),
+  });
+  if (!res.ok) return [];
+
+  const rows = await res.json();
+  const out = [];
+  for (const row of rows) {
+    if (!row.document) continue;
+    const f = decodeFields(row.document.fields || {});
+    out.push({
+      name: f.bible_study || '',
+      type: f.type || '', // 'bs' (Bible study) or 'rv' (return visit)
+      schedule: f.schedule || null,
+      completed: f.completed === true,
+    });
+  }
+  return out;
+}
+
+/**
  * Delete a subscription document by its full resource name. Called when a push
  * endpoint returns 404/410 (the browser unsubscribed or the endpoint expired).
  */

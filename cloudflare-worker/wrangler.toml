@@ -8,8 +8,8 @@ binding = "AI"
 
 # Cron triggers (UTC; Cloudflare crons have no timezone). Both drive the
 # scheduled() handler in src/worker.js:
-#   "0 22 * * *" = 06:00 Philippine time -> morning ministry encouragement
-#   "0 10 * * *" = 18:00 Philippine time -> evening "log your hours" reminder
+#   "0 22 * * *" = 06:00 Philippine time -> morning study reminder / ministry encouragement
+#   "0 10 * * *" = 18:00 Philippine time -> evening "log today's report" reminder
 [triggers]
 crons = ["0 22 * * *", "0 10 * * *"]
 
