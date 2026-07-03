@@ -88,10 +88,7 @@ export class DashboardComponent implements OnInit {
         this.allReports = reports;
         this.reports = this.util.aggregateReportsByMonth(reports);
         this.api.updateAggregatedData(this.reports);
-        this.monthlyHours =
-          this.reports.length > 0 ? this.reports[0].total_hours || 0 : 0;
-        this.prevMonthHours =
-          this.reports.length > 1 ? this.reports[1].total_hours || 0 : 0;
+        this.computeMonthlyHours();
         this.calculateWeeklyHours();
         this.loading = false;
       }
@@ -125,6 +122,32 @@ export class DashboardComponent implements OnInit {
     });
   }
   
+  /**
+   * Set the "this month" / "previous month" hour totals by matching the actual
+   * current calendar month, not just the latest month that has data. Without
+   * this, an empty current month falls back to the most recent month with
+   * reports and shows stale totals.
+   */
+  private computeMonthlyHours() {
+    const now = new Date();
+    const curYear = now.getFullYear();
+    const curMonth = now.getMonth() + 1;
+    let prevYear = curYear;
+    let prevMonth = curMonth - 1;
+    if (prevMonth === 0) {
+      prevMonth = 12;
+      prevYear -= 1;
+    }
+    const curEntry = this.reports.find(
+      (r) => r.year === curYear && r.month === curMonth,
+    );
+    const prevEntry = this.reports.find(
+      (r) => r.year === prevYear && r.month === prevMonth,
+    );
+    this.monthlyHours = curEntry?.total_hours || 0;
+    this.prevMonthHours = prevEntry?.total_hours || 0;
+  }
+
   calculateWeeklyHours() {
     const now = new Date();
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -194,10 +217,7 @@ export class DashboardComponent implements OnInit {
         this.reports = data;
         this.reports = this.util.aggregateReportsByMonth(data);
         this.api.updateAggregatedData(this.reports);
-        this.monthlyHours =
-          this.reports.length > 0 ? this.reports[0].total_hours || 0 : 0;
-        this.prevMonthHours =
-          this.reports.length > 1 ? this.reports[1].total_hours || 0 : 0;
+        this.computeMonthlyHours();
         this.calculateWeeklyHours();
       }
       this.loading = false;
