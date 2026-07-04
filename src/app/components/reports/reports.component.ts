@@ -17,6 +17,7 @@ import {
 import { LocationMapComponent } from '../location-map/location-map.component';
 import { GeoService, LatLng } from '../../_services/geo.service';
 import { AuthService } from '../../_services/auth.service';
+import { NavigationService } from '../../_services/navigation.service';
 
 @Component({
   selector: 'app-reports',
@@ -105,6 +106,7 @@ export class ReportsComponent implements OnDestroy {
     private settingsService: SettingsService,
     private geo: GeoService,
     private authService: AuthService,
+    private navigationService: NavigationService,
   ) {}
 
   ngOnInit() {
@@ -117,6 +119,15 @@ export class ReportsComponent implements OnDestroy {
     setTimeout(() => {
       this.loading = false;
     }, 1000);
+
+    this.navigationService.studyFilter$.subscribe(({ section, filter }) => {
+      this.scrollToSection(section, filter);
+    });
+
+    this.navigationService.openAddStudy$.subscribe(() => {
+      this.scrollToSection('studiesSection');
+      this.showStudyModal = true;
+    });
   }
 
   loadUserSettings() {

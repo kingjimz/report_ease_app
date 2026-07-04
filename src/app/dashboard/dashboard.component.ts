@@ -34,6 +34,7 @@ export class DashboardComponent implements OnInit {
   isCopied = false;
   numberOfBibleStudies = 0;
   numberOfReturnVisits = 0;
+  upcomingStudies: any[] = [];
   monthlyHours = 0;
   prevMonthHours = 0;
   allReports: any[] = [];
@@ -106,10 +107,11 @@ export class DashboardComponent implements OnInit {
         this.numberOfReturnVisits = this.bibleStudies.filter(
           (study) => study.type === 'rv' && !study.completed,
         ).length;
+        this.computeUpcomingStudies();
         this.loading = false;
       }
     });
-    
+
     // Subscribe to goals stream
     this.api.goals$.subscribe((goals) => {
       if (goals && goals.length >= 0) {
@@ -279,8 +281,82 @@ export class DashboardComponent implements OnInit {
     return this.missionSvc.count;
   }
 
+  private computeUpcomingStudies() {
+    const active = this.bibleStudies.filter(s => !s.completed && s.schedule);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    const withDates = active
+      .map(s => ({ ...s, _scheduleDate: this.parseScheduleDate(s.schedule) }))
+      .filter(s => s._scheduleDate !== null)
+      .sort((a, b) => {
+        const aOverdue = a._scheduleDate!.getTime() < now.getTime();
+        const bOverdue = b._scheduleDate!.getTime() < now.getTime();
+        if (aOverdue !== bOverdue) return aOverdue ? -1 : 1;
+        return a._scheduleDate!.getTime() - b._scheduleDate!.getTime();
+      });
+
+    this.upcomingStudies = withDates.slice(0, 5);
+  }
+
+  parseScheduleDate(schedule: any): Date | null {
+    if (!schedule) return null;
+    if (schedule.toDate && typeof schedule.toDate === 'function') return schedule.toDate();
+    if (schedule.seconds) return new Date(schedule.seconds * 1000);
+    if (schedule instanceof Date) return schedule;
+    if (typeof schedule === 'string') {
+      const d = new Date(schedule);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    return null;
+  }
+
+  formatSchedule(schedule: any): string {
+    const date = this.parseScheduleDate(schedule);
+    if (!date) return 'Not scheduled';
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  }
+
+  isOverdue(study: any): boolean {
+    const date = this.parseScheduleDate(study.schedule);
+    if (!date) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const schedDay = new Date(date);
+    schedDay.setHours(0, 0, 0, 0);
+    return schedDay < today;
+  }
+
+  getDaysUntil(study: any): string {
+    const date = this.parseScheduleDate(study.schedule);
+    if (!date) return '';
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const schedDay = new Date(date);
+    schedDay.setHours(0, 0, 0, 0);
+    const diff = Math.ceil((schedDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Tomorrow';
+    return `In ${diff} days`;
+  }
+
   navigateTo(tab: string) {
     this.navigationService.changeTab(tab);
+  }
+
+  navigateToStudy(study: any) {
+    this.navigationService.navigateToStudies(study.type === 'bs' ? 'bs' : 'rv');
+  }
+
+  addNewStudy() {
+    this.navigationService.navigateAndAddStudy();
   }
 
   currentYear = new Date().getFullYear();

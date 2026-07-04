@@ -3,74 +3,73 @@
     <!-- Greeting / time / location / weather widget -->
     <app-weather-widget />
 
-    <!-- Daily Practice Card -->
-    <div *ngIf="practice" class="mb-3">
+    <!-- Upcoming / Overdue Studies -->
+    <div class="mb-3 px-0">
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <!-- Header -->
-        <div class="bg-gradient-to-r from-amber-500 to-orange-600 px-5 py-4 flex items-center justify-between gap-3">
-          <div class="flex items-center gap-3 min-w-0">
-            <div class="flex items-center justify-center w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex-shrink-0">
-              <i class="bi bi-bookmark-star text-white text-xl"></i>
-            </div>
-            <div class="min-w-0">
-              <h2 class="text-base sm:text-lg font-semibold text-white">Daily Practice</h2>
-              <p class="text-white/90 text-xs truncate">
-                {{ practice.verse.reference }} &middot; Practice {{ practice.position }} of {{ practiceTotal }}
-              </p>
-            </div>
-          </div>
-          <span
-            class="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold flex-shrink-0"
-            [ngClass]="practice.passed ? 'bg-white text-amber-700' : 'bg-white/20 text-white'"
+        <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center">
+            <i class="bi bi-calendar-event text-emerald-600 dark:text-emerald-400 mr-2"></i>
+            Upcoming Studies
+          </h2>
+          <button
+            *ngIf="upcomingStudies.length > 0"
+            (click)="navigateTo('reports')"
+            class="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline"
           >
-            <i class="bi bi-fire"></i> {{ practice.currentStreak }}
-          </span>
+            View all
+          </button>
         </div>
 
-        <!-- Body -->
-        <div class="p-5">
-          <h3 class="text-base font-semibold text-gray-800 dark:text-gray-100 mb-1.5 leading-snug">
-            {{ practice.verse.label }}
-          </h3>
-          <p class="text-sm text-gray-600 dark:text-gray-300 mb-4 flex items-start gap-2">
-            <i class="bi bi-flag-fill text-amber-500 mt-0.5 flex-shrink-0"></i>
-            <span>{{ practice.verse.step }}</span>
-          </p>
-
-          <!-- Progress -->
-          <div class="mb-4">
-            <div class="flex items-center justify-between text-xs mb-1.5">
-              <span class="text-gray-500 dark:text-gray-400">{{ practice.doneSteps }}/{{ practice.totalSteps }} steps done</span>
-              <span class="font-semibold text-amber-600 dark:text-amber-400">{{ practice.progressPercent }}%</span>
+        <!-- Studies list -->
+        <div *ngIf="upcomingStudies.length > 0" class="divide-y divide-gray-100 dark:divide-gray-700">
+          <div
+            *ngFor="let study of upcomingStudies"
+            (click)="navigateToStudy(study)"
+            class="flex items-center gap-3 px-5 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
+          >
+            <div
+              class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+              [ngClass]="study.type === 'bs' ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-amber-100 dark:bg-amber-900/30'"
+            >
+              <i
+                class="text-sm"
+                [ngClass]="study.type === 'bs'
+                  ? 'bi bi-book text-emerald-600 dark:text-emerald-400'
+                  : 'bi bi-arrow-repeat text-amber-600 dark:text-amber-400'"
+              ></i>
             </div>
-            <div class="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div
-                class="h-full rounded-full transition-all duration-300"
-                [ngClass]="practice.passed ? 'bg-green-500' : 'bg-gradient-to-r from-amber-500 to-orange-600'"
-                [style.width.%]="practice.progressPercent"
-              ></div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ study.bible_study }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                {{ formatSchedule(study.schedule) }}
+              </p>
             </div>
+            <span
+              class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0"
+              [ngClass]="isOverdue(study)
+                ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'"
+            >
+              {{ isOverdue(study) ? 'Overdue' : getDaysUntil(study) }}
+            </span>
           </div>
+        </div>
 
+        <!-- Empty state -->
+        <div *ngIf="upcomingStudies.length === 0" class="px-5 py-4 text-center">
+          <div class="flex items-center justify-center w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl mx-auto mb-2">
+            <i class="bi bi-journal-plus text-emerald-600 dark:text-emerald-400 text-lg"></i>
+          </div>
+          <p class="text-sm font-medium text-gray-900 dark:text-white mb-0.5">No upcoming studies</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+            Track your Bible studies and return visits so you never miss a session.
+          </p>
           <button
-            type="button"
-            (click)="goToPractice()"
-            class="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-semibold text-sm text-white transition-colors"
-            [ngClass]="practice.passed
-              ? 'bg-green-500 hover:bg-green-600'
-              : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700'"
+            (click)="addNewStudy()"
+            class="inline-flex items-center px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg text-xs font-medium hover:from-emerald-700 hover:to-teal-700 transition-all active:scale-[0.98]"
           >
-            <i class="bi" [ngClass]="practice.passed ? 'bi-check-circle-fill' : 'bi-arrow-right-circle'"></i>
-            {{ practice.passed ? 'Practice passed — review it' : 'Open Daily Practice' }}
-          </button>
-
-          <button
-            type="button"
-            (click)="openVerse()"
-            class="mt-2 w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-semibold text-sm border border-amber-500 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
-          >
-            <i class="bi bi-book"></i>
-            Read verse
+            <i class="bi bi-plus-lg mr-1.5"></i>
+            Add a Study
           </button>
         </div>
       </div>
@@ -144,6 +143,79 @@
           </div>
         </div>
         <app-chart [reportData]="allReports"></app-chart>
+      </div>
+    </div>
+
+    <!-- Daily Practice Card -->
+    <div *ngIf="practice" class="mb-3 px-0">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-amber-500 to-orange-600 px-5 py-4 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="flex items-center justify-center w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex-shrink-0">
+              <i class="bi bi-bookmark-star text-white text-xl"></i>
+            </div>
+            <div class="min-w-0">
+              <h2 class="text-base sm:text-lg font-semibold text-white">Daily Practice</h2>
+              <p class="text-white/90 text-xs truncate">
+                {{ practice.verse.reference }} &middot; Practice {{ practice.position }} of {{ practiceTotal }}
+              </p>
+            </div>
+          </div>
+          <span
+            class="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold flex-shrink-0"
+            [ngClass]="practice.passed ? 'bg-white text-amber-700' : 'bg-white/20 text-white'"
+          >
+            <i class="bi bi-fire"></i> {{ practice.currentStreak }}
+          </span>
+        </div>
+
+        <!-- Body -->
+        <div class="p-5">
+          <h3 class="text-base font-semibold text-gray-800 dark:text-gray-100 mb-1.5 leading-snug">
+            {{ practice.verse.label }}
+          </h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300 mb-4 flex items-start gap-2">
+            <i class="bi bi-flag-fill text-amber-500 mt-0.5 flex-shrink-0"></i>
+            <span>{{ practice.verse.step }}</span>
+          </p>
+
+          <!-- Progress -->
+          <div class="mb-4">
+            <div class="flex items-center justify-between text-xs mb-1.5">
+              <span class="text-gray-500 dark:text-gray-400">{{ practice.doneSteps }}/{{ practice.totalSteps }} steps done</span>
+              <span class="font-semibold text-amber-600 dark:text-amber-400">{{ practice.progressPercent }}%</span>
+            </div>
+            <div class="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div
+                class="h-full rounded-full transition-all duration-300"
+                [ngClass]="practice.passed ? 'bg-green-500' : 'bg-gradient-to-r from-amber-500 to-orange-600'"
+                [style.width.%]="practice.progressPercent"
+              ></div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            (click)="goToPractice()"
+            class="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-semibold text-sm text-white transition-colors"
+            [ngClass]="practice.passed
+              ? 'bg-green-500 hover:bg-green-600'
+              : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700'"
+          >
+            <i class="bi" [ngClass]="practice.passed ? 'bi-check-circle-fill' : 'bi-arrow-right-circle'"></i>
+            {{ practice.passed ? 'Practice passed — review it' : 'Open Daily Practice' }}
+          </button>
+
+          <button
+            type="button"
+            (click)="openVerse()"
+            class="mt-2 w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-semibold text-sm border border-amber-500 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+          >
+            <i class="bi bi-book"></i>
+            Read verse
+          </button>
+        </div>
       </div>
     </div>
   </div>
