@@ -154,9 +154,12 @@ export class ReportsComponent implements OnInit, OnDestroy {
     this.subs.push(this.api.bibleStudies$.subscribe((data) => {
       if (data && data.length > 0) {
         this.bibleStudies = data;
+        // Auto-flag overdue studies that haven't been studied this month
+        this.autoFlagInactiveStudies();
         // Completed studies stay as a record but are excluded from active counts.
+        // Only count studies that are active (not flagged inactive).
         this.numberOfBibleStudies = this.bibleStudies.filter(
-          (study) => study.type === 'bs' && !study.completed,
+          (study) => study.type === 'bs' && !study.completed && study.active !== false,
         ).length;
         this.numberOfReturnVisits = this.bibleStudies.filter(
           (study) => study.type === 'rv' && !study.completed,
@@ -533,6 +536,45 @@ export class ReportsComponent implements OnInit, OnDestroy {
     return scheduleDate < now;
   }
 
+  /** Whether the study was updated during the current month. */
+  isStudiedThisMonth(study: any): boolean {
+    const ts = study.updated_at;
+    if (!ts) return false;
+    const date = ts.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
+    const now = new Date();
+    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+  }
+
+  /** Auto-flag overdue + not-studied-this-month studies as inactive, then persist. */
+  autoFlagInactiveStudies() {
+    this.bibleStudies.forEach((study) => {
+      if (study.completed) return;
+      if (study.active === false) return; // already inactive, don't override manual choice
+      if (this.isStudyOverdue(study) && !this.isStudiedThisMonth(study)) {
+        study.active = false;
+        this.api.updateStudy({ id: study.id, active: false });
+      }
+    });
+  }
+
+  async toggleStudyActive(study: any, event: Event) {
+    event.stopPropagation();
+    if (!study?.id) return;
+
+    const newStatus = !(study.active ?? true);
+    study.active = newStatus; // optimistic update
+    try {
+      await this.api.updateStudy({
+        id: study.id,
+        active: newStatus,
+        updated_at: newStatus ? new Date() : (study.updated_at || new Date()),
+      });
+    } catch (error) {
+      study.active = !newStatus; // revert on failure
+      console.error('Error updating study active status:', error);
+    }
+  }
+
   closeStudyDetails() {
     this.isSelected = false;
     this.studySelected = null;
@@ -627,6 +669,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
       schedule: scheduleDate || this.editSchedule, // Save as Date if valid, otherwise as string
       type: study.type,
       lesson: this.next_lesson,
+      active: true,
       updated_at: new Date(),
       id: study.id,
     };
@@ -657,6 +700,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
       schedule: scheduleDate || this.schedule, // Save as Date if valid, otherwise as string
       type: this.type,
       lesson: this.next_lesson,
+      active: true,
       updated_at: new Date(),
     };
     if (this.location) {
@@ -725,8 +769,8 @@ export class ReportsComponent implements OnInit, OnDestroy {
   }
 
   filterBibleStudies(studies: any[]): any[] {
-    // Active Bible studies only: exclude return visits and completed studies.
-    return studies.filter((study) => study.type !== 'rv' && !study.completed);
+    // Active Bible studies only: exclude return visits, completed, and inactive studies.
+    return studies.filter((study) => study.type !== 'rv' && !study.completed && study.active !== false);
   }
 
   closeDlModal() {
@@ -903,12 +947,12 @@ export class ReportsComponent implements OnInit, OnDestroy {
       return;
     }
     
-    if (!this.reportHours && !this.reportMinutes) {
+    if (this.isPioneer && !this.reportHours && !this.reportMinutes) {
       this.reportSuccess = false;
       this.reportAlertMessage = 'Please enter at least some hours or minutes.';
       return;
     }
-    
+
     if (!this.reportJoinedMinistry) {
       this.reportSuccess = false;
       this.reportAlertMessage = 'Please indicate if you participated in the ministry.';

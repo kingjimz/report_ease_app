@@ -266,7 +266,7 @@
         </div>
 
         <!-- Hours and Minutes -->
-        <div>
+        <div *ngIf="isPioneer">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
             <i class="bi bi-clock mr-1"></i>
             Time Spent *
@@ -382,7 +382,7 @@
           </button>
           <button
             type="submit"
-            [disabled]="isSubmittingReport || !reportDate || (!reportHours && !reportMinutes) || !reportJoinedMinistry"
+            [disabled]="isSubmittingReport || !reportDate || (isPioneer && !reportHours && !reportMinutes) || !reportJoinedMinistry"
             class="px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span

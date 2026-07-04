@@ -439,6 +439,12 @@ export class ApiService {
       const user = this.auth.currentUser;
       if (!user) throw new Error('User not logged in');
 
+      // Snapshot the current active Bible studies count onto the report
+      const studies = this.bibleStudiesSubject.value || [];
+      report.active_bible_studies = studies.filter(
+        (s: any) => s.type === 'bs' && !s.completed && s.active !== false,
+      ).length;
+
       const reportsCollection = collection(
         this.fireStore,
         'users',

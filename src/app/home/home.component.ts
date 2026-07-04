@@ -83,6 +83,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private scrollThreshold = 20; // Increased threshold to reduce sensitivity
   private boundScrollHandler?: (event: Event) => void;
   private scrollCheckInterval?: number;
+  private scrollSuppressedUntil = 0;
 
   constructor(
     private auth: AuthService,
@@ -157,6 +158,11 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       this.selectedTab = tabId;
       // Persist the active tab
       localStorage.setItem('activeTab', tabId);
+      // Reset scroll tracking so programmatic scrolls (e.g. scrollIntoView
+      // after navigating from dashboard studies) don't hide the bottom nav
+      this.showTab = true;
+      this.lastScrollTop = window.pageYOffset || document.documentElement.scrollTop || 0;
+      this.scrollSuppressedUntil = Date.now() + 600;
     });
 
   }
@@ -189,6 +195,12 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onWindowScroll(event: Event) {
+    // Ignore scroll events during programmatic navigation (e.g. scrollIntoView)
+    if (Date.now() < this.scrollSuppressedUntil) {
+      this.lastScrollTop = window.pageYOffset || document.documentElement.scrollTop || 0;
+      return;
+    }
+
     // Don't hide tab if modal is open
     if (this.isAnyModalOpen) {
       this.showTab = true;

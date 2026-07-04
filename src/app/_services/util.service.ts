@@ -82,6 +82,7 @@ export class UtilService {
           total_minutes: 0, // Track minutes separately
           report_count: 0,
           is_joined_ministry: 'no',
+          active_bible_studies: 0,
           reports: [],
         };
       }
@@ -91,6 +92,12 @@ export class UtilService {
       aggregated[yearMonth].total_minutes += minutes;
       aggregated[yearMonth].report_count++;
       aggregated[yearMonth].reports.push(report);
+
+      // Keep the highest bible studies count recorded during the month
+      const studyCount = report.active_bible_studies ?? 0;
+      if (studyCount > aggregated[yearMonth].active_bible_studies) {
+        aggregated[yearMonth].active_bible_studies = studyCount;
+      }
 
       if (report.is_joined_ministry?.toLowerCase() === 'yes') {
         aggregated[yearMonth].is_joined_ministry = 'yes';

@@ -58,6 +58,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   reportSuccess: boolean = false;
   reportAlertMessage: string = '';
 
+  isPioneer = false;
+
   // Today's daily practice summary (verse, progress, streak) for the dashboard card.
   practice: PracticeSummary | null = null;
 
@@ -70,6 +72,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    // Load pioneer status
+    this.subs.push(this.settingsService.settings$.subscribe(settings => {
+      this.isPioneer = settings.isPioneer;
+    }));
+
     // Subscribe to real-time data streams (works offline with Firestore cache)
     this.subscribeToDataStreams();
 
@@ -108,7 +115,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         // Don't call updateBibleStudies here - it would create an infinite loop
         // The data is already coming from the subject
         this.numberOfBibleStudies = this.bibleStudies.filter(
-          (study) => study.type === 'bs' && !study.completed,
+          (study) => study.type === 'bs' && !study.completed && study.active !== false,
         ).length;
         this.numberOfReturnVisits = this.bibleStudies.filter(
           (study) => study.type === 'rv' && !study.completed,
@@ -208,7 +215,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         // Don't call updateBibleStudies here - the real-time listener will handle updates
         // Calling it would create a loop since we're also subscribed to bibleStudies$
         this.numberOfBibleStudies = this.bibleStudies.filter(
-          (study) => study.type === 'bs' && !study.completed,
+          (study) => study.type === 'bs' && !study.completed && study.active !== false,
         ).length;
         this.numberOfReturnVisits = this.bibleStudies.filter(
           (study) => study.type === 'rv' && !study.completed,
@@ -436,12 +443,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
     
-    if (!this.reportHours && !this.reportMinutes) {
+    if (this.isPioneer && !this.reportHours && !this.reportMinutes) {
       this.reportSuccess = false;
       this.reportAlertMessage = 'Please enter at least some hours or minutes.';
       return;
     }
-    
+
     if (!this.reportJoinedMinistry) {
       this.reportSuccess = false;
       this.reportAlertMessage = 'Please indicate if you participated in the ministry.';
