@@ -759,7 +759,7 @@
 
     <!-- Delete Confirmation Modal -->
     <ng-container *ngIf="studyDelete">
-      <div [@bottomSheet] class="fixed inset-0 z-[10000] flex flex-col justify-end">
+      <div [@bottomSheet] class="fixed inset-0 z-[100000] flex flex-col justify-end">
         <div class="app-sheet-fade absolute inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm" (click)="closeDeleteModal()"></div>
         <div appDragToClose (dismissed)="closeDeleteModal()" class="app-sheet-up relative w-full max-w-md mx-auto bg-white rounded-t-2xl shadow-2xl px-8 pb-8 pt-3 max-h-[88vh] overflow-y-auto">
           <div class="flex justify-center pb-4">

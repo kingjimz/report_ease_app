@@ -1,29 +1,41 @@
-<div *ngIf="showPrompt" class="update-toast">
-  <div class="update-toast-content">
-    <div class="update-toast-icon">
-      <i class="bi bi-arrow-clockwise"></i>
+<div *ngIf="showPrompt" class="update-overlay">
+  <div class="update-modal">
+    <!-- Icon -->
+    <div class="update-icon" [ngClass]="{ 'spin': isUpdating }">
+      <i class="bi" [ngClass]="updateComplete ? 'bi-check-lg' : 'bi-arrow-clockwise'"></i>
     </div>
-    <div class="update-toast-text">
-      <p class="update-toast-title">Update Available</p>
-      <p class="update-toast-message">
-        A new version of the app is available. Update now to get the latest features and improvements.
-      </p>
+
+    <!-- Title -->
+    <h2 class="update-title">
+      {{ updateComplete ? 'Update Complete' : (isUpdating ? 'Updating...' : 'Update Available') }}
+    </h2>
+
+    <!-- Message -->
+    <p class="update-message" *ngIf="!isUpdating && !updateComplete">
+      A new version of ReportEase is available. Please update to continue using the app with the latest features and improvements.
+    </p>
+    <p class="update-message" *ngIf="isUpdating && !updateComplete">
+      Installing the latest version. This will only take a moment.
+    </p>
+    <p class="update-message" *ngIf="updateComplete">
+      The app has been updated successfully. Reloading now...
+    </p>
+
+    <!-- Progress bar (visible during update) -->
+    <div *ngIf="isUpdating && !updateComplete" class="progress-container">
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="progress"></div>
+      </div>
+      <span class="progress-text">{{ progress }}%</span>
     </div>
-    <div class="update-toast-actions">
-      <button 
-        class="btn-update" 
-        (click)="updateApp()" 
-        [disabled]="isUpdating"
-        title="Update Now">
-        <span *ngIf="!isUpdating">Update</span>
-        <span *ngIf="isUpdating">Updating...</span>
-      </button>
-      <button 
-        class="btn-close" 
-        (click)="dismissPrompt()" 
-        title="Dismiss">
-        <i class="bi bi-x-lg"></i>
-      </button>
-    </div>
+
+    <!-- Update button -->
+    <button
+      *ngIf="!isUpdating && !updateComplete"
+      class="btn-update"
+      (click)="updateApp()">
+      <i class="bi bi-download mr-2"></i>
+      Update Now
+    </button>
   </div>
 </div>

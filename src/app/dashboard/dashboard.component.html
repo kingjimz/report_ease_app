@@ -79,7 +79,7 @@
     <!-- Key Metrics Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3 px-0">
       <!-- Monthly Hours Card -->
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+      <div (click)="navigateTo('reports')" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 cursor-pointer hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600 transition-all active:scale-[0.98]">
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center justify-center w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
             <i class="bi bi-clock-history text-blue-600 dark:text-blue-400 text-lg"></i>
@@ -97,7 +97,7 @@
       </div>
 
       <!-- Weekly Hours Card -->
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+      <div (click)="navigateTo('calendar')" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 cursor-pointer hover:shadow-md hover:border-purple-300 dark:hover:border-purple-600 transition-all active:scale-[0.98]">
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center justify-center w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
             <i class="bi bi-calendar-week text-purple-600 dark:text-purple-400 text-lg"></i>
@@ -108,7 +108,7 @@
       </div>
 
       <!-- Bible Studies Card -->
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+      <div (click)="navigateTo('reports')" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 cursor-pointer hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-600 transition-all active:scale-[0.98]">
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center justify-center w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl">
             <i class="bi bi-book text-emerald-600 dark:text-emerald-400 text-lg"></i>
@@ -119,7 +119,7 @@
       </div>
 
       <!-- Return Visits Card -->
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+      <div (click)="navigateTo('reports')" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 cursor-pointer hover:shadow-md hover:border-amber-300 dark:hover:border-amber-600 transition-all active:scale-[0.98]">
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center justify-center w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-xl">
             <i class="bi bi-arrow-repeat text-amber-600 dark:text-amber-400 text-lg"></i>
@@ -136,7 +136,7 @@
         <div class="flex items-center justify-between mb-5 gap-4">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
             <i class="bi bi-graph-up-arrow text-blue-600 dark:text-blue-400 mr-2"></i>
-            Activity Overview
+            Activity {{ currentYear }}
           </h2>
           <div class="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
             <div class="w-2.5 h-2.5 bg-blue-500 rounded-full"></div>

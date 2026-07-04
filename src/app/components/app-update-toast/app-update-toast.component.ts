@@ -13,29 +13,27 @@ import { Subscription } from 'rxjs';
 export class AppUpdateToastComponent implements OnInit, OnDestroy {
   showPrompt = false;
   isUpdating = false;
+  updateComplete = false;
+  progress = 0;
   private updateSubscription?: Subscription;
+  private progressInterval?: ReturnType<typeof setInterval>;
 
   constructor(private swUpdateService: SwUpdateService) {}
 
   ngOnInit() {
-    // Only subscribe if service worker is enabled
     if (this.swUpdateService.isEnabled()) {
-      // Subscribe to update availability
       this.updateSubscription = this.swUpdateService.updateAvailable$.subscribe(() => {
-        // Only show if not dismissed recently
-        if (this.shouldShowPrompt()) {
-          this.showPrompt = true;
-        }
+        this.showPrompt = true;
       });
 
-      // Also check on component init
       this.checkForUpdates();
     }
   }
 
   ngOnDestroy() {
-    if (this.updateSubscription) {
-      this.updateSubscription.unsubscribe();
+    this.updateSubscription?.unsubscribe();
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
     }
   }
 
@@ -45,33 +43,41 @@ export class AppUpdateToastComponent implements OnInit, OnDestroy {
 
   async updateApp() {
     this.isUpdating = true;
+    this.progress = 0;
+    this.startProgress();
+
     try {
       await this.swUpdateService.activateUpdate();
-      // Page will reload automatically after activation
+      this.finishProgress();
     } catch (error) {
       console.error('Error updating app:', error);
       this.isUpdating = false;
-      alert('Failed to update the app. Please try refreshing the page manually.');
+      this.progress = 0;
+      if (this.progressInterval) {
+        clearInterval(this.progressInterval);
+      }
+      alert('Failed to update. Please refresh the page manually.');
     }
   }
 
-  dismissPrompt() {
-    this.showPrompt = false;
-    // Store dismissal in localStorage (will show again after 24 hours)
-    localStorage.setItem('app_update_dismissed', Date.now().toString());
+  private startProgress() {
+    this.progressInterval = setInterval(() => {
+      if (this.progress < 90) {
+        this.progress += Math.random() * 15 + 5;
+        if (this.progress > 90) this.progress = 90;
+      }
+    }, 300);
   }
 
-  private shouldShowPrompt(): boolean {
-    const dismissed = localStorage.getItem('app_update_dismissed');
-    if (!dismissed) {
-      return true;
+  private finishProgress() {
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
     }
+    this.progress = 100;
+    this.updateComplete = true;
 
-    const dismissedTime = parseInt(dismissed, 10);
-    const now = Date.now();
-    const hoursSinceDismissed = (now - dismissedTime) / (1000 * 60 * 60);
-
-    // Show again after 24 hours
-    return hoursSinceDismissed >= 24;
+    setTimeout(() => {
+      window.location.reload();
+    }, 1200);
   }
 }

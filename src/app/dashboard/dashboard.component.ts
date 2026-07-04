@@ -150,8 +150,11 @@ export class DashboardComponent implements OnInit {
 
   calculateWeeklyHours() {
     const now = new Date();
-    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    
+    // Start of the current calendar week (Sunday at midnight)
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+
     const weeklyReports = this.allReports.filter(report => {
       if (!report.report_date) return false;
       let reportDate: Date;
@@ -162,11 +165,12 @@ export class DashboardComponent implements OnInit {
       } else {
         reportDate = new Date(report.report_date);
       }
-      return reportDate >= weekAgo && reportDate <= now;
+      return reportDate >= startOfWeek && reportDate <= now;
     });
-    
+
+    const daysElapsed = now.getDay() + 1;
     this.weeklyHours = weeklyReports.reduce((total, report) => total + (report.hours || 0), 0);
-    this.dailyAverage = this.weeklyHours / 7;
+    this.dailyAverage = daysElapsed > 0 ? this.weeklyHours / daysElapsed : 0;
   }
   
   getTrendPercentage(): number {
@@ -274,6 +278,12 @@ export class DashboardComponent implements OnInit {
   get practiceTotal(): number {
     return this.missionSvc.count;
   }
+
+  navigateTo(tab: string) {
+    this.navigationService.changeTab(tab);
+  }
+
+  currentYear = new Date().getFullYear();
 
   // Helper method for Math.abs in template
   Math = Math;

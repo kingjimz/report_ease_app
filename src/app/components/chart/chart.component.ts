@@ -30,6 +30,7 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
   chartCanvas!: ElementRef<HTMLCanvasElement>;
 
   private chart: Chart | null = null;
+  private reportDates: Date[] = [];
   @Input() reportData: any[] = [];
   @Input() chartType: ChartType = 'line';
   @Input() chartOptions: any = {
@@ -179,10 +180,12 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
     const N = 8;
     const latestData = sortedData.slice(-N);
 
+    // Store full dates for tooltip formatting
+    this.reportDates = latestData.map((item: any) => this.getReportDate(item));
+
     // Process labels and data
-    this.chartData.labels = latestData.map((item: any) => {
-      const date = this.getReportDate(item);
-      return date.toLocaleDateString('en-CA');
+    this.chartData.labels = this.reportDates.map((date: Date) => {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     });
 
     this.chartData.datasets[0].data = latestData.map((item: any) => {
@@ -190,6 +193,16 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
       const hours = Number(item.hours) || Number(item.total_hours) || 0;
       return hours;
     });
+
+    // Update tooltip to show full readable date
+    const dates = this.reportDates;
+    this.chartOptions.plugins.tooltip.callbacks.title = function(tooltipItems: any[]) {
+      const index = tooltipItems[0]?.dataIndex;
+      if (index !== undefined && dates[index]) {
+        return dates[index].toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: '2-digit' });
+      }
+      return tooltipItems[0]?.label || '';
+    };
 
     // Update chart if it exists, otherwise create it
     if (this.chart) {
