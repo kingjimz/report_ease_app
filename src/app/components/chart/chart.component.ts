@@ -130,12 +130,6 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
   };
   ngOnChanges(changes: SimpleChanges) {
     if (changes['reportData']) {
-      console.log('Chart data changed:', {
-        hasData: !!this.reportData,
-        dataLength: this.reportData?.length || 0,
-        firstItem: this.reportData?.[0]
-      });
-      
       if (this.reportData && this.reportData.length > 0) {
         this.processChartData();
       } else if (this.chart) {
@@ -149,11 +143,8 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
   
   private processChartData() {
     if (!this.reportData || this.reportData.length === 0) {
-      console.warn('processChartData: No report data available');
       return;
     }
-
-    console.log('Processing chart data:', this.reportData.length, 'reports');
 
     // Filter out reports without valid dates
     const validReports = this.reportData.filter((report: any) => {
@@ -162,10 +153,7 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
       return hasDate && hasHours;
     });
 
-    console.log('Valid reports:', validReports.length);
-
     if (validReports.length === 0) {
-      console.warn('No valid reports with dates found. Sample report:', this.reportData[0]);
       return;
     }
 
@@ -209,7 +197,6 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
       this.chart.data.labels = this.chartData.labels;
       this.chart.data.datasets[0].data = this.chartData.datasets[0].data;
       this.chart.update('active');
-      console.log('Chart updated with', this.chartData.labels.length, 'data points');
     } else if (this.chartCanvas && this.chartCanvas.nativeElement) {
       // Chart not created yet, create it now
       setTimeout(() => {
@@ -256,7 +243,6 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
     }
     
     // Fallback to current date
-    console.warn('Unable to parse report date:', report.report_date);
     return new Date();
   }
 
@@ -272,7 +258,6 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
 
   private createChart() {
     if (!this.chartCanvas) {
-      console.error('Canvas element not found');
       return;
     }
 
@@ -280,7 +265,6 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
     const ctx = canvas.getContext('2d');
 
     if (!ctx) {
-      console.error('Could not get canvas context');
       return;
     }
 
@@ -294,8 +278,6 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
       // If no data yet, process it if available
       if (this.reportData && this.reportData.length > 0) {
         this.processChartData();
-      } else {
-        console.warn('No chart data available, creating empty chart');
       }
     }
 
@@ -307,9 +289,7 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
 
     try {
       this.chart = new Chart(ctx, config);
-      console.log('Chart created successfully with', this.chartData.labels?.length || 0, 'data points');
     } catch (error) {
-      console.error('Error creating chart:', error);
     }
   }
 

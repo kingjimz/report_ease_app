@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ChartComponent } from '../components/chart/chart.component';
 import { ApiService } from '../_services/api.service';
 import { UtilService } from '../_services/util.service';
@@ -6,6 +6,7 @@ import { SettingsService } from '../_services/settings.service';
 import { MissionService, PracticeSummary } from '../_services/mission.service';
 import { NavigationService } from '../_services/navigation.service';
 import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { ModalComponent } from '../components/modal/modal.component';
 import { AlertsComponent } from '../components/alerts/alerts.component';
@@ -18,7 +19,8 @@ import { WeatherWidgetComponent } from '../components/weather-widget/weather-wid
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
+  private subs: Subscription[] = [];
   reports: any[] = [];
 
   bibleStudies: any[] = [];
@@ -72,19 +74,23 @@ export class DashboardComponent implements OnInit {
     this.subscribeToDataStreams();
 
     // Keep the daily practice summary in sync with completion records.
-    this.api.missionCompletions$.subscribe((completions) => {
+    this.subs.push(this.api.missionCompletions$.subscribe((completions) => {
       this.practice = this.missionSvc.getTodaySummary(completions || []);
-    });
+    }));
     
     // Also try to load initial data (will use cache if offline)
     this.loadReports();
-    this.loadBibLeStudies();
+    this.loadBibleStudies();
     this.loadGoals();
   }
-  
+
+  ngOnDestroy() {
+    this.subs.forEach(s => s.unsubscribe());
+  }
+
   subscribeToDataStreams() {
     // Subscribe to reports stream (updates in real-time, works offline)
-    this.api.reports$.subscribe((reports) => {
+    this.subs.push(this.api.reports$.subscribe((reports) => {
       if (reports && reports.length >= 0) {
         this.allReports = reports;
         this.reports = this.util.aggregateReportsByMonth(reports);
@@ -93,10 +99,10 @@ export class DashboardComponent implements OnInit {
         this.calculateWeeklyHours();
         this.loading = false;
       }
-    });
+    }));
 
     // Subscribe to bible studies stream
-    this.api.bibleStudies$.subscribe((studies) => {
+    this.subs.push(this.api.bibleStudies$.subscribe((studies) => {
       if (studies && studies.length >= 0) {
         this.bibleStudies = studies;
         // Don't call updateBibleStudies here - it would create an infinite loop
@@ -110,10 +116,10 @@ export class DashboardComponent implements OnInit {
         this.computeUpcomingStudies();
         this.loading = false;
       }
-    });
+    }));
 
     // Subscribe to goals stream
-    this.api.goals$.subscribe((goals) => {
+    this.subs.push(this.api.goals$.subscribe((goals) => {
       if (goals && goals.length >= 0) {
         this.goals = goals;
         this.randomizeGoals(this.goals);
@@ -121,7 +127,7 @@ export class DashboardComponent implements OnInit {
         // The data is already coming from the subject
         this.loading = false;
       }
-    });
+    }));
   }
   
   /**
@@ -194,7 +200,7 @@ export class DashboardComponent implements OnInit {
     return 'text-gray-600';
   }
 
-  async loadBibLeStudies() {
+  async loadBibleStudies() {
     try {
       const data = await this.api.getBibleStudies();
       if (data) {

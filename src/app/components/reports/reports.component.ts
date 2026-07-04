@@ -1,4 +1,5 @@
 import { Component, Signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { ApiService } from '../../_services/api.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -36,7 +37,8 @@ import { NavigationService } from '../../_services/navigation.service';
   styleUrl: './reports.component.css',
   animations: [bottomSheet],
 })
-export class ReportsComponent implements OnDestroy {
+export class ReportsComponent implements OnInit, OnDestroy {
+  private subs: Subscription[] = [];
   reports: any[] = [];
   paginatedReports: any[] = [];
 
@@ -111,7 +113,7 @@ export class ReportsComponent implements OnDestroy {
 
   ngOnInit() {
     this.loadReports();
-    this.loadBibLeStudies();
+    this.loadBibleStudies();
     this.loadUserSettings();
     // Set default date to today for modals
     const today = new Date();
@@ -120,28 +122,36 @@ export class ReportsComponent implements OnDestroy {
       this.loading = false;
     }, 1000);
 
-    this.navigationService.studyFilter$.subscribe(({ section, filter }) => {
-      this.scrollToSection(section, filter);
-    });
+    this.subs.push(
+      this.navigationService.studyFilter$.subscribe(({ section, filter }) => {
+        this.scrollToSection(section, filter);
+      })
+    );
 
-    this.navigationService.openAddStudy$.subscribe(() => {
-      this.scrollToSection('studiesSection');
-      this.showStudyModal = true;
-    });
+    this.subs.push(
+      this.navigationService.openAddStudy$.subscribe(() => {
+        this.scrollToSection('studiesSection');
+        this.showStudyModal = true;
+      })
+    );
   }
 
   loadUserSettings() {
-    this.settingsService.settings$.subscribe(settings => {
-      this.isPioneer = settings.isPioneer;
-    });
+    this.subs.push(
+      this.settingsService.settings$.subscribe(settings => {
+        this.isPioneer = settings.isPioneer;
+      })
+    );
     // Use the signed-in user's email as the report name for now.
-    this.authService.user$.subscribe((user) => {
-      this.userEmail = user?.email ?? '';
-    });
+    this.subs.push(
+      this.authService.user$.subscribe((user) => {
+        this.userEmail = user?.email ?? '';
+      })
+    );
   }
 
-  async loadBibLeStudies() {
-    this.api.bibleStudies$.subscribe((data) => {
+  async loadBibleStudies() {
+    this.subs.push(this.api.bibleStudies$.subscribe((data) => {
       if (data && data.length > 0) {
         this.bibleStudies = data;
         // Completed studies stay as a record but are excluded from active counts.
@@ -162,7 +172,7 @@ export class ReportsComponent implements OnDestroy {
         this.numberOfReturnVisits = 0;
         this.numberOfCompletedStudies = 0;
       }
-    });
+    }));
   }
   
   applyFilters() {
@@ -253,38 +263,42 @@ export class ReportsComponent implements OnDestroy {
 
   loadReports() {
     // Subscribe to aggregated data (updated by dashboard/calendar)
-    this.api.aggregatedData$.subscribe((data) => {
-      if (data && Array.isArray(data) && data.length > 0) {
-        this.reports = data;
-        this.calculatePagination();
-        this.updatePaginatedReports();
-        this.loading = false;
-      }
-    });
-
-    // Also subscribe to raw reports and aggregate them to ensure data is always available
-    this.api.reports$.subscribe((reports) => {
-      if (reports && reports.length > 0) {
-        // Always aggregate reports to ensure data is available
-        const aggregatedReports = this.util.aggregateReportsByMonth(reports);
-        
-        // Update aggregated data in API service
-        this.api.updateAggregatedData(aggregatedReports);
-        
-        // Update local reports if not already set from aggregatedData$ subscription
-        if (!this.reports || this.reports.length === 0) {
-          this.reports = aggregatedReports;
+    this.subs.push(
+      this.api.aggregatedData$.subscribe((data) => {
+        if (data && Array.isArray(data) && data.length > 0) {
+          this.reports = data;
           this.calculatePagination();
           this.updatePaginatedReports();
+          this.loading = false;
         }
-        this.loading = false;
-      } else if (reports && reports.length === 0) {
-        // No reports available
-        this.reports = [];
-        this.paginatedReports = [];
-        this.loading = false;
-      }
-    });
+      })
+    );
+
+    // Also subscribe to raw reports and aggregate them to ensure data is always available
+    this.subs.push(
+      this.api.reports$.subscribe((reports) => {
+        if (reports && reports.length > 0) {
+          // Always aggregate reports to ensure data is available
+          const aggregatedReports = this.util.aggregateReportsByMonth(reports);
+
+          // Update aggregated data in API service
+          this.api.updateAggregatedData(aggregatedReports);
+
+          // Update local reports if not already set from aggregatedData$ subscription
+          if (!this.reports || this.reports.length === 0) {
+            this.reports = aggregatedReports;
+            this.calculatePagination();
+            this.updatePaginatedReports();
+          }
+          this.loading = false;
+        } else if (reports && reports.length === 0) {
+          // No reports available
+          this.reports = [];
+          this.paginatedReports = [];
+          this.loading = false;
+        }
+      })
+    );
   }
   
   toggleShowAllReports() {
@@ -624,7 +638,7 @@ export class ReportsComponent implements OnDestroy {
     this.api
       .updateStudy(studyData)
       .then(() => {
-        this.loadBibLeStudies();
+        this.loadBibleStudies();
       })
       .catch((error) => {
         console.error('Error updating study:', error);
@@ -660,7 +674,7 @@ export class ReportsComponent implements OnDestroy {
       this.isSuccess = true;
       this.alertMessage = 'Study added successfully!';
       this.showStudyModal = false;
-      this.loadBibLeStudies();
+      this.loadBibleStudies();
     } catch (error) {
       console.error('Error adding study:', error);
       this.isSuccess = false;
@@ -816,6 +830,7 @@ export class ReportsComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.subs.forEach(s => s.unsubscribe());
     // Clean up modal state if component is destroyed with modals open
     if (this.studyDelete) {
       this.modalService.closeModal();
