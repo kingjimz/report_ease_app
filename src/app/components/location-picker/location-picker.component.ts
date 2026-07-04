@@ -12,6 +12,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as L from 'leaflet';
+import 'leaflet-rotate';
 import { GeoService, LatLng } from '../../_services/geo.service';
 import { addBaseLayers } from '../../_utils/leaflet-layers';
 import { teleportToBody, restoreFromBody } from '../../_utils/fullscreen';
@@ -203,7 +204,10 @@ export class LocationPickerComponent implements AfterViewInit, OnDestroy {
       center: [center.lat, center.lng],
       zoom: this.location ? 16 : 12,
       attributionControl: true,
-    });
+      rotate: true,
+      touchRotate: true,
+      bearing: 0,
+    } as L.MapOptions);
 
     addBaseLayers(this.map, 'satellite');
 

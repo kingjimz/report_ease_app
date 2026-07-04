@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as L from 'leaflet';
+import 'leaflet-rotate';
 import { GeoService, LatLng, RouteStep } from '../../_services/geo.service';
 import { addBaseLayers } from '../../_utils/leaflet-layers';
 import { teleportToBody, restoreFromBody } from '../../_utils/fullscreen';
@@ -214,7 +215,10 @@ export class LocationMapComponent implements AfterViewInit, OnDestroy {
       zoomControl: true,
       dragging: true,
       scrollWheelZoom: false,
-    });
+      rotate: true,
+      touchRotate: true,
+      bearing: 0,
+    } as L.MapOptions);
 
     addBaseLayers(this.map, 'street');
 
