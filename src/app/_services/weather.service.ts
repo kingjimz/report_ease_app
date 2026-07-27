@@ -110,7 +110,12 @@ const TIP_MAX_WORDS = 50;
 function capWords(text: string, max: number): string {
   const words = text.split(/\s+/).filter(Boolean);
   if (words.length <= max) return text;
-  return words.slice(0, max).join(' ').replace(/[,;:]$/, '') + '…';
+  return (
+    words
+      .slice(0, max)
+      .join(' ')
+      .replace(/[,;:]$/, '') + '…'
+  );
 }
 
 interface AiTipCache {
@@ -194,10 +199,7 @@ export class WeatherService {
       // Ministry context: nearby barangay weather + matched studies.
       ...(ministryContext ? { ministry: ministryContext } : {}),
     };
-    const signature = this.aiSignature(
-      { ...payload, forecast: upcoming },
-      ministryContext,
-    );
+    const signature = this.aiSignature({ ...payload, forecast: upcoming }, ministryContext);
 
     console.log('[WeatherTip] getAiTip called', {
       online: this.network.isOnline,
@@ -228,9 +230,7 @@ export class WeatherService {
 
     try {
       console.log('[WeatherTip] POST →', environment.weatherAiUrl, payload);
-      const res: any = await firstValueFrom(
-        this.http.post(environment.weatherAiUrl, payload),
-      );
+      const res: any = await firstValueFrom(this.http.post(environment.weatherAiUrl, payload));
       console.log('[WeatherTip] Response:', res);
       const raw = typeof res?.text === 'string' ? res.text.trim() : '';
       if (!raw) {
@@ -239,10 +239,7 @@ export class WeatherService {
       }
       // Enforce the 20-word cap regardless of what the Worker returns.
       const text = capWords(raw, TIP_MAX_WORDS);
-      localStorage.setItem(
-        AI_TIP_CACHE_KEY,
-        JSON.stringify({ signature, text } as AiTipCache),
-      );
+      localStorage.setItem(AI_TIP_CACHE_KEY, JSON.stringify({ signature, text } as AiTipCache));
       console.log('[WeatherTip] Fresh AI tip cached:', text);
       return text;
     } catch (err) {
@@ -316,8 +313,7 @@ export class WeatherService {
 
     const cached = this.getCached();
 
-    const fresh =
-      cached && Date.now() - cached.fetchedAt < REFRESH_MS;
+    const fresh = cached && Date.now() - cached.fetchedAt < REFRESH_MS;
     if ((fresh && !force) || !this.network.isOnline) {
       return cached;
     }
@@ -327,7 +323,13 @@ export class WeatherService {
       const weather = await this.fetchWeather(coords);
       const city = coords.city || (await this.fetchCity(coords)) || 'Your area';
 
-      const info: WeatherInfo = { ...weather, city, fetchedAt: Date.now(), latitude: coords.lat, longitude: coords.lon };
+      const info: WeatherInfo = {
+        ...weather,
+        city,
+        fetchedAt: Date.now(),
+        latitude: coords.lat,
+        longitude: coords.lon,
+      };
       localStorage.setItem(CACHE_KEY, JSON.stringify(info));
       return info;
     } catch (err) {
@@ -352,8 +354,7 @@ export class WeatherService {
         return;
       }
       navigator.geolocation.getCurrentPosition(
-        (pos) =>
-          resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+        (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
         (err) => reject(err),
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 10 * 60 * 1000 },
       );
@@ -361,9 +362,7 @@ export class WeatherService {
   }
 
   private async getIpCoords(): Promise<Coords> {
-    const res: any = await firstValueFrom(
-      this.http.get('https://ipapi.co/json/'),
-    );
+    const res: any = await firstValueFrom(this.http.get('https://ipapi.co/json/'));
     if (res?.latitude == null || res?.longitude == null) {
       throw new Error('IP location unavailable');
     }
@@ -371,9 +370,7 @@ export class WeatherService {
     return { lat: res.latitude, lon: res.longitude, city };
   }
 
-  private async fetchWeather(
-    coords: Coords,
-  ): Promise<Omit<WeatherInfo, 'city' | 'fetchedAt'>> {
+  private async fetchWeather(coords: Coords): Promise<Omit<WeatherInfo, 'city' | 'fetchedAt'>> {
     const url =
       `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}` +
       `&longitude=${coords.lon}` +
@@ -499,14 +496,14 @@ export class WeatherService {
       // ~0.018 deg lat ≈ 2 km; ~0.02 deg lon ≈ 2 km at PH latitudes.
       // Probe 8 compass directions so we catch surrounding barangays.
       const offsets = [
-        { dlat:  0.018, dlon:  0      }, // N
-        { dlat: -0.018, dlon:  0      }, // S
-        { dlat:  0,     dlon:  0.02   }, // E
-        { dlat:  0,     dlon: -0.02   }, // W
-        { dlat:  0.013, dlon:  0.014  }, // NE
-        { dlat: -0.013, dlon: -0.014  }, // SW
-        { dlat:  0.013, dlon: -0.014  }, // NW
-        { dlat: -0.013, dlon:  0.014  }, // SE
+        { dlat: 0.018, dlon: 0 }, // N
+        { dlat: -0.018, dlon: 0 }, // S
+        { dlat: 0, dlon: 0.02 }, // E
+        { dlat: 0, dlon: -0.02 }, // W
+        { dlat: 0.013, dlon: 0.014 }, // NE
+        { dlat: -0.013, dlon: -0.014 }, // SW
+        { dlat: 0.013, dlon: -0.014 }, // NW
+        { dlat: -0.013, dlon: 0.014 }, // SE
       ];
 
       const currentBrgy = currentCity.split(',')[0].trim().toLowerCase();
@@ -524,8 +521,12 @@ export class WeatherService {
           if (!addr) return null;
 
           const barangay =
-            addr.quarter || addr.village || addr.neighbourhood ||
-            addr.suburb || addr.hamlet || null;
+            addr.quarter ||
+            addr.village ||
+            addr.neighbourhood ||
+            addr.suburb ||
+            addr.hamlet ||
+            null;
           if (!barangay || barangay.toLowerCase() === currentBrgy) return null;
 
           return { name: barangay, lat: pLat, lon: pLon };
@@ -584,15 +585,18 @@ export class WeatherService {
             icon: map.icon,
             description: map.description,
             isDay,
-            tempMax: daily?.temperature_2m_max?.[0] != null
-              ? Math.round(daily.temperature_2m_max[0])
-              : Math.round(current.temperature_2m),
-            tempMin: daily?.temperature_2m_min?.[0] != null
-              ? Math.round(daily.temperature_2m_min[0])
-              : Math.round(current.temperature_2m),
-            precipProbability: daily?.precipitation_probability_max?.[0] != null
-              ? Math.round(daily.precipitation_probability_max[0])
-              : 0,
+            tempMax:
+              daily?.temperature_2m_max?.[0] != null
+                ? Math.round(daily.temperature_2m_max[0])
+                : Math.round(current.temperature_2m),
+            tempMin:
+              daily?.temperature_2m_min?.[0] != null
+                ? Math.round(daily.temperature_2m_min[0])
+                : Math.round(current.temperature_2m),
+            precipProbability:
+              daily?.precipitation_probability_max?.[0] != null
+                ? Math.round(daily.precipitation_probability_max[0])
+                : 0,
             forecast: this.parseForecast(wRes?.hourly, isDay),
           };
         } catch {
@@ -635,8 +639,7 @@ export class WeatherService {
       const barangay =
         addr.quarter || addr.village || addr.neighbourhood || addr.suburb || addr.hamlet || null;
       // Municipality / city
-      const municipality =
-        addr.city || addr.town || addr.municipality || null;
+      const municipality = addr.city || addr.town || addr.municipality || null;
 
       if (barangay && municipality && barangay !== municipality) {
         return `${barangay}, ${municipality}`;
@@ -666,11 +669,7 @@ export type WeatherScene =
   | 'storm';
 
 /** The four clear-sky variants, in case the caller needs the time-of-day set. */
-export type ClearScene =
-  | 'clear-morning'
-  | 'clear-day'
-  | 'clear-evening'
-  | 'clear-night';
+export type ClearScene = 'clear-morning' | 'clear-day' | 'clear-evening' | 'clear-night';
 
 /**
  * Map a WMO weather code to a background scene. Active weather (rain, storm,
@@ -709,11 +708,8 @@ export function forecastDigest(forecast: ForecastHour[]): string {
   if (!forecast.length) return 'none';
   const precips = forecast.map((h) => h.precipProbability);
   const maxPrecipBand = Math.round(Math.max(...precips) / 20) * 20;
-  const rainSoon = forecast
-    .slice(0, 3)
-    .some((h) => h.precipProbability >= 50);
-  const maxTempBand =
-    Math.round(Math.max(...forecast.map((h) => h.temperature)) / 2) * 2;
+  const rainSoon = forecast.slice(0, 3).some((h) => h.precipProbability >= 50);
+  const maxTempBand = Math.round(Math.max(...forecast.map((h) => h.temperature)) / 2) * 2;
   return `p${maxPrecipBand}|r${rainSoon ? 1 : 0}|t${maxTempBand}`;
 }
 
@@ -777,9 +773,7 @@ export function weatherTip(
     };
 
   // Dry now, but rain on the way in the next few hours? Pack an umbrella.
-  const rainAhead = forecast.some(
-    (h) => h.precipProbability >= 60 || h.weatherCode >= 51,
-  );
+  const rainAhead = forecast.some((h) => h.precipProbability >= 60 || h.weatherCode >= 51);
   if (rainAhead)
     return {
       text: 'Dry now, but rain is expected later. Take an umbrella to be safe.',
@@ -857,9 +851,7 @@ export function haversineKm(lat1: number, lon1: number, lat2: number, lon2: numb
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
     Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) ** 2;
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
@@ -871,11 +863,7 @@ export function haversineKm(lat1: number, lon1: number, lat2: number, lon2: numb
  * Returns a corrected WMO code; correcting once here keeps every downstream
  * consumer (description, scene, icon, forecast, AI tip) honest with no changes.
  */
-function reconcileCode(
-  code: number,
-  precipitationMm: number,
-  cloudCover: number,
-): number {
+function reconcileCode(code: number, precipitationMm: number, cloudCover: number): number {
   const isWetCode = code >= 51; // drizzle (51) through thunderstorm (99)
   if (!isWetCode) return code; // clear/cloud/fog codes are trustworthy
   if (precipitationMm > 0.1) return code; // genuinely precipitating — keep it
@@ -897,19 +885,12 @@ export function describeWeather(
   if (code === 1) return { description: 'Mostly clear', icon: partly };
   if (code === 2) return { description: 'Partly cloudy', icon: partly };
   if (code === 3) return { description: 'Cloudy', icon: 'bi-clouds' };
-  if (code === 45 || code === 48)
-    return { description: 'Foggy', icon: 'bi-cloud-fog' };
-  if (code >= 51 && code <= 57)
-    return { description: 'Drizzle', icon: 'bi-cloud-drizzle' };
-  if (code >= 61 && code <= 67)
-    return { description: 'Rain', icon: 'bi-cloud-rain' };
-  if (code >= 71 && code <= 77)
-    return { description: 'Snow', icon: 'bi-cloud-snow' };
-  if (code >= 80 && code <= 82)
-    return { description: 'Rain showers', icon: 'bi-cloud-rain-heavy' };
-  if (code === 85 || code === 86)
-    return { description: 'Snow showers', icon: 'bi-cloud-snow' };
-  if (code >= 95)
-    return { description: 'Thunderstorm', icon: 'bi-cloud-lightning-rain' };
+  if (code === 45 || code === 48) return { description: 'Foggy', icon: 'bi-cloud-fog' };
+  if (code >= 51 && code <= 57) return { description: 'Drizzle', icon: 'bi-cloud-drizzle' };
+  if (code >= 61 && code <= 67) return { description: 'Rain', icon: 'bi-cloud-rain' };
+  if (code >= 71 && code <= 77) return { description: 'Snow', icon: 'bi-cloud-snow' };
+  if (code >= 80 && code <= 82) return { description: 'Rain showers', icon: 'bi-cloud-rain-heavy' };
+  if (code === 85 || code === 86) return { description: 'Snow showers', icon: 'bi-cloud-snow' };
+  if (code >= 95) return { description: 'Thunderstorm', icon: 'bi-cloud-lightning-rain' };
   return { description: 'Weather', icon: 'bi-cloud' };
 }

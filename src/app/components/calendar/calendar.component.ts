@@ -33,7 +33,14 @@ interface CalendarEvent {
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [CommonModule, FormsModule, LoaderComponent, ModalComponent, AlertsComponent, DragToCloseDirective],
+  imports: [
+    CommonModule,
+    FormsModule,
+    LoaderComponent,
+    ModalComponent,
+    AlertsComponent,
+    DragToCloseDirective,
+  ],
   templateUrl: './calendar.component.html',
   styleUrls: ['./calendar.component.css'],
   animations: [bottomSheet],
@@ -69,18 +76,18 @@ export class CalendarComponent implements OnInit, OnDestroy {
   showDeleteConfirmModal = false;
   isDeleting = false;
   private reportsSubscription?: Subscription;
-  
+
   // Add Report Modal properties (matching dashboard)
-  showAddReportModal: boolean = false;
-  reportDate: string = '';
-  reportHours: number = 0;
-  reportMinutes: number = 0;
-  reportJoinedMinistry: string = 'yes';
-  reportNotes: string = '';
-  isSubmittingReport: boolean = false;
-  reportSuccess: boolean = false;
-  reportAlertMessage: string = '';
-  isDateLocked: boolean = false; // Flag to lock date when opened from calendar
+  showAddReportModal = false;
+  reportDate = '';
+  reportHours = 0;
+  reportMinutes = 0;
+  reportJoinedMinistry = 'yes';
+  reportNotes = '';
+  isSubmittingReport = false;
+  reportSuccess = false;
+  reportAlertMessage = '';
+  isDateLocked = false; // Flag to lock date when opened from calendar
 
   constructor(
     private api: ApiService,
@@ -185,16 +192,10 @@ export class CalendarComponent implements OnInit, OnDestroy {
 
   previousMonth() {
     if (this.viewMode === 'month') {
-      this.viewDate = new Date(
-        this.viewDate.getFullYear(),
-        this.viewDate.getMonth() - 1,
-        1,
-      );
+      this.viewDate = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() - 1, 1);
       this.generateCalendar();
     } else if (this.viewMode === 'week') {
-      this.viewDate = new Date(
-        this.viewDate.getTime() - 7 * 24 * 60 * 60 * 1000,
-      );
+      this.viewDate = new Date(this.viewDate.getTime() - 7 * 24 * 60 * 60 * 1000);
       this.generateWeekDays();
     } else if (this.viewMode === 'day') {
       this.viewDate = new Date(this.viewDate.getTime() - 24 * 60 * 60 * 1000);
@@ -203,16 +204,10 @@ export class CalendarComponent implements OnInit, OnDestroy {
 
   nextMonth() {
     if (this.viewMode === 'month') {
-      this.viewDate = new Date(
-        this.viewDate.getFullYear(),
-        this.viewDate.getMonth() + 1,
-        1,
-      );
+      this.viewDate = new Date(this.viewDate.getFullYear(), this.viewDate.getMonth() + 1, 1);
       this.generateCalendar();
     } else if (this.viewMode === 'week') {
-      this.viewDate = new Date(
-        this.viewDate.getTime() + 7 * 24 * 60 * 60 * 1000,
-      );
+      this.viewDate = new Date(this.viewDate.getTime() + 7 * 24 * 60 * 60 * 1000);
       this.generateWeekDays();
     } else if (this.viewMode === 'day') {
       this.viewDate = new Date(this.viewDate.getTime() + 24 * 60 * 60 * 1000);
@@ -221,15 +216,11 @@ export class CalendarComponent implements OnInit, OnDestroy {
 
   // Event-related methods
   hasEvent(date: Date): boolean {
-    return this.events.some(
-      (event) => event.start.toDateString() === date.toDateString(),
-    );
+    return this.events.some((event) => event.start.toDateString() === date.toDateString());
   }
 
   getEventHours(date: Date): string {
-    const event = this.events.find(
-      (e) => e.start.toDateString() === date.toDateString(),
-    );
+    const event = this.events.find((e) => e.start.toDateString() === date.toDateString());
     if (event) {
       const hours = event.meta.hours || 0;
       const minutes = event.meta.minutes || 0;
@@ -242,9 +233,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
   }
 
   getEventPreview(date: Date): string {
-    const event = this.events.find(
-      (e) => e.start.toDateString() === date.toDateString(),
-    );
+    const event = this.events.find((e) => e.start.toDateString() === date.toDateString());
     return event ? event.title : '';
   }
 
@@ -258,9 +247,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
       // not just the live window. Reseed the map from scratch on a full load.
       const data = await this.api.getAllReports();
       this.rawReportsById = new Map(
-        (data || [])
-          .filter((r: any) => r && r.id)
-          .map((r: any) => [r.id, r] as [string, any]),
+        (data || []).filter((r: any) => r && r.id).map((r: any) => [r.id, r] as [string, any]),
       );
       this.reports = this.util.aggregateReportsByMonth(data);
       this.api.updateAggregatedData(this.reports);
@@ -498,10 +485,10 @@ export class CalendarComponent implements OnInit, OnDestroy {
     this.selectedDate = new Date(day.date);
     // Lock the date when opened from calendar
     this.isDateLocked = true;
-    
+
     // Format date for input (YYYY-MM-DD) in local time to avoid timezone off-by-one
     this.reportDate = this.formatDateLocal(this.selectedDate);
-    
+
     const existingEvent = this.events.find(
       (e) => e.start.toDateString() === this.selectedDate?.toDateString(),
     );
@@ -513,13 +500,11 @@ export class CalendarComponent implements OnInit, OnDestroy {
       this.report_id = existingEvent.meta.report_id;
       this.reportJoinedMinistry = existingEvent.meta.joined_ministry || 'yes';
       this.reportNotes = existingEvent.meta.notes || '';
-      
+
       // Also set old variables for backward compatibility if needed
       this.hours = existingEvent.meta.hours || 0;
       this.minutes = existingEvent.meta.minutes || 0;
-      this.joined_ministry = this.util.capitalizeFirstLetter(
-        existingEvent.meta.joined_ministry,
-      );
+      this.joined_ministry = this.util.capitalizeFirstLetter(existingEvent.meta.joined_ministry);
       this.note = existingEvent.meta.notes;
     } else {
       // Reset to defaults for new report
@@ -530,7 +515,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
       this.report_id = '';
       this.reInitializeVariables();
     }
-    
+
     // Open the modal
     this.openAddReportModal();
   }
@@ -540,7 +525,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
     this.noChangeDetected = false;
     this.modalService.closeModal();
   }
-  
+
   // Add Report Modal Methods (matching dashboard)
   openAddReportModal() {
     // If no date is selected (opened from + button), set today's date
@@ -550,12 +535,12 @@ export class CalendarComponent implements OnInit, OnDestroy {
       this.reportDate = this.formatDateLocal(today);
       this.isDateLocked = false; // Allow date change when opened from + button
     }
-    
+
     this.reportSuccess = false;
     this.reportAlertMessage = '';
     this.showAddReportModal = true;
   }
-  
+
   closeAddReportModal() {
     this.showAddReportModal = false;
     this.selectedDate = null;
@@ -570,44 +555,44 @@ export class CalendarComponent implements OnInit, OnDestroy {
     this.report_id = '';
     this.hasExistingEvent = false;
   }
-  
+
   incrementHours() {
     this.reportHours = (this.reportHours || 0) + 1;
   }
-  
+
   decrementHours() {
     this.reportHours = Math.max(0, (this.reportHours || 0) - 1);
   }
-  
+
   incrementMinutes() {
     this.reportMinutes = Math.min(55, (this.reportMinutes || 0) + 5);
   }
-  
+
   decrementMinutes() {
     this.reportMinutes = Math.max(0, (this.reportMinutes || 0) - 5);
   }
-  
+
   async saveReportFromModal() {
     if (!this.reportDate || !this.selectedDate) {
       this.reportSuccess = false;
       this.reportAlertMessage = 'Please select a date for the report.';
       return;
     }
-    
+
     if (!this.reportHours && !this.reportMinutes) {
       this.reportSuccess = false;
       this.reportAlertMessage = 'Please enter at least some hours or minutes.';
       return;
     }
-    
+
     if (!this.reportJoinedMinistry) {
       this.reportSuccess = false;
       this.reportAlertMessage = 'Please indicate if you participated in the ministry.';
       return;
     }
-    
+
     this.isSubmittingReport = true;
-    
+
     try {
       // Use selectedDate which is already a Date object
       const report: any = {
@@ -619,7 +604,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
         created_at: new Date(),
         updated_at: new Date(),
       };
-      
+
       if (this.hasExistingEvent && this.report_id) {
         // Update existing report
         report.id = this.report_id;

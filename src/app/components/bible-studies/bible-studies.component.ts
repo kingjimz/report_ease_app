@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../_services/api.service';
 import { FormsModule } from '@angular/forms';
@@ -13,17 +13,11 @@ import { LatLng } from '../../_services/geo.service';
 @Component({
   selector: 'app-bible-studies',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    AlertsComponent,
-    ModalComponent,
-    LocationPickerComponent,
-  ],
+  imports: [CommonModule, FormsModule, AlertsComponent, ModalComponent, LocationPickerComponent],
   templateUrl: './bible-studies.component.html',
   styleUrl: './bible-studies.component.css',
 })
-export class BibleStudiesComponent {
+export class BibleStudiesComponent implements OnInit {
   @Input() bibleStudies: any[] = [];
   @Output() edit = new EventEmitter<any>();
   hoveredCard: number | null = null;
@@ -68,11 +62,11 @@ export class BibleStudiesComponent {
   }
 
   getBibleStudiesCount(): number {
-    return this.bibleStudies.filter(study => study.type === 'bs').length;
+    return this.bibleStudies.filter((study) => study.type === 'bs').length;
   }
 
   getReturnVisitsCount(): number {
-    return this.bibleStudies.filter(study => study.type === 'rv').length;
+    return this.bibleStudies.filter((study) => study.type === 'rv').length;
   }
 
   getTimeAgo(date: any): string {
@@ -81,7 +75,7 @@ export class BibleStudiesComponent {
     const studyDate = new Date(date);
     const diffInMs = now.getTime() - studyDate.getTime();
     const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-    
+
     if (diffInDays === 0) return 'Today';
     if (diffInDays === 1) return 'Yesterday';
     if (diffInDays < 7) return `${diffInDays} days ago`;
@@ -93,8 +87,7 @@ export class BibleStudiesComponent {
     const baseClasses =
       'group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl cursor-pointer transition-all duration-500 ease-out hover:-translate-y-2 hover:scale-[1.02] overflow-hidden';
     const borderColor = this.getBorderColor(index);
-    const ringClass =
-      this.hoveredCard === index ? 'ring-2 ring-blue-200 ring-opacity-60' : '';
+    const ringClass = this.hoveredCard === index ? 'ring-2 ring-blue-200 ring-opacity-60' : '';
 
     return `${baseClasses} ${borderColor} ${ringClass}`;
   }

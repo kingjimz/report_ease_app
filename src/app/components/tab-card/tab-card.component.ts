@@ -1,4 +1,13 @@
-import { Component, Output, EventEmitter, Input, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
+import {
+  Component,
+  Output,
+  EventEmitter,
+  Input,
+  OnInit,
+  OnChanges,
+  SimpleChanges,
+  OnDestroy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationService } from '../../_services/navigation.service';
 import { Subscription } from 'rxjs';
@@ -18,7 +27,7 @@ export class TabCardComponent implements OnInit, OnChanges, OnDestroy {
   @Output() manualReportModalOpen = new EventEmitter<void>();
   @Output() addReportModalOpen = new EventEmitter<void>();
   @Output() generateReportModalOpen = new EventEmitter<void>();
-  @Input() selectedTab: string = 'dashboard';
+  @Input() selectedTab = 'dashboard';
 
   activeTab = 'dashboard';
   showReportTypePicker = false;
@@ -57,7 +66,7 @@ export class TabCardComponent implements OnInit, OnChanges, OnDestroy {
     if (this.selectedTab && this.selectedTab !== this.activeTab) {
       this.activeTab = this.selectedTab;
     }
-    
+
     // Subscribe to navigation service for immediate updates
     this.navigationSubscription = this.navigationService.tabChange$.subscribe((tabId) => {
       this.activeTab = tabId;

@@ -11,14 +11,11 @@ import * as L from 'leaflet';
  * The control sits bottom-left to avoid the zoom (top-left) and the custom
  * fullscreen button (top-right).
  */
-export function addBaseLayers(
-  map: L.Map,
-  defaultLayer: 'street' | 'satellite' = 'street',
-): void {
-  const street = L.tileLayer(
-    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    { maxZoom: 19, attribution: '© OpenStreetMap' },
-  );
+export function addBaseLayers(map: L.Map, defaultLayer: 'street' | 'satellite' = 'street'): void {
+  const street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap',
+  });
 
   const imagery = L.tileLayer(
     'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',

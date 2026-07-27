@@ -7,11 +7,11 @@ interface UserSettings {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class SettingsService {
   private readonly STORAGE_KEY = 'user_settings';
-  
+
   private settingsSubject = new BehaviorSubject<UserSettings>(this.loadSettings());
   public settings$ = this.settingsSubject.asObservable();
 
@@ -87,7 +87,3 @@ export class SettingsService {
     return this.getSettings().locationEnabled;
   }
 }
-
-
-
-

@@ -56,7 +56,9 @@
 }
 
 .group:hover .group-hover\:shadow-lg {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .group:hover .group-hover\:text-indigo-600 {
@@ -105,7 +107,9 @@
 
 .card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 /* Icon animations */
@@ -114,20 +118,25 @@
 }
 
 @keyframes bounce {
-  0%, 20%, 53%, 80%, 100% {
-    animation-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000);
-    transform: translate3d(0,0,0);
+  0%,
+  20%,
+  53%,
+  80%,
+  100% {
+    animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+    transform: translate3d(0, 0, 0);
   }
-  40%, 43% {
-    animation-timing-function: cubic-bezier(0.755, 0.050, 0.855, 0.060);
+  40%,
+  43% {
+    animation-timing-function: cubic-bezier(0.755, 0.05, 0.855, 0.06);
     transform: translate3d(0, -8px, 0);
   }
   70% {
-    animation-timing-function: cubic-bezier(0.755, 0.050, 0.855, 0.060);
+    animation-timing-function: cubic-bezier(0.755, 0.05, 0.855, 0.06);
     transform: translate3d(0, -4px, 0);
   }
   90% {
-    transform: translate3d(0,-1px,0);
+    transform: translate3d(0, -1px, 0);
   }
 }
 
@@ -159,7 +168,12 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(45deg, transparent 49%, rgba(255, 255, 255, 0.1) 50%, transparent 51%);
+  background: linear-gradient(
+    45deg,
+    transparent 49%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 51%
+  );
   pointer-events: none;
 }
 
@@ -169,7 +183,7 @@
     font-size: 1.125rem;
     line-height: 1.75rem;
   }
-  
+
   .responsive-text-3xl {
     font-size: 1.875rem;
     line-height: 2.25rem;
@@ -355,7 +369,8 @@
 
 /* Streak card animation */
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -377,7 +392,7 @@
 /* Add Report Button Modern Glow Animation */
 @keyframes modern-glow {
   0% {
-    box-shadow: 
+    box-shadow:
       0 0 10px rgba(59, 130, 246, 0.5),
       0 0 20px rgba(59, 130, 246, 0.3),
       0 0 30px rgba(99, 102, 241, 0.2),
@@ -385,7 +400,7 @@
     filter: brightness(1);
   }
   50% {
-    box-shadow: 
+    box-shadow:
       0 0 20px rgba(59, 130, 246, 0.8),
       0 0 40px rgba(59, 130, 246, 0.5),
       0 0 60px rgba(99, 102, 241, 0.3),
@@ -394,7 +409,7 @@
     filter: brightness(1.1);
   }
   100% {
-    box-shadow: 
+    box-shadow:
       0 0 10px rgba(59, 130, 246, 0.5),
       0 0 20px rgba(59, 130, 246, 0.3),
       0 0 30px rgba(99, 102, 241, 0.2),
@@ -404,7 +419,8 @@
 }
 
 @keyframes icon-pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
   }
@@ -428,7 +444,7 @@
 .add-report-button:hover {
   animation: none;
   transform: scale(1.05);
-  box-shadow: 
+  box-shadow:
     0 0 25px rgba(59, 130, 246, 0.9),
     0 0 50px rgba(59, 130, 246, 0.6),
     0 0 75px rgba(99, 102, 241, 0.4),
@@ -443,36 +459,36 @@
 
 .add-report-button:active {
   transform: scale(0.98);
-  box-shadow: 
+  box-shadow:
     0 0 15px rgba(59, 130, 246, 0.7),
     0 0 30px rgba(59, 130, 246, 0.4);
 }
 
 /* Remove native calendar icon from date input but keep it clickable */
-input[type="date"]::-webkit-calendar-picker-indicator {
+input[type='date']::-webkit-calendar-picker-indicator {
   display: none;
   -webkit-appearance: none;
 }
 
-input[type="date"]::-webkit-inner-spin-button,
-input[type="date"]::-webkit-clear-button {
+input[type='date']::-webkit-inner-spin-button,
+input[type='date']::-webkit-clear-button {
   display: none;
   -webkit-appearance: none;
 }
 
 /* For Firefox */
-input[type="date"] {
+input[type='date'] {
   -moz-appearance: textfield;
   appearance: textfield;
 }
 
 /* Ensure the entire input is clickable and opens date picker */
-input[type="date"] {
+input[type='date'] {
   cursor: pointer;
 }
 
 /* Fix iOS date input overflow in modals */
-:host ::ng-deep input[type="date"] {
+:host ::ng-deep input[type='date'] {
   width: 100% !important;
   max-width: 100% !important;
   min-width: 0 !important;

@@ -79,12 +79,8 @@
         class="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md font-medium"
       >
         {{ isLastStep ? 'Get Started' : 'Next' }}
-        <i
-          *ngIf="!isLastStep"
-          class="bi bi-chevron-right ml-1 inline-block"
-        ></i>
+        <i *ngIf="!isLastStep" class="bi bi-chevron-right ml-1 inline-block"></i>
       </button>
     </div>
   </div>
 </div>
-

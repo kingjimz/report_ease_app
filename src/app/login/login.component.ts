@@ -42,7 +42,8 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.networkSubscription = this.networkService.onlineStatus$.subscribe((isOnline) => {
       this.isOnline = isOnline;
       if (!isOnline) {
-        this.errorMessage = 'You are offline. Login is disabled. The app will auto-login if you were previously logged in.';
+        this.errorMessage =
+          'You are offline. Login is disabled. The app will auto-login if you were previously logged in.';
       } else {
         this.errorMessage = '';
       }

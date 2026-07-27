@@ -1,18 +1,19 @@
 <div *ngIf="showPrompt" class="update-overlay">
   <div class="update-modal">
     <!-- Icon -->
-    <div class="update-icon" [ngClass]="{ 'spin': isUpdating }">
+    <div class="update-icon" [ngClass]="{ spin: isUpdating }">
       <i class="bi" [ngClass]="updateComplete ? 'bi-check-lg' : 'bi-arrow-clockwise'"></i>
     </div>
 
     <!-- Title -->
     <h2 class="update-title">
-      {{ updateComplete ? 'Update Complete' : (isUpdating ? 'Updating...' : 'Update Available') }}
+      {{ updateComplete ? 'Update Complete' : isUpdating ? 'Updating...' : 'Update Available' }}
     </h2>
 
     <!-- Message -->
     <p class="update-message" *ngIf="!isUpdating && !updateComplete">
-      A new version of Field Service Tracker App is available. Please update to continue using the app with the latest features and improvements.
+      A new version of Field Service Tracker App is available. Please update to continue using the
+      app with the latest features and improvements.
     </p>
     <p class="update-message" *ngIf="isUpdating && !updateComplete">
       Installing the latest version. This will only take a moment.
@@ -30,10 +31,7 @@
     </div>
 
     <!-- Update button -->
-    <button
-      *ngIf="!isUpdating && !updateComplete"
-      class="btn-update"
-      (click)="updateApp()">
+    <button *ngIf="!isUpdating && !updateComplete" class="btn-update" (click)="updateApp()">
       <i class="bi bi-download mr-2"></i>
       Update Now
     </button>

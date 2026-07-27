@@ -103,19 +103,19 @@
   .pwa-toast-content {
     background: #1f2937;
   }
-  
+
   .pwa-toast-title {
     color: #f9fafb;
   }
-  
+
   .pwa-toast-message {
     color: #d1d5db;
   }
-  
+
   .btn-close {
     color: #9ca3af;
   }
-  
+
   .btn-close:hover {
     background: #374151;
     color: #f9fafb;
@@ -142,22 +142,18 @@
     max-width: none;
     width: auto;
   }
-  
+
   .pwa-toast-content {
     padding: 14px;
   }
-  
+
   .pwa-toast-icon {
     width: 36px;
     height: 36px;
   }
-  
+
   .btn-install {
     padding: 7px 14px;
     font-size: 12px;
   }
 }
-
-
-
-

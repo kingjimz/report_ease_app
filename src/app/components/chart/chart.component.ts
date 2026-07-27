@@ -62,10 +62,10 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
         cornerRadius: 8,
         displayColors: true,
         callbacks: {
-          label: function(context: any) {
+          label: function (context: any) {
             return `Hours: ${context.parsed.y}`;
-          }
-        }
+          },
+        },
       },
     },
     scales: {
@@ -140,7 +140,7 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
       }
     }
   }
-  
+
   private processChartData() {
     if (!this.reportData || this.reportData.length === 0) {
       return;
@@ -184,10 +184,14 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
 
     // Update tooltip to show full readable date
     const dates = this.reportDates;
-    this.chartOptions.plugins.tooltip.callbacks.title = function(tooltipItems: any[]) {
+    this.chartOptions.plugins.tooltip.callbacks.title = function (tooltipItems: any[]) {
       const index = tooltipItems[0]?.dataIndex;
       if (index !== undefined && dates[index]) {
-        return dates[index].toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: '2-digit' });
+        return dates[index].toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'short',
+          day: '2-digit',
+        });
       }
       return tooltipItems[0]?.label || '';
     };
@@ -211,37 +215,37 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
       }, 200);
     }
   }
-  
+
   private getReportDate(report: any): Date {
     if (!report.report_date) {
       return new Date();
     }
-    
+
     // Handle Firestore Timestamp with toDate method
     if (report.report_date.toDate && typeof report.report_date.toDate === 'function') {
       return report.report_date.toDate();
     }
-    
+
     // Handle Firestore Timestamp object with seconds
     if (report.report_date.seconds) {
       return new Date(report.report_date.seconds * 1000);
     }
-    
+
     // Handle Firestore Timestamp object with _seconds (alternative format)
     if (report.report_date._seconds) {
       return new Date(report.report_date._seconds * 1000);
     }
-    
+
     // Handle Date object
     if (report.report_date instanceof Date) {
       return report.report_date;
     }
-    
+
     // Handle string date
     if (typeof report.report_date === 'string') {
       return new Date(report.report_date);
     }
-    
+
     // Fallback to current date
     return new Date();
   }
@@ -289,8 +293,7 @@ export class ChartComponent implements OnChanges, AfterViewInit, OnDestroy {
 
     try {
       this.chart = new Chart(ctx, config);
-    } catch (error) {
-    }
+    } catch (error) {}
   }
 
   updateChart(newData: any) {

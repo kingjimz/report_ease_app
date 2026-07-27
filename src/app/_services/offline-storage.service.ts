@@ -10,7 +10,7 @@ interface QueuedOperation {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class OfflineStorageService {
   private dbName = 'ReportEaseOfflineDB';
@@ -68,7 +68,7 @@ export class OfflineStorageService {
   async queueOperation(
     type: 'create' | 'update' | 'delete',
     collection: 'reports' | 'bibleStudies' | 'goals' | 'missionCompletions',
-    data: any
+    data: any,
   ): Promise<string> {
     const db = await this.ensureDB();
     const operation: QueuedOperation = {
@@ -77,7 +77,7 @@ export class OfflineStorageService {
       collection,
       data,
       timestamp: Date.now(),
-      retries: 0
+      retries: 0,
     };
 
     return new Promise((resolve, reject) => {
@@ -218,4 +218,3 @@ export class OfflineStorageService {
     return this.maxRetries;
   }
 }
-

@@ -2,24 +2,23 @@
 <div *ngIf="isLoading">
   <app-loader [loadingMessage]="'Loading your reports...'"></app-loader>
 </div>
-<div *ngIf="!isLoading" class="container py-2 sm:py-2 md:py-4 px-2 mb-12 sm:mb-12 md:mb-2 lg:mb-2 xl:mb-2">
-  <h1 class="text-xl sm:text-2xl font-semibold mb-1" style="color: var(--text-primary);">Calendar</h1>
-  <p class="text-sm mb-3" style="color: var(--text-secondary);">View and manage your reports and activities.</p>
+<div
+  *ngIf="!isLoading"
+  class="container py-2 sm:py-2 md:py-4 px-2 mb-12 sm:mb-12 md:mb-2 lg:mb-2 xl:mb-2"
+>
+  <h1 class="text-xl sm:text-2xl font-semibold mb-1" style="color: var(--text-primary)">
+    Calendar
+  </h1>
+  <p class="text-sm mb-3" style="color: var(--text-secondary)">
+    View and manage your reports and activities.
+  </p>
   <div class="calendar-card shadow-md rounded-lg p-2">
     <div class="flex justify-between items-center mb-4">
-      <button
-        (click)="previousMonth()"
-        class="nav-button px-4 py-2 rounded"
-      >
-        ◀
-      </button>
-      <h2 class="text-xl font-semibold" style="color: var(--text-primary);">{{ getMonthYearDisplay() }}</h2>
-      <button
-        (click)="nextMonth()"
-        class="nav-button px-4 py-2 rounded"
-      >
-        ▶
-      </button>
+      <button (click)="previousMonth()" class="nav-button px-4 py-2 rounded">◀</button>
+      <h2 class="text-xl font-semibold" style="color: var(--text-primary)">
+        {{ getMonthYearDisplay() }}
+      </h2>
+      <button (click)="nextMonth()" class="nav-button px-4 py-2 rounded">▶</button>
     </div>
 
     <div class="flex space-x-2 view-toggle-container p-1 rounded-lg">
@@ -75,10 +74,7 @@
             </span>
 
             <!-- Event indicator dot -->
-            <div
-              *ngIf="hasEvent(day.date)"
-              class="w-2 h-2 bg-green-500 rounded-full"
-            ></div>
+            <div *ngIf="hasEvent(day.date)" class="w-2 h-2 bg-green-500 rounded-full"></div>
           </div>
 
           <!-- Hours display -->
@@ -102,9 +98,9 @@
           *ngFor="let day of weekDays"
           class="calendar-day-header p-3 text-center font-medium border-r last:border-r-0"
         >
-          <div>{{ day | date: "EEE" }}</div>
+          <div>{{ day | date: 'EEE' }}</div>
           <div class="text-lg" [class.text-blue-600]="isToday(day)">
-            {{ day | date: "d" }}
+            {{ day | date: 'd' }}
           </div>
         </div>
       </div>
@@ -139,9 +135,13 @@
   <app-modal (dismissed)="closeAddReportModal()">
     <div class="w-full">
       <!-- Modal Header -->
-      <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+      <div
+        class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700"
+      >
         <div class="flex items-center space-x-2 min-w-0 flex-1">
-          <div class="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex-shrink-0">
+          <div
+            class="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex-shrink-0"
+          >
             <i class="bi bi-calendar-plus text-white text-base"></i>
           </div>
           <div class="min-w-0 flex-1">
@@ -149,7 +149,7 @@
               {{ hasExistingEvent ? 'Edit Report' : 'Add Report' }}
             </h3>
             <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
-              {{ selectedDate | date: "fullDate" }}
+              {{ selectedDate | date: 'fullDate' }}
             </p>
           </div>
         </div>
@@ -189,7 +189,7 @@
             [disabled]="isDateLocked"
             required
             class="w-full min-w-0 p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed box-border"
-            style="box-sizing: border-box; max-width: 100%;"
+            style="box-sizing: border-box; max-width: 100%"
           />
           <p *ngIf="isDateLocked" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
             <i class="bi bi-lock mr-1"></i>
@@ -314,14 +314,21 @@
           </button>
           <button
             type="submit"
-            [disabled]="isSubmittingReport || !reportDate || (!reportHours && !reportMinutes) || !reportJoinedMinistry"
+            [disabled]="
+              isSubmittingReport ||
+              !reportDate ||
+              (!reportHours && !reportMinutes) ||
+              !reportJoinedMinistry
+            "
             class="px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span
               *ngIf="isSubmittingReport"
               class="animate-spin rounded-full h-4 w-4 border-t-2 border-white inline-block mr-2"
             ></span>
-            {{ isSubmittingReport ? 'Saving...' : (hasExistingEvent ? 'Update Report' : 'Save Report') }}
+            {{
+              isSubmittingReport ? 'Saving...' : hasExistingEvent ? 'Update Report' : 'Save Report'
+            }}
           </button>
         </div>
       </form>
@@ -349,21 +356,21 @@
       <span class="w-10 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600"></span>
     </div>
     <!-- Icon -->
-    <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-red-100 dark:bg-red-900/30 rounded-full">
+    <div
+      class="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-red-100 dark:bg-red-900/30 rounded-full"
+    >
       <i class="bi bi-exclamation-triangle-fill text-red-600 dark:text-red-400 text-3xl"></i>
     </div>
 
     <!-- Title -->
-    <h3 class="text-xl font-bold text-gray-900 dark:text-white text-center mb-2">
-      Delete Report?
-    </h3>
+    <h3 class="text-xl font-bold text-gray-900 dark:text-white text-center mb-2">Delete Report?</h3>
 
     <!-- Message -->
     <p class="text-gray-600 dark:text-gray-400 text-center mb-6">
       Are you sure you want to delete the report for
       <span class="font-semibold text-gray-900 dark:text-white">
-        {{ selectedDate | date: 'fullDate' }}
-      </span>?
+        {{ selectedDate | date: 'fullDate' }} </span
+      >?
       <br />
       <span class="text-sm text-red-600 dark:text-red-400 mt-2 block">
         This action cannot be undone.

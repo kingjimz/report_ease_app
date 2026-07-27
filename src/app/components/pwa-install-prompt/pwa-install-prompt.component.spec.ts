@@ -8,9 +8,8 @@ describe('PwaInstallPromptComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PwaInstallPromptComponent]
-    })
-    .compileComponents();
+      imports: [PwaInstallPromptComponent],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(PwaInstallPromptComponent);
     component = fixture.componentInstance;
@@ -21,8 +20,3 @@ describe('PwaInstallPromptComponent', () => {
     expect(component).toBeTruthy();
   });
 });
-
-
-
-
-

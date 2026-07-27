@@ -5,7 +5,7 @@ import { isDevMode } from '@angular/core';
 import { VersionService } from './version.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class SwUpdateService {
   private readonly CHECK_INTERVAL = 60 * 60 * 1000; // Check every 1 hour (more frequent for production)
@@ -17,11 +17,11 @@ export class SwUpdateService {
 
   constructor(
     private swUpdate: SwUpdate,
-    private versionService: VersionService
+    private versionService: VersionService,
   ) {
     // Detect iOS and standalone mode
     this.detectIOSAndStandalone();
-    
+
     // Only initialize if service worker is enabled
     if (swUpdate.isEnabled) {
       this.initializeUpdateChecks();
@@ -37,8 +37,9 @@ export class SwUpdateService {
   private detectIOSAndStandalone(): void {
     if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
       this.isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-      this.isStandalone = (window.navigator as any).standalone || 
-                         window.matchMedia('(display-mode: standalone)').matches;
+      this.isStandalone =
+        (window.navigator as any).standalone ||
+        window.matchMedia('(display-mode: standalone)').matches;
     }
   }
 
@@ -46,7 +47,7 @@ export class SwUpdateService {
     console.log('Initializing iOS version checking...');
     // Initialize version service for iOS
     this.versionService.initializeVersionChecking();
-    
+
     // Subscribe to version updates
     this.versionSubscription = this.versionService.updateAvailable$.subscribe((hasUpdate) => {
       this.updateAvailable = hasUpdate;
@@ -93,9 +94,7 @@ export class SwUpdateService {
 
     // Listen for available updates
     this.swUpdate.versionUpdates
-      .pipe(
-        filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY')
-      )
+      .pipe(filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY'))
       .subscribe((event) => {
         console.log('New version available', event);
         this.updateAvailable = true;
@@ -104,9 +103,7 @@ export class SwUpdateService {
 
     // Listen for update activation
     this.swUpdate.versionUpdates
-      .pipe(
-        filter(evt => evt.type === 'VERSION_INSTALLATION_FAILED')
-      )
+      .pipe(filter((evt) => evt.type === 'VERSION_INSTALLATION_FAILED'))
       .subscribe(() => {
         console.error('Update installation failed');
       });
@@ -128,12 +125,12 @@ export class SwUpdateService {
     try {
       const updateAvailable = await this.swUpdate.checkForUpdate();
       console.log('Update check result:', updateAvailable);
-      
+
       // Also check if update is already available
       if (this.updateAvailable) {
         return true;
       }
-      
+
       return updateAvailable;
     } catch (error) {
       console.error('Error checking for updates:', error);
@@ -152,10 +149,10 @@ export class SwUpdateService {
         const response = await fetch('/version.json?t=' + Date.now(), {
           cache: 'no-cache',
           headers: {
-            'Cache-Control': 'no-cache'
-          }
+            'Cache-Control': 'no-cache',
+          },
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           const newVersion = data.version || data.appVersion || '1.0.0';
@@ -172,7 +169,7 @@ export class SwUpdateService {
         console.error('Error fetching version before reload:', error);
         // Continue with reload even if version fetch fails
       }
-      
+
       this.versionService.reloadApp();
       return true;
     }
@@ -204,7 +201,7 @@ export class SwUpdateService {
    */
   get updateAvailable$(): Observable<VersionReadyEvent> {
     return this.swUpdate.versionUpdates.pipe(
-      filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY')
+      filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY'),
     );
   }
 

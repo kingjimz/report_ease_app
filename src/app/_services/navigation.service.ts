@@ -36,8 +36,7 @@ export class NavigationService {
   // Whether the bottom tab bar is currently shown (vs. slid away on scroll).
   // Lets globally-mounted UI (e.g. the chat button) ride along with it.
   private tabBarVisibleSubject = new BehaviorSubject<boolean>(true);
-  public tabBarVisible$: Observable<boolean> =
-    this.tabBarVisibleSubject.asObservable();
+  public tabBarVisible$: Observable<boolean> = this.tabBarVisibleSubject.asObservable();
 
   changeTab(tabId: string) {
     this.tabChangeSubject.next(tabId);

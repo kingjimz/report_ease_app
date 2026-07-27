@@ -7,7 +7,7 @@ import { ThemeService } from '../../services/theme.service';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './theme-toggle.component.html',
-  styleUrl: './theme-toggle.component.css'
+  styleUrl: './theme-toggle.component.css',
 })
 export class ThemeToggleComponent implements OnInit {
   isDarkMode = false;
@@ -15,7 +15,7 @@ export class ThemeToggleComponent implements OnInit {
   constructor(public themeService: ThemeService) {}
 
   ngOnInit(): void {
-    this.themeService.darkMode$.subscribe(isDark => {
+    this.themeService.darkMode$.subscribe((isDark) => {
       this.isDarkMode = isDark;
     });
   }

@@ -20,7 +20,8 @@ export const environment = {
   // VAPID public key (base64url) for Web Push subscriptions. Must match the
   // VAPID_PUBLIC_KEY var set on the Cloudflare Worker. Paste the public key
   // from `npx web-push generate-vapid-keys`. Empty disables push.
-  vapidPublicKey: 'BOEQ3qlOzfcElN2jZWYanCgafn7CwNoljESAM9rD2adLKxp18QmI4QHlt6-Uj4-o33FFUJ5_LebcZ3_e1-sNDn4',
+  vapidPublicKey:
+    'BOEQ3qlOzfcElN2jZWYanCgafn7CwNoljESAM9rD2adLKxp18QmI4QHlt6-Uj4-o33FFUJ5_LebcZ3_e1-sNDn4',
   firebase: {
     // PRODUCTION Firebase credentials (shared with environment.prod.ts)
     apiKey: 'AIzaSyAOZ6R5siNGVKJp76i8uQunU9mojsKvU64',

@@ -37,11 +37,7 @@ import { teleportToBody, restoreFromBody } from '../../_utils/fullscreen';
       "
     >
       <div class="relative" [ngClass]="isFullscreen ? 'flex-1 min-h-0' : ''">
-        <div
-          #mapEl
-          class="w-full bg-gray-100"
-          [ngClass]="isFullscreen ? 'h-full' : 'h-48'"
-        ></div>
+        <div #mapEl class="w-full bg-gray-100" [ngClass]="isFullscreen ? 'h-full' : 'h-48'"></div>
         <button
           type="button"
           (click)="toggleFullscreen()"
@@ -53,28 +49,19 @@ import { teleportToBody, restoreFromBody } from '../../_utils/fullscreen';
           "
           class="absolute top-2 right-2 z-[1200] flex items-center justify-center rounded-md shadow transition-colors text-sm font-semibold"
         >
-          <i
-            [class]="
-              isFullscreen ? 'bi bi-fullscreen-exit' : 'bi bi-arrows-fullscreen'
-            "
-          ></i>
+          <i [class]="isFullscreen ? 'bi bi-fullscreen-exit' : 'bi bi-arrows-fullscreen'"></i>
           <span *ngIf="isFullscreen">Close</span>
         </button>
       </div>
 
       <!-- Turn-by-turn guidance banner (while navigating) -->
-      <div
-        *ngIf="navigating"
-        class="flex items-center gap-3 px-3 py-2 bg-emerald-600 text-white"
-      >
+      <div *ngIf="navigating" class="flex items-center gap-3 px-3 py-2 bg-emerald-600 text-white">
         <i class="bi {{ nextIcon }} text-2xl shrink-0"></i>
         <div class="min-w-0 flex-1">
           <p class="text-sm font-semibold truncate">
             {{ nextInstruction || 'Starting…' }}
           </p>
-          <p *ngIf="nextDistanceLabel" class="text-xs opacity-90">
-            in {{ nextDistanceLabel }}
-          </p>
+          <p *ngIf="nextDistanceLabel" class="text-xs opacity-90">in {{ nextDistanceLabel }}</p>
         </div>
         <button
           type="button"
@@ -196,9 +183,7 @@ export class LocationMapComponent implements AfterViewInit, OnDestroy {
       this.map.setView(this.youMarker.getLatLng(), Math.max(this.map.getZoom(), 16));
       return;
     }
-    const line = this.routeLayers.find((l) => l instanceof L.Polyline) as
-      | L.Polyline
-      | undefined;
+    const line = this.routeLayers.find((l) => l instanceof L.Polyline) as L.Polyline | undefined;
     if (line) this.map.fitBounds(line.getBounds(), { padding: [30, 30] });
     else this.map.setView([this.location.lat, this.location.lng], 16);
   }
@@ -291,8 +276,7 @@ export class LocationMapComponent implements AfterViewInit, OnDestroy {
       // Prepare live-progress data and begin tracking.
       this.routePath = route.path;
       this.steps = route.steps;
-      this.avgKmPerMin =
-        route.durationMin > 0 ? route.distanceKm / route.durationMin : 0;
+      this.avgKmPerMin = route.durationMin > 0 ? route.distanceKm / route.durationMin : 0;
       this.buildCumulativeDistances();
       this.startTracking();
     } catch {
@@ -388,20 +372,15 @@ export class LocationMapComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    const remainingMin =
-      this.avgKmPerMin > 0 ? remainingKm / this.avgKmPerMin : 0;
+    const remainingMin = this.avgKmPerMin > 0 ? remainingKm / this.avgKmPerMin : 0;
     this.remainingLabel =
-      `${this.geo.formatShort(remainingKm)}` +
-      ` • ${this.geo.formatDuration(remainingMin)} left`;
+      `${this.geo.formatShort(remainingKm)}` + ` • ${this.geo.formatDuration(remainingMin)} left`;
 
     // Next maneuver: the first step whose point is ahead of us.
-    const step =
-      this.steps.find((s) => s.wayPoint > idx) ??
-      this.steps[this.steps.length - 1];
+    const step = this.steps.find((s) => s.wayPoint > idx) ?? this.steps[this.steps.length - 1];
     if (step) {
       const toManeuverKm =
-        Math.max(0, (this.cumDist[step.wayPoint] ?? total) - this.cumDist[idx]) +
-        offRoute;
+        Math.max(0, (this.cumDist[step.wayPoint] ?? total) - this.cumDist[idx]) + offRoute;
       this.nextInstruction = step.instruction || 'Continue';
       this.nextIcon = this.geo.maneuverIcon(step.type);
       this.nextDistanceLabel = this.geo.formatShort(toManeuverKm);

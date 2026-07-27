@@ -19,13 +19,13 @@ export class NotificationPermissionToastComponent implements OnInit, OnDestroy {
 
   constructor(
     private notificationService: NotificationService,
-    private auth: Auth
+    private auth: Auth,
   ) {}
 
   ngOnInit() {
     // Check permission immediately on component init (before subscription)
     this.checkInitialPermission();
-    
+
     // Subscribe to permission changes from service
     this.permissionSubscription = this.notificationService.permission$.subscribe((permission) => {
       this.updateToastVisibility(permission);
@@ -49,15 +49,15 @@ export class NotificationPermissionToastComponent implements OnInit, OnDestroy {
     const permissionState: NotificationPermission = {
       granted: permission === 'granted',
       denied: permission === 'denied',
-      default: permission === 'default'
+      default: permission === 'default',
     };
-    
+
     this.updateToastVisibility(permissionState);
   }
 
   private updateToastVisibility(permission: NotificationPermission) {
     console.log('Notification permission status:', permission);
-    
+
     // If permission is denied (blocked), always show the toast
     if (permission.denied) {
       console.log('Permission is denied (blocked), showing toast');
@@ -85,7 +85,7 @@ export class NotificationPermissionToastComponent implements OnInit, OnDestroy {
       console.log('Permission is default, checking dismissal status');
       this.isBlocked = false;
       const dismissed = localStorage.getItem('notification_toast_dismissed');
-      
+
       // Only show if not dismissed
       if (dismissed !== 'true') {
         console.log('Not dismissed, will show toast after delay');
@@ -115,10 +115,12 @@ export class NotificationPermissionToastComponent implements OnInit, OnDestroy {
     // User needs to enable it in browser settings
     if (this.isBlocked) {
       // Show alert or message about enabling in browser settings
-      alert('Notifications are blocked. Please enable them in your browser settings:\n\nChrome/Edge: Settings > Privacy and security > Site settings > Notifications\n\nFirefox: Settings > Privacy & Security > Permissions > Notifications\n\nSafari: Preferences > Websites > Notifications');
+      alert(
+        'Notifications are blocked. Please enable them in your browser settings:\n\nChrome/Edge: Settings > Privacy and security > Site settings > Notifications\n\nFirefox: Settings > Privacy & Security > Permissions > Notifications\n\nSafari: Preferences > Websites > Notifications',
+      );
       return;
     }
-    
+
     this.isRequesting = true;
     try {
       const granted = await this.notificationService.requestPermission();

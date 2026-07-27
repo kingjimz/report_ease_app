@@ -88,11 +88,7 @@ export interface PickedLocation {
         </p>
       </div>
       <div class="relative" [ngClass]="isFullscreen ? 'flex-1 min-h-0' : ''">
-        <div
-          #mapEl
-          class="w-full bg-gray-100"
-          [ngClass]="isFullscreen ? 'h-full' : 'h-56'"
-        ></div>
+        <div #mapEl class="w-full bg-gray-100" [ngClass]="isFullscreen ? 'h-full' : 'h-56'"></div>
         <button
           type="button"
           (click)="toggleFullscreen()"
@@ -104,11 +100,7 @@ export interface PickedLocation {
           "
           class="absolute top-2 right-2 z-[1200] flex items-center justify-center rounded-md shadow transition-colors text-sm font-semibold"
         >
-          <i
-            [class]="
-              isFullscreen ? 'bi bi-fullscreen-exit' : 'bi bi-arrows-fullscreen'
-            "
-          ></i>
+          <i [class]="isFullscreen ? 'bi bi-fullscreen-exit' : 'bi bi-arrows-fullscreen'"></i>
           <span *ngIf="isFullscreen">Close</span>
         </button>
       </div>
@@ -156,7 +148,7 @@ export class LocationPickerComponent implements AfterViewInit, OnDestroy {
   searchQuery = '';
   searching = false;
   searchedEmpty = false;
-  searchResults: Array<{ lat: number; lng: number; label: string }> = [];
+  searchResults: { lat: number; lng: number; label: string }[] = [];
 
   private map?: L.Map;
   private marker?: L.Marker;

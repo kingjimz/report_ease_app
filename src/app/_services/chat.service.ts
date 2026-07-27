@@ -85,8 +85,7 @@ export class ChatService {
       this.messages.push({
         role: 'assistant',
         content:
-          `You've reached today's limit of ${DAILY_LIMIT} questions. ` +
-          'It resets tomorrow.',
+          `You've reached today's limit of ${DAILY_LIMIT} questions. ` + 'It resets tomorrow.',
       });
       this.persist();
       return;
@@ -120,9 +119,7 @@ export class ChatService {
       this.bumpUsage();
       this.messages.push({
         role: 'assistant',
-        content:
-          reply ||
-          "Sorry, I couldn't come up with an answer. Please try rephrasing.",
+        content: reply || "Sorry, I couldn't come up with an answer. Please try rephrasing.",
       });
     } catch (err: any) {
       const rateLimited = err?.status === 429;
@@ -255,8 +252,7 @@ export class ChatService {
       if (Array.isArray(parsed) && parsed.length) {
         const valid = parsed.filter(
           (m: any) =>
-            (m?.role === 'user' || m?.role === 'assistant') &&
-            typeof m?.content === 'string',
+            (m?.role === 'user' || m?.role === 'assistant') && typeof m?.content === 'string',
         );
         if (valid.length) return valid.slice(-MAX_STORED_MESSAGES);
       }

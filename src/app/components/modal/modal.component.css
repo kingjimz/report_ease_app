@@ -10,7 +10,10 @@
 
 /* Ensure modal content inherits proper colors */
 :host ::ng-deep .modal-container * {
-  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+  transition:
+    color 0.3s ease,
+    background-color 0.3s ease,
+    border-color 0.3s ease;
   box-sizing: border-box;
 }
 
@@ -27,9 +30,9 @@
 }
 
 /* Fix iOS date input overflow issue */
-:host ::ng-deep .modal-container input[type="date"],
-:host ::ng-deep .modal-container input[type="datetime-local"],
-:host ::ng-deep .modal-container input[type="time"] {
+:host ::ng-deep .modal-container input[type='date'],
+:host ::ng-deep .modal-container input[type='datetime-local'],
+:host ::ng-deep .modal-container input[type='time'] {
   width: 100% !important;
   max-width: 100% !important;
   min-width: 0 !important;

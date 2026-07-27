@@ -15,7 +15,14 @@ import { WeatherWidgetComponent } from '../components/weather-widget/weather-wid
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [ChartComponent, CommonModule, FormsModule, ModalComponent, AlertsComponent, WeatherWidgetComponent],
+  imports: [
+    ChartComponent,
+    CommonModule,
+    FormsModule,
+    ModalComponent,
+    AlertsComponent,
+    WeatherWidgetComponent,
+  ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
@@ -44,19 +51,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
   randomizedGoals: any[] = [];
 
   // This-week stats shown in the metrics cards.
-  weeklyHours: number = 0;
-  dailyAverage: number = 0;
+  weeklyHours = 0;
+  dailyAverage = 0;
 
   // Add Report Modal properties
-  showAddReportModal: boolean = false;
-  reportDate: string = '';
-  reportHours: number = 0;
-  reportMinutes: number = 0;
-  reportJoinedMinistry: string = 'yes';
-  reportNotes: string = '';
-  isSubmittingReport: boolean = false;
-  reportSuccess: boolean = false;
-  reportAlertMessage: string = '';
+  showAddReportModal = false;
+  reportDate = '';
+  reportHours = 0;
+  reportMinutes = 0;
+  reportJoinedMinistry = 'yes';
+  reportNotes = '';
+  isSubmittingReport = false;
+  reportSuccess = false;
+  reportAlertMessage = '';
 
   isPioneer = false;
 
@@ -73,18 +80,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     // Load pioneer status
-    this.subs.push(this.settingsService.settings$.subscribe(settings => {
-      this.isPioneer = settings.isPioneer;
-    }));
+    this.subs.push(
+      this.settingsService.settings$.subscribe((settings) => {
+        this.isPioneer = settings.isPioneer;
+      }),
+    );
 
     // Subscribe to real-time data streams (works offline with Firestore cache)
     this.subscribeToDataStreams();
 
     // Keep the daily practice summary in sync with completion records.
-    this.subs.push(this.api.missionCompletions$.subscribe((completions) => {
-      this.practice = this.missionSvc.getTodaySummary(completions || []);
-    }));
-    
+    this.subs.push(
+      this.api.missionCompletions$.subscribe((completions) => {
+        this.practice = this.missionSvc.getTodaySummary(completions || []);
+      }),
+    );
+
     // Also try to load initial data (will use cache if offline)
     this.loadReports();
     this.loadBibleStudies();
@@ -92,51 +103,57 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.subs.forEach(s => s.unsubscribe());
+    this.subs.forEach((s) => s.unsubscribe());
   }
 
   subscribeToDataStreams() {
     // Subscribe to reports stream (updates in real-time, works offline)
-    this.subs.push(this.api.reports$.subscribe((reports) => {
-      if (reports && reports.length >= 0) {
-        this.allReports = reports;
-        this.reports = this.util.aggregateReportsByMonth(reports);
-        this.api.updateAggregatedData(this.reports);
-        this.computeMonthlyHours();
-        this.calculateWeeklyHours();
-        this.loading = false;
-      }
-    }));
+    this.subs.push(
+      this.api.reports$.subscribe((reports) => {
+        if (reports && reports.length >= 0) {
+          this.allReports = reports;
+          this.reports = this.util.aggregateReportsByMonth(reports);
+          this.api.updateAggregatedData(this.reports);
+          this.computeMonthlyHours();
+          this.calculateWeeklyHours();
+          this.loading = false;
+        }
+      }),
+    );
 
     // Subscribe to bible studies stream
-    this.subs.push(this.api.bibleStudies$.subscribe((studies) => {
-      if (studies && studies.length >= 0) {
-        this.bibleStudies = studies;
-        // Don't call updateBibleStudies here - it would create an infinite loop
-        // The data is already coming from the subject
-        this.numberOfBibleStudies = this.bibleStudies.filter(
-          (study) => study.type === 'bs' && !study.completed && study.active !== false,
-        ).length;
-        this.numberOfReturnVisits = this.bibleStudies.filter(
-          (study) => study.type === 'rv' && !study.completed,
-        ).length;
-        this.computeUpcomingStudies();
-        this.loading = false;
-      }
-    }));
+    this.subs.push(
+      this.api.bibleStudies$.subscribe((studies) => {
+        if (studies && studies.length >= 0) {
+          this.bibleStudies = studies;
+          // Don't call updateBibleStudies here - it would create an infinite loop
+          // The data is already coming from the subject
+          this.numberOfBibleStudies = this.bibleStudies.filter(
+            (study) => study.type === 'bs' && !study.completed && study.active !== false,
+          ).length;
+          this.numberOfReturnVisits = this.bibleStudies.filter(
+            (study) => study.type === 'rv' && !study.completed,
+          ).length;
+          this.computeUpcomingStudies();
+          this.loading = false;
+        }
+      }),
+    );
 
     // Subscribe to goals stream
-    this.subs.push(this.api.goals$.subscribe((goals) => {
-      if (goals && goals.length >= 0) {
-        this.goals = goals;
-        this.randomizeGoals(this.goals);
-        // Don't call notifyGoalChange here - it would create an infinite loop
-        // The data is already coming from the subject
-        this.loading = false;
-      }
-    }));
+    this.subs.push(
+      this.api.goals$.subscribe((goals) => {
+        if (goals && goals.length >= 0) {
+          this.goals = goals;
+          this.randomizeGoals(this.goals);
+          // Don't call notifyGoalChange here - it would create an infinite loop
+          // The data is already coming from the subject
+          this.loading = false;
+        }
+      }),
+    );
   }
-  
+
   /**
    * Set the "this month" / "previous month" hour totals by matching the actual
    * current calendar month, not just the latest month that has data. Without
@@ -153,12 +170,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       prevMonth = 12;
       prevYear -= 1;
     }
-    const curEntry = this.reports.find(
-      (r) => r.year === curYear && r.month === curMonth,
-    );
-    const prevEntry = this.reports.find(
-      (r) => r.year === prevYear && r.month === prevMonth,
-    );
+    const curEntry = this.reports.find((r) => r.year === curYear && r.month === curMonth);
+    const prevEntry = this.reports.find((r) => r.year === prevYear && r.month === prevMonth);
     this.monthlyHours = curEntry?.total_hours || 0;
     this.prevMonthHours = prevEntry?.total_hours || 0;
   }
@@ -170,7 +183,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     startOfWeek.setDate(now.getDate() - now.getDay());
     startOfWeek.setHours(0, 0, 0, 0);
 
-    const weeklyReports = this.allReports.filter(report => {
+    const weeklyReports = this.allReports.filter((report) => {
       if (!report.report_date) return false;
       let reportDate: Date;
       if (report.report_date.toDate) {
@@ -187,19 +200,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.weeklyHours = weeklyReports.reduce((total, report) => total + (report.hours || 0), 0);
     this.dailyAverage = daysElapsed > 0 ? this.weeklyHours / daysElapsed : 0;
   }
-  
+
   getTrendPercentage(): number {
     if (this.prevMonthHours === 0) return 0;
     return ((this.monthlyHours - this.prevMonthHours) / this.prevMonthHours) * 100;
   }
-  
+
   getTrendIcon(): string {
     const trend = this.monthlyHours - this.prevMonthHours;
     if (trend > 0) return 'bi-arrow-up';
     if (trend < 0) return 'bi-arrow-down';
     return 'bi-dash';
   }
-  
+
   getTrendColor(): string {
     const trend = this.monthlyHours - this.prevMonthHours;
     if (trend > 0) return 'text-green-600';
@@ -295,13 +308,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private computeUpcomingStudies() {
-    const active = this.bibleStudies.filter(s => !s.completed && s.schedule);
+    const active = this.bibleStudies.filter((s) => !s.completed && s.schedule);
     const now = new Date();
     now.setHours(0, 0, 0, 0);
 
     const withDates = active
-      .map(s => ({ ...s, _scheduleDate: this.parseScheduleDate(s.schedule) }))
-      .filter(s => s._scheduleDate !== null)
+      .map((s) => ({ ...s, _scheduleDate: this.parseScheduleDate(s.schedule) }))
+      .filter((s) => s._scheduleDate !== null)
       .sort((a, b) => {
         const aOverdue = a._scheduleDate!.getTime() < now.getTime();
         const bOverdue = b._scheduleDate!.getTime() < now.getTime();
@@ -376,7 +389,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Helper method for Math.abs in template
   Math = Math;
-  
+
   // Add Report Modal Methods
   openAddReportModal() {
     // Set default date to today
@@ -390,7 +403,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.reportAlertMessage = '';
     this.showAddReportModal = true;
   }
-  
+
   closeAddReportModal() {
     this.showAddReportModal = false;
     this.reportDate = '';
@@ -401,23 +414,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.reportSuccess = false;
     this.reportAlertMessage = '';
   }
-  
+
   incrementHours() {
     this.reportHours = (this.reportHours || 0) + 1;
   }
-  
+
   decrementHours() {
     this.reportHours = Math.max(0, (this.reportHours || 0) - 1);
   }
-  
+
   incrementMinutes() {
     this.reportMinutes = Math.min(55, (this.reportMinutes || 0) + 5);
   }
-  
+
   decrementMinutes() {
     this.reportMinutes = Math.max(0, (this.reportMinutes || 0) - 5);
   }
-  
+
   openDatePicker(event: Event) {
     const input = event.target as HTMLInputElement;
     // Use showPicker() if available (modern browsers)
@@ -435,14 +448,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
       input.click();
     }
   }
-  
+
   async saveReport() {
     if (!this.reportDate) {
       this.reportSuccess = false;
       this.reportAlertMessage = 'Please select a date for the report.';
       return;
     }
-    
+
     if (this.isPioneer && !this.reportHours && !this.reportMinutes) {
       this.reportSuccess = false;
       this.reportAlertMessage = 'Please enter at least some hours or minutes.';
@@ -454,15 +467,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.reportAlertMessage = 'Please indicate if you participated in the ministry.';
       return;
     }
-    
+
     this.isSubmittingReport = true;
-    
+
     try {
       // Convert date string to Date object
       const selectedDate = new Date(this.reportDate);
       // Set time to start of day to avoid timezone issues
       selectedDate.setHours(0, 0, 0, 0);
-      
+
       const report = {
         hours: this.reportHours || 0,
         minutes: this.reportMinutes || 0,
@@ -472,15 +485,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
         created_at: new Date(),
         updated_at: new Date(),
       };
-      
+
       await this.api.createReport(report);
-      
+
       this.reportSuccess = true;
       this.reportAlertMessage = 'Report added successfully! It will appear on your calendar.';
-      
+
       // Reload reports to update dashboard
       await this.loadReports();
-      
+
       // Close modal after 1.5 seconds
       setTimeout(() => {
         this.closeAddReportModal();

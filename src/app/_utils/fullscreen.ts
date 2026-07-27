@@ -18,10 +18,7 @@ export function teleportToBody(el: HTMLElement): Comment {
 }
 
 /** Return `el` to its original spot (where the placeholder is) and unlock scroll. */
-export function restoreFromBody(
-  el: HTMLElement,
-  placeholder: Comment | null,
-): void {
+export function restoreFromBody(el: HTMLElement, placeholder: Comment | null): void {
   if (placeholder?.parentNode) {
     placeholder.parentNode.replaceChild(el, placeholder);
   }

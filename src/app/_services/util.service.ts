@@ -20,10 +20,7 @@ export class UtilService {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' }); // e.g., "March 2025"
   }
 
-  formatDateToHumanReadable(timestamp: {
-    seconds: number;
-    nanoseconds: number;
-  }): string {
+  formatDateToHumanReadable(timestamp: { seconds: number; nanoseconds: number }): string {
     if (!timestamp || !timestamp.seconds) return 'Invalid Date';
     const date = new Date(timestamp.seconds * 1000);
     return date.toLocaleDateString('en-US', {
@@ -116,13 +113,10 @@ export class UtilService {
 
       // For display purposes, you might want total time as decimal
       month.total_time_decimal = month.total_hours + month.total_minutes / 60;
-      month.total_time_decimal =
-        Math.round(month.total_time_decimal * 100) / 100;
+      month.total_time_decimal = Math.round(month.total_time_decimal * 100) / 100;
     });
 
-    return Object.values(aggregated).sort(
-      (a, b) => b.year - a.year || b.month - a.month,
-    );
+    return Object.values(aggregated).sort((a, b) => b.year - a.year || b.month - a.month);
   }
 
   generatePNG(report: any, isPioneer: boolean) {
@@ -130,21 +124,13 @@ export class UtilService {
     const loadFont = () => {
       return new Promise((resolve) => {
         // Check if font is already loaded
-        if (
-          document.fonts &&
-          document.fonts.check &&
-          document.fonts.check('16px Poppins')
-        ) {
+        if (document.fonts && document.fonts.check && document.fonts.check('16px Poppins')) {
           resolve(true);
           return;
         }
 
         // Create font link if it doesn't exist
-        if (
-          !document.querySelector(
-            'link[href*="fonts.googleapis.com"][href*="Poppins"]',
-          )
-        ) {
+        if (!document.querySelector('link[href*="fonts.googleapis.com"][href*="Poppins"]')) {
           const link = document.createElement('link');
           link.href =
             'https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap';
@@ -397,20 +383,12 @@ export class UtilService {
     // Load font and generate image
     const loadFont = () => {
       return new Promise((resolve) => {
-        if (
-          document.fonts &&
-          document.fonts.check &&
-          document.fonts.check('16px Poppins')
-        ) {
+        if (document.fonts && document.fonts.check && document.fonts.check('16px Poppins')) {
           resolve(true);
           return;
         }
 
-        if (
-          !document.querySelector(
-            'link[href*="fonts.googleapis.com"][href*="Poppins"]',
-          )
-        ) {
+        if (!document.querySelector('link[href*="fonts.googleapis.com"][href*="Poppins"]')) {
           const link = document.createElement('link');
           link.href =
             'https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap';
@@ -437,10 +415,10 @@ export class UtilService {
     };
 
     await loadFont();
-    
+
     // Generate image data URL
     const imageDataUrl = this.renderCanvasForShare(report, isPioneer);
-    
+
     // Convert data URL to blob
     const response = await fetch(imageDataUrl);
     const blob = await response.blob();
@@ -461,20 +439,24 @@ export class UtilService {
         if (error.name !== 'AbortError') {
           console.error('Error sharing:', error);
           // Fallback to download
-          this.downloadImageFromDataUrl(imageDataUrl, `Field-Service-Report-${report.month.replace(' ', '-')}.png`);
+          this.downloadImageFromDataUrl(
+            imageDataUrl,
+            `Field-Service-Report-${report.month.replace(' ', '-')}.png`,
+          );
         }
       }
     } else {
       // Fallback: copy to clipboard or download
       try {
         // Try to copy to clipboard (for images, this may not work in all browsers)
-        await navigator.clipboard.write([
-          new ClipboardItem({ 'image/png': blob })
-        ]);
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
         alert('Image copied to clipboard! You can paste it in your messenger or other apps.');
       } catch (clipboardError) {
         // If clipboard fails, just download
-        this.downloadImageFromDataUrl(imageDataUrl, `Field-Service-Report-${report.month.replace(' ', '-')}.png`);
+        this.downloadImageFromDataUrl(
+          imageDataUrl,
+          `Field-Service-Report-${report.month.replace(' ', '-')}.png`,
+        );
       }
     }
   }

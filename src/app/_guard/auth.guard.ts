@@ -35,7 +35,7 @@ export class AuthGuard implements CanActivate {
         (user) => {
           clearTimeout(timeout);
           unsubscribe();
-          
+
           if (user) {
             resolve(true);
           } else {
@@ -51,7 +51,7 @@ export class AuthGuard implements CanActivate {
           clearTimeout(timeout);
           unsubscribe();
           console.error('Auth state check error:', error);
-          
+
           // On error, check current user as fallback
           const user = this.auth.currentUser;
           if (user) {
@@ -62,7 +62,7 @@ export class AuthGuard implements CanActivate {
             }
             resolve(false);
           }
-        }
+        },
       );
     });
   }

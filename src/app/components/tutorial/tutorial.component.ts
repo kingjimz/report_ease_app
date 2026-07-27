@@ -1,4 +1,13 @@
-import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  OnInit,
+  OnChanges,
+  SimpleChanges,
+  OnDestroy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TutorialService } from '../../_services/tutorial.service';
 import { ModalService } from '../../_services/modal.service';
@@ -19,16 +28,16 @@ export interface TutorialStep {
   styleUrls: ['./tutorial.component.css'],
 })
 export class TutorialComponent implements OnInit, OnChanges, OnDestroy {
-  @Input() showTutorial: boolean = false;
+  @Input() showTutorial = false;
   @Output() tutorialComplete = new EventEmitter<void>();
   @Output() tutorialSkip = new EventEmitter<void>();
 
-  currentStep: number = 0;
+  currentStep = 0;
   steps: TutorialStep[] = [
     {
       title: 'Welcome to Field Service Tracker!',
       description:
-        'This app helps you track your ministry service hours, reports, and goals. Let\'s take a quick tour of the main features.',
+        "This app helps you track your ministry service hours, reports, and goals. Let's take a quick tour of the main features.",
       icon: 'bi bi-house-fill',
       position: 'center',
     },
@@ -82,7 +91,7 @@ export class TutorialComponent implements OnInit, OnChanges, OnDestroy {
       position: 'bottom',
     },
     {
-      title: 'You\'re All Set!',
+      title: "You're All Set!",
       description:
         'You can always access the Configure button in the header to adjust your settings. Start by adding your first report using the "Add Report" button on the Dashboard!',
       icon: 'bi bi-check-circle-fill',
@@ -159,4 +168,3 @@ export class TutorialComponent implements OnInit, OnChanges, OnDestroy {
     return this.currentStep === this.steps.length - 1;
   }
 }
-

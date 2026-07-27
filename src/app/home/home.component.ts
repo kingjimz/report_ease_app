@@ -1,4 +1,11 @@
-import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectorRef, AfterViewInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ViewChild,
+  ChangeDetectorRef,
+  AfterViewInit,
+} from '@angular/core';
 import { AuthService } from '../_services/auth.service';
 import { Router } from '@angular/router';
 import { CalendarComponent } from '../components/calendar/calendar.component';
@@ -42,10 +49,10 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild(ReportsComponent) reportsComponent?: ReportsComponent;
   @ViewChild(DashboardComponent) dashboardComponent?: DashboardComponent;
   @ViewChild(CalendarComponent) calendarComponent?: CalendarComponent;
-  
+
   activeTab = 'dashboard';
   private _showTab = true;
-  selectedTab: string = 'dashboard';
+  selectedTab = 'dashboard';
   showManualReportModal = false;
   showMonthlyReportModal = false;
   showOnboardingModal = false;
@@ -116,10 +123,10 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit() {
     // Check if onboarding has been completed
     this.checkOnboarding();
-    
+
     // Initialize scroll position
     this.lastScrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    
+
     // Subscribe to modal state to hide tab bar on mobile when modals are open
     // Use setTimeout to defer the update to the next change detection cycle
     // to avoid ExpressionChangedAfterItHasBeenCheckedError
@@ -135,7 +142,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     // Sync pioneer status from settings
-    this.settingsService.settings$.subscribe(settings => {
+    this.settingsService.settings$.subscribe((settings) => {
       this.isPioneer = settings.isPioneer;
     });
 
@@ -164,7 +171,6 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       this.lastScrollTop = window.pageYOffset || document.documentElement.scrollTop || 0;
       this.scrollSuppressedUntil = Date.now() + 600;
     });
-
   }
 
   ngAfterViewInit() {
@@ -174,18 +180,18 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       window.addEventListener('scroll', this.boundScrollHandler, { passive: true });
       // Also try document scroll
       document.addEventListener('scroll', this.boundScrollHandler, { passive: true });
-      
+
       // Also try listening on document.documentElement and body
-      document.documentElement.addEventListener('scroll', this.boundScrollHandler, { passive: true });
+      document.documentElement.addEventListener('scroll', this.boundScrollHandler, {
+        passive: true,
+      });
       document.body.addEventListener('scroll', this.boundScrollHandler, { passive: true });
-      
+
       // Fallback: Check scroll position periodically in case events don't fire
       // This will catch scroll even if events don't fire
       this.scrollCheckInterval = window.setInterval(() => {
-        const currentScrollTop = window.pageYOffset || 
-                                 document.documentElement.scrollTop || 
-                                 document.body.scrollTop || 
-                                 0;
+        const currentScrollTop =
+          window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
         if (Math.abs(currentScrollTop - this.lastScrollTop) > 5) {
           // Scroll position changed significantly, trigger handler
           this.onWindowScroll(new Event('scroll'));
@@ -208,11 +214,9 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // Get scroll position from multiple sources to ensure compatibility
-    const currentScrollTop = window.pageYOffset || 
-                             document.documentElement.scrollTop || 
-                             document.body.scrollTop || 
-                             0;
-    
+    const currentScrollTop =
+      window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+
     // Always show tab at the top of the page
     if (currentScrollTop <= this.scrollThreshold) {
       this.showTab = true;
@@ -306,12 +310,12 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isGeneratingMonthly = false;
     this.showMonthlyReportModal = true;
   }
-  
+
   onAddReportModalOpen() {
     // Defer modal opening to next tick to avoid change detection error
     setTimeout(() => {
       let modalOpened = false;
-      
+
       // Close any stale modals on the reports component first
       if (this.reportsComponent) {
         this.reportsComponent.showAddReportModal = false;
@@ -363,7 +367,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
         // Use requestAnimationFrame to ensure smooth transition
         this.forceReportsVisible = true;
         this.cdr.detectChanges();
-        
+
         // Open modal in next animation frame for smooth transition
         requestAnimationFrame(() => {
           if (this.reportsComponent) {
@@ -384,7 +388,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
         modalOpened = true;
         this.cdr.detectChanges();
       }
-      
+
       // If modal still not opened, try fallback after a delay
       if (!modalOpened) {
         setTimeout(() => {
@@ -504,13 +508,25 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.monthlyAlertMessage = '';
   }
 
-  incrementMonthlyHours() { this.monthlyHours++; }
-  decrementMonthlyHours() { if (this.monthlyHours > 0) this.monthlyHours--; }
-  incrementMonthlyBibleStudies() { this.monthlyBibleStudies++; }
-  decrementMonthlyBibleStudies() { if (this.monthlyBibleStudies > 0) this.monthlyBibleStudies--; }
+  incrementMonthlyHours() {
+    this.monthlyHours++;
+  }
+  decrementMonthlyHours() {
+    if (this.monthlyHours > 0) this.monthlyHours--;
+  }
+  incrementMonthlyBibleStudies() {
+    this.monthlyBibleStudies++;
+  }
+  decrementMonthlyBibleStudies() {
+    if (this.monthlyBibleStudies > 0) this.monthlyBibleStudies--;
+  }
 
   generateMonthlyReport() {
-    if (!this.monthlyReportDate || !this.monthlyJoinedMinistry || (this.isPioneer && !this.monthlyHours)) {
+    if (
+      !this.monthlyReportDate ||
+      !this.monthlyJoinedMinistry ||
+      (this.isPioneer && !this.monthlyHours)
+    ) {
       this.monthlySuccess = false;
       this.monthlyAlertMessage = 'Please fill in all required fields.';
       return;
@@ -536,7 +552,9 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       this.util.generatePNG(reportData, this.isPioneer);
       this.monthlySuccess = true;
       this.monthlyAlertMessage = 'Report generated successfully! Check your downloads.';
-      setTimeout(() => { this.closeMonthlyReportModal(); }, 1500);
+      setTimeout(() => {
+        this.closeMonthlyReportModal();
+      }, 1500);
     } catch (error) {
       console.error('Error generating report:', error);
       this.monthlySuccess = false;
@@ -555,13 +573,13 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.onboardingPioneerChoice !== null) {
       // Set pioneer status based on user's choice
       this.settingsService.setIsPioneer(this.onboardingPioneerChoice);
-      
+
       // Mark onboarding as completed
       localStorage.setItem('onboardingCompleted', 'true');
-      
+
       // Close modal
       this.showOnboardingModal = false;
-      
+
       // Show tutorial after onboarding is completed
       setTimeout(() => {
         this.checkTutorial();
@@ -585,7 +603,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       document.documentElement.removeEventListener('scroll', this.boundScrollHandler);
       document.body.removeEventListener('scroll', this.boundScrollHandler);
     }
-    
+
     // Clear interval if it exists
     if (this.scrollCheckInterval) {
       clearInterval(this.scrollCheckInterval);

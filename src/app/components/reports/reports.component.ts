@@ -52,7 +52,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
   isPioneer = false;
   userEmail = '';
   selectedReport: any = null;
-  dropdownOpen: { [key: number]: boolean } = {};
+  dropdownOpen: Record<number, boolean> = {};
   monthlyReportData: any = null;
   loading = true;
   isCopied = false;
@@ -82,24 +82,23 @@ export class ReportsComponent implements OnInit, OnDestroy {
   itemsPerPage = 2;
   totalPages = 0;
   showAllReports = false;
-  
+
   // Library view properties
-  searchQuery: string = '';
+  searchQuery = '';
   filterType: 'all' | 'bs' | 'rv' = 'all';
   filteredBibleStudies: any[] = [];
   showAllBibleStudies = false;
-  
+
   // Add Report Modal properties
-  showAddReportModal: boolean = false;
-  reportDate: string = '';
-  reportHours: number = 0;
-  reportMinutes: number = 0;
-  reportJoinedMinistry: string = 'yes';
-  reportNotes: string = '';
-  isSubmittingReport: boolean = false;
-  reportSuccess: boolean = false;
-  reportAlertMessage: string = '';
-  
+  showAddReportModal = false;
+  reportDate = '';
+  reportHours = 0;
+  reportMinutes = 0;
+  reportJoinedMinistry = 'yes';
+  reportNotes = '';
+  isSubmittingReport = false;
+  reportSuccess = false;
+  reportAlertMessage = '';
 
   constructor(
     public api: ApiService,
@@ -125,77 +124,79 @@ export class ReportsComponent implements OnInit, OnDestroy {
     this.subs.push(
       this.navigationService.studyFilter$.subscribe(({ section, filter }) => {
         this.scrollToSection(section, filter);
-      })
+      }),
     );
 
     this.subs.push(
       this.navigationService.openAddStudy$.subscribe(() => {
         this.scrollToSection('studiesSection');
         this.showStudyModal = true;
-      })
+      }),
     );
   }
 
   loadUserSettings() {
     this.subs.push(
-      this.settingsService.settings$.subscribe(settings => {
+      this.settingsService.settings$.subscribe((settings) => {
         this.isPioneer = settings.isPioneer;
-      })
+      }),
     );
     // Use the signed-in user's email as the report name for now.
     this.subs.push(
       this.authService.user$.subscribe((user) => {
         this.userEmail = user?.email ?? '';
-      })
+      }),
     );
   }
 
   async loadBibleStudies() {
-    this.subs.push(this.api.bibleStudies$.subscribe((data) => {
-      if (data && data.length > 0) {
-        this.bibleStudies = data;
-        // Auto-flag overdue studies that haven't been studied this month
-        this.autoFlagInactiveStudies();
-        // Completed studies stay as a record but are excluded from active counts.
-        // Only count studies that are active (not flagged inactive).
-        this.numberOfBibleStudies = this.bibleStudies.filter(
-          (study) => study.type === 'bs' && !study.completed && study.active !== false,
-        ).length;
-        this.numberOfReturnVisits = this.bibleStudies.filter(
-          (study) => study.type === 'rv' && !study.completed,
-        ).length;
-        this.numberOfCompletedStudies = this.bibleStudies.filter(
-          (study) => study.completed,
-        ).length;
-        this.applyFilters();
-      } else {
-        this.bibleStudies = [];
-        this.filteredBibleStudies = [];
-        this.numberOfBibleStudies = 0;
-        this.numberOfReturnVisits = 0;
-        this.numberOfCompletedStudies = 0;
-      }
-    }));
+    this.subs.push(
+      this.api.bibleStudies$.subscribe((data) => {
+        if (data && data.length > 0) {
+          this.bibleStudies = data;
+          // Auto-flag overdue studies that haven't been studied this month
+          this.autoFlagInactiveStudies();
+          // Completed studies stay as a record but are excluded from active counts.
+          // Only count studies that are active (not flagged inactive).
+          this.numberOfBibleStudies = this.bibleStudies.filter(
+            (study) => study.type === 'bs' && !study.completed && study.active !== false,
+          ).length;
+          this.numberOfReturnVisits = this.bibleStudies.filter(
+            (study) => study.type === 'rv' && !study.completed,
+          ).length;
+          this.numberOfCompletedStudies = this.bibleStudies.filter(
+            (study) => study.completed,
+          ).length;
+          this.applyFilters();
+        } else {
+          this.bibleStudies = [];
+          this.filteredBibleStudies = [];
+          this.numberOfBibleStudies = 0;
+          this.numberOfReturnVisits = 0;
+          this.numberOfCompletedStudies = 0;
+        }
+      }),
+    );
   }
-  
+
   applyFilters() {
     let filtered = [...this.bibleStudies];
-    
+
     // Filter by type
     if (this.filterType !== 'all') {
-      filtered = filtered.filter(study => study.type === this.filterType);
+      filtered = filtered.filter((study) => study.type === this.filterType);
     }
-    
+
     // Filter by search query
     if (this.searchQuery.trim()) {
       const query = this.searchQuery.toLowerCase();
-      filtered = filtered.filter(study => {
+      filtered = filtered.filter((study) => {
         // Check bible_study name
         const bibleStudyMatch = study.bible_study?.toLowerCase().includes(query);
-        
+
         // Check address
         const addressMatch = study.address?.toLowerCase().includes(query);
-        
+
         // Check schedule - handle Date objects, Firestore timestamps, and strings
         let scheduleMatch = false;
         if (study.schedule) {
@@ -203,27 +204,32 @@ export class ReportsComponent implements OnInit, OnDestroy {
             let scheduleStr = '';
             // Handle Firestore timestamp
             if (study.schedule.toDate && typeof study.schedule.toDate === 'function') {
-              scheduleStr = study.schedule.toDate().toLocaleString('en-US', {
-                weekday: 'short',
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-              }).toLowerCase();
+              scheduleStr = study.schedule
+                .toDate()
+                .toLocaleString('en-US', {
+                  weekday: 'short',
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                  hour12: true,
+                })
+                .toLowerCase();
             }
             // Handle Date object
             else if (study.schedule instanceof Date) {
-              scheduleStr = study.schedule.toLocaleString('en-US', {
-                weekday: 'short',
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-              }).toLowerCase();
+              scheduleStr = study.schedule
+                .toLocaleString('en-US', {
+                  weekday: 'short',
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                  hour12: true,
+                })
+                .toLowerCase();
             }
             // Handle string
             else if (typeof study.schedule === 'string') {
@@ -232,15 +238,17 @@ export class ReportsComponent implements OnInit, OnDestroy {
             // Handle Firestore timestamp with seconds
             else if (study.schedule.seconds) {
               const date = new Date(study.schedule.seconds * 1000);
-              scheduleStr = date.toLocaleString('en-US', {
-                weekday: 'short',
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-              }).toLowerCase();
+              scheduleStr = date
+                .toLocaleString('en-US', {
+                  weekday: 'short',
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                  hour12: true,
+                })
+                .toLowerCase();
             }
             scheduleMatch = scheduleStr.includes(query);
           } catch (error) {
@@ -248,18 +256,18 @@ export class ReportsComponent implements OnInit, OnDestroy {
             scheduleMatch = false;
           }
         }
-        
+
         return bibleStudyMatch || addressMatch || scheduleMatch;
       });
     }
-    
+
     this.filteredBibleStudies = filtered;
   }
-  
+
   onSearchChange() {
     this.applyFilters();
   }
-  
+
   onFilterChange() {
     this.applyFilters();
   }
@@ -274,7 +282,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
           this.updatePaginatedReports();
           this.loading = false;
         }
-      })
+      }),
     );
 
     // Also subscribe to raw reports and aggregate them to ensure data is always available
@@ -300,10 +308,10 @@ export class ReportsComponent implements OnInit, OnDestroy {
           this.paginatedReports = [];
           this.loading = false;
         }
-      })
+      }),
     );
   }
-  
+
   toggleShowAllReports() {
     this.showAllReports = !this.showAllReports;
     if (this.showAllReports) {
@@ -314,31 +322,31 @@ export class ReportsComponent implements OnInit, OnDestroy {
     this.calculatePagination();
     this.updatePaginatedReports();
   }
-  
+
   toggleShowAllBibleStudies() {
     this.showAllBibleStudies = !this.showAllBibleStudies;
   }
-  
+
   getDisplayedBibleStudies() {
     if (this.showAllBibleStudies) {
       return this.filteredBibleStudies;
     }
     return this.filteredBibleStudies.slice(0, 2);
   }
-  
+
   formatNameForMobile(name: string): string {
     if (!name) return '';
-    
+
     const parts = name.trim().split(/\s+/);
     if (parts.length === 1) return name; // Single name, return as is
-    
+
     // Get all parts except the last one (first/middle names)
     const firstNames = parts.slice(0, -1);
     const lastName = parts[parts.length - 1];
-    
+
     // Convert first names to initials
-    const initials = firstNames.map(part => part.charAt(0).toUpperCase() + '.').join(' ');
-    
+    const initials = firstNames.map((part) => part.charAt(0).toUpperCase() + '.').join(' ');
+
     return `${initials} ${lastName}`;
   }
 
@@ -380,7 +388,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
     const pages: number[] = [];
     const maxVisiblePages = 5;
     let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
+    const endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
 
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
@@ -400,9 +408,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
       this.applyFilters();
     }
     setTimeout(() => {
-      document
-        .getElementById(id)
-        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 0);
   }
 
@@ -452,35 +458,35 @@ export class ReportsComponent implements OnInit, OnDestroy {
       this.distanceLabel = 'Enable location to see distance';
     }
   }
-  
+
   // Convert schedule string/date to Date object
   parseScheduleToDate(schedule: any): Date | null {
     if (!schedule) return null;
-    
+
     // If it's already a Date object
     if (schedule instanceof Date) {
       return schedule;
     }
-    
+
     // If it's a Firestore Timestamp
     if (schedule.toDate && typeof schedule.toDate === 'function') {
       return schedule.toDate();
     }
-    
+
     // If it's a Firestore Timestamp with seconds
     if (schedule.seconds) {
       return new Date(schedule.seconds * 1000);
     }
-    
+
     // If it's a string (ISO format or other)
     if (typeof schedule === 'string') {
       const date = new Date(schedule);
       return isNaN(date.getTime()) ? null : date;
     }
-    
+
     return null;
   }
-  
+
   // Format Date object to datetime-local input format (YYYY-MM-DDTHH:mm)
   formatDateForInput(date: Date): string {
     const year = date.getFullYear();
@@ -490,18 +496,18 @@ export class ReportsComponent implements OnInit, OnDestroy {
     const minutes = String(date.getMinutes()).padStart(2, '0');
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
-  
+
   // Convert datetime-local string to Date object for saving
   parseInputToDate(inputValue: string): Date | null {
     if (!inputValue) return null;
     const date = new Date(inputValue);
     return isNaN(date.getTime()) ? null : date;
   }
-  
+
   // Format schedule for display (handles both Date objects and strings)
   formatScheduleForDisplay(schedule: any): string {
     if (!schedule) return 'Not scheduled';
-    
+
     const scheduleDate = this.parseScheduleToDate(schedule);
     if (scheduleDate) {
       // Format as readable date and time
@@ -512,10 +518,10 @@ export class ReportsComponent implements OnInit, OnDestroy {
         day: 'numeric',
         hour: 'numeric',
         minute: '2-digit',
-        hour12: true
+        hour12: true,
       });
     }
-    
+
     // Fallback to string if it's not a date
     return String(schedule);
   }
@@ -567,7 +573,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
       await this.api.updateStudy({
         id: study.id,
         active: newStatus,
-        updated_at: newStatus ? new Date() : (study.updated_at || new Date()),
+        updated_at: newStatus ? new Date() : study.updated_at || new Date(),
       });
     } catch (error) {
       study.active = !newStatus; // revert on failure
@@ -662,7 +668,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
     // Convert editSchedule to Date object for saving
     const scheduleDate = this.parseInputToDate(this.editSchedule);
-    
+
     const studyData: any = {
       bible_study: study.bible_study,
       address: study.address,
@@ -690,10 +696,10 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
   async addStudy() {
     this.loading = true;
-    
+
     // Convert schedule to Date object if it's a datetime-local value
     const scheduleDate = this.parseInputToDate(this.schedule);
-    
+
     const data: any = {
       bible_study: this.bible_study,
       address: this.address,
@@ -770,7 +776,9 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
   filterBibleStudies(studies: any[]): any[] {
     // Active Bible studies only: exclude return visits, completed, and inactive studies.
-    return studies.filter((study) => study.type !== 'rv' && !study.completed && study.active !== false);
+    return studies.filter(
+      (study) => study.type !== 'rv' && !study.completed && study.active !== false,
+    );
   }
 
   closeDlModal() {
@@ -781,7 +789,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
   toggleDropdown(index: number) {
     this.dropdownOpen[index] = !this.dropdownOpen[index];
     // Close other dropdowns
-    Object.keys(this.dropdownOpen).forEach(key => {
+    Object.keys(this.dropdownOpen).forEach((key) => {
       if (parseInt(key) !== index) {
         this.dropdownOpen[parseInt(key)] = false;
       }
@@ -807,10 +815,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
     const baseClasses =
       'group relative bg-white shadow-xl rounded-2xl border border-gray-200 transition-all duration-500 ease-out hover:shadow-2xl hover:-translate-y-2 hover:scale-[1.01] overflow-hidden';
     const borderColor = this.getReportBorderColor(index);
-    const ringClass =
-      this.hoveredReport === index
-        ? 'ring-2 ring-purple-200 ring-opacity-60'
-        : '';
+    const ringClass = this.hoveredReport === index ? 'ring-2 ring-purple-200 ring-opacity-60' : '';
 
     return `${baseClasses} ${borderColor} ${ringClass}`;
   }
@@ -874,13 +879,13 @@ export class ReportsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.subs.forEach(s => s.unsubscribe());
+    this.subs.forEach((s) => s.unsubscribe());
     // Clean up modal state if component is destroyed with modals open
     if (this.studyDelete) {
       this.modalService.closeModal();
     }
   }
-  
+
   // Add Report Modal Methods
   openAddReportModal() {
     // Set default date to today
@@ -894,7 +899,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
     this.reportAlertMessage = '';
     this.showAddReportModal = true;
   }
-  
+
   closeAddReportModal() {
     this.showAddReportModal = false;
     this.reportDate = '';
@@ -905,23 +910,23 @@ export class ReportsComponent implements OnInit, OnDestroy {
     this.reportSuccess = false;
     this.reportAlertMessage = '';
   }
-  
+
   incrementHours() {
     this.reportHours = (this.reportHours || 0) + 1;
   }
-  
+
   decrementHours() {
     this.reportHours = Math.max(0, (this.reportHours || 0) - 1);
   }
-  
+
   incrementMinutes() {
     this.reportMinutes = Math.min(55, (this.reportMinutes || 0) + 5);
   }
-  
+
   decrementMinutes() {
     this.reportMinutes = Math.max(0, (this.reportMinutes || 0) - 5);
   }
-  
+
   openDatePicker(event: Event) {
     const input = event.target as HTMLInputElement;
     // Use showPicker() if available (modern browsers)
@@ -939,14 +944,14 @@ export class ReportsComponent implements OnInit, OnDestroy {
       input.click();
     }
   }
-  
+
   async saveReport() {
     if (!this.reportDate) {
       this.reportSuccess = false;
       this.reportAlertMessage = 'Please select a date for the report.';
       return;
     }
-    
+
     if (this.isPioneer && !this.reportHours && !this.reportMinutes) {
       this.reportSuccess = false;
       this.reportAlertMessage = 'Please enter at least some hours or minutes.';
@@ -958,15 +963,15 @@ export class ReportsComponent implements OnInit, OnDestroy {
       this.reportAlertMessage = 'Please indicate if you participated in the ministry.';
       return;
     }
-    
+
     this.isSubmittingReport = true;
-    
+
     try {
       // Convert date string to Date object
       const selectedDate = new Date(this.reportDate);
       // Set time to start of day to avoid timezone issues
       selectedDate.setHours(0, 0, 0, 0);
-      
+
       const report = {
         hours: this.reportHours || 0,
         minutes: this.reportMinutes || 0,
@@ -976,14 +981,14 @@ export class ReportsComponent implements OnInit, OnDestroy {
         created_at: new Date(),
         updated_at: new Date(),
       };
-      
+
       await this.api.createReport(report);
-      
+
       this.reportSuccess = true;
       this.reportAlertMessage = 'Report added successfully! It will appear on your calendar.';
-      
+
       // Reports will update automatically through subscriptions
-      
+
       // Close modal after 1.5 seconds
       setTimeout(() => {
         this.closeAddReportModal();
@@ -996,5 +1001,4 @@ export class ReportsComponent implements OnInit, OnDestroy {
       this.isSubmittingReport = false;
     }
   }
-
 }

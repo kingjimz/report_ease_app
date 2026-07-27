@@ -19,9 +19,7 @@ import { NavigationService } from '../../_services/navigation.service';
   templateUrl: './chatbot-widget.component.html',
   styleUrl: './chatbot-widget.component.css',
 })
-export class ChatbotWidgetComponent
-  implements OnInit, OnDestroy, AfterViewChecked
-{
+export class ChatbotWidgetComponent implements OnInit, OnDestroy, AfterViewChecked {
   @ViewChild('scrollArea') private scrollArea?: ElementRef<HTMLElement>;
 
   open = false;
@@ -160,8 +158,7 @@ export class ChatbotWidgetComponent
   clearAll(): void {
     if (this.chat.messages.length > 1) {
       const ok =
-        typeof window === 'undefined' ||
-        window.confirm('Clear all chats? This cannot be undone.');
+        typeof window === 'undefined' || window.confirm('Clear all chats? This cannot be undone.');
       if (!ok) return;
     }
     this.chat.clearAll();

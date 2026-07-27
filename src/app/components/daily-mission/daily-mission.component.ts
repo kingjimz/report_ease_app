@@ -229,9 +229,7 @@ export class DailyMissionComponent implements OnInit, OnDestroy {
     );
     const inWindow = this.recentLoaded
       ? this.recentCompletions
-      : this.fullCompletions.filter(
-          (c) => this.completionDateKey(c) >= this.missionWindowKey,
-        );
+      : this.fullCompletions.filter((c) => this.completionDateKey(c) >= this.missionWindowKey);
     this.ingestCompletions([...olderThanWindow, ...inWindow]);
   }
 
@@ -252,9 +250,7 @@ export class DailyMissionComponent implements OnInit, OnDestroy {
     this.celebrationMessage =
       streak >= 2
         ? `${streak} days in a row — keep it going!`
-        : this.encouragements[
-            Math.floor(Math.random() * this.encouragements.length)
-          ];
+        : this.encouragements[Math.floor(Math.random() * this.encouragements.length)];
     this.showCelebration = true;
     this.celebrationTimeout = setTimeout(() => {
       this.showCelebration = false;
@@ -460,9 +456,7 @@ export class DailyMissionComponent implements OnInit, OnDestroy {
 
   private recalculateToday() {
     const total = this.todayVerse?.checklist.length ?? 0;
-    const done =
-      this.todayVerse?.checklist.filter((i) => this.todayChecked.has(i.id))
-        .length ?? 0;
+    const done = this.todayVerse?.checklist.filter((i) => this.todayChecked.has(i.id)).length ?? 0;
     this.todayProgressPercent = total > 0 ? Math.round((done / total) * 100) : 0;
     this.passedToday = total > 0 && done === total;
   }
@@ -476,9 +470,7 @@ export class DailyMissionComponent implements OnInit, OnDestroy {
   // resolves after a server round-trip, so blocking the UI on it would hang the
   // checkbox. The optimistic update + real-time listener give instant feedback.
   private persistDay(dateKey: string, verse: Verse, checked: Set<string>) {
-    const checkedSteps = verse.checklist
-      .map((i) => i.id)
-      .filter((id) => checked.has(id));
+    const checkedSteps = verse.checklist.map((i) => i.id).filter((id) => checked.has(id));
 
     this.writesInFlight++;
     const write =
@@ -532,9 +524,7 @@ export class DailyMissionComponent implements OnInit, OnDestroy {
     // Optimistic local update.
     if (this.selectedChecked.has(item.id)) this.selectedChecked.delete(item.id);
     else this.selectedChecked.add(item.id);
-    this.selectedPassed = verse.checklist.every((i) =>
-      this.selectedChecked.has(i.id),
-    );
+    this.selectedPassed = verse.checklist.every((i) => this.selectedChecked.has(i.id));
     // If editing today, keep the top card in sync too.
     if (dateKey === this.todayKey) {
       this.todayChecked = new Set(this.selectedChecked);
@@ -555,8 +545,7 @@ export class DailyMissionComponent implements OnInit, OnDestroy {
     this.currentStreak = this.calcCurrentStreak();
     this.longestStreak = this.calcLongestStreak();
     // Highest milestone the current streak has reached (100, then 30, then 7).
-    this.currentMilestone =
-      this.milestones.find((m) => this.currentStreak >= m) ?? null;
+    this.currentMilestone = this.milestones.find((m) => this.currentStreak >= m) ?? null;
   }
 
   // Shift a YYYY-MM-DD key by a number of days (handles month/year rollover).
@@ -624,20 +613,12 @@ export class DailyMissionComponent implements OnInit, OnDestroy {
   }
 
   prevMonth() {
-    this.viewMonth = new Date(
-      this.viewMonth.getFullYear(),
-      this.viewMonth.getMonth() - 1,
-      1,
-    );
+    this.viewMonth = new Date(this.viewMonth.getFullYear(), this.viewMonth.getMonth() - 1, 1);
     this.buildCalendar();
   }
 
   nextMonth() {
-    this.viewMonth = new Date(
-      this.viewMonth.getFullYear(),
-      this.viewMonth.getMonth() + 1,
-      1,
-    );
+    this.viewMonth = new Date(this.viewMonth.getFullYear(), this.viewMonth.getMonth() + 1, 1);
     this.buildCalendar();
   }
 

@@ -10,7 +10,7 @@ import { takeUntil } from 'rxjs/operators';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './install.component.html',
-  styleUrls: ['./install.component.css']
+  styleUrls: ['./install.component.css'],
 })
 export class InstallComponent implements OnInit, OnDestroy {
   isIOS = false;
@@ -26,19 +26,17 @@ export class InstallComponent implements OnInit, OnDestroy {
 
   constructor(
     private pwaService: PwaService,
-    private router: Router
+    private router: Router,
   ) {}
 
   ngOnInit() {
     this.detectPlatform();
     this.checkInstallability();
-    
+
     // Subscribe to install prompt availability from PWA service
-    this.pwaService.showInstallPrompt$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(available => {
-        this.canInstall = available;
-      });
+    this.pwaService.showInstallPrompt$.pipe(takeUntil(this.destroy$)).subscribe((available) => {
+      this.canInstall = available;
+    });
   }
 
   ngOnDestroy() {
@@ -48,20 +46,21 @@ export class InstallComponent implements OnInit, OnDestroy {
 
   private detectPlatform() {
     const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-    
+
     // Check if already installed
-    this.isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                       (window.navigator as any).standalone === true;
-    
+    this.isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true;
+
     // Detect iOS
     this.isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
-    
+
     // Detect Android
     this.isAndroid = /android/i.test(userAgent);
-    
+
     // Detect Desktop (Windows, Mac, Linux)
     this.isDesktop = !this.isIOS && !this.isAndroid;
-    
+
     // Set platform name
     if (this.isIOS) {
       this.platform = 'iOS';
@@ -116,7 +115,7 @@ export class InstallComponent implements OnInit, OnDestroy {
         // Use the deferred prompt directly
         this.deferredPrompt.prompt();
         const { outcome } = await this.deferredPrompt.userChoice;
-        
+
         if (outcome === 'accepted') {
           console.log('User accepted the install prompt');
           this.canInstall = false;
@@ -138,13 +137,15 @@ export class InstallComponent implements OnInit, OnDestroy {
             this.router.navigate(['/login']);
           }, 1000);
         } else {
-          this.installError = 'Installation prompt is not available. Please try refreshing the page or use the manual installation method.';
+          this.installError =
+            'Installation prompt is not available. Please try refreshing the page or use the manual installation method.';
           this.isInstalling = false;
         }
       }
     } catch (error) {
       console.error('Installation error:', error);
-      this.installError = 'An error occurred during installation. Please try again or use the manual installation method.';
+      this.installError =
+        'An error occurred during installation. Please try again or use the manual installation method.';
       this.isInstalling = false;
     }
   }

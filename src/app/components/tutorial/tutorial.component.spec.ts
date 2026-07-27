@@ -19,9 +19,7 @@ describe('TutorialComponent', () => {
       providers: [{ provide: TutorialService, useValue: tutorialServiceSpy }],
     }).compileComponents();
 
-    tutorialService = TestBed.inject(
-      TutorialService
-    ) as jasmine.SpyObj<TutorialService>;
+    tutorialService = TestBed.inject(TutorialService) as jasmine.SpyObj<TutorialService>;
     fixture = TestBed.createComponent(TutorialComponent);
     component = fixture.componentInstance;
   });
@@ -68,4 +66,3 @@ describe('TutorialComponent', () => {
     expect(component.progress).toBe((1 / component.steps.length) * 100);
   });
 });
-

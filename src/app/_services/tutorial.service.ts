@@ -6,9 +6,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 })
 export class TutorialService {
   private readonly TUTORIAL_COMPLETED_KEY = 'tutorialCompleted';
-  private tutorialCompletedSubject = new BehaviorSubject<boolean>(
-    this.hasCompletedTutorial()
-  );
+  private tutorialCompletedSubject = new BehaviorSubject<boolean>(this.hasCompletedTutorial());
 
   constructor() {}
 
@@ -42,4 +40,3 @@ export class TutorialService {
     return this.tutorialCompletedSubject.asObservable();
   }
 }
-

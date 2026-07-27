@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, OnDestroy } from '@angular/core';
 import {
   Firestore,
   collection,
@@ -24,7 +24,7 @@ import { OfflineStorageService } from './offline-storage.service';
 @Injectable({
   providedIn: 'root',
 })
-export class ApiService {
+export class ApiService implements OnDestroy {
   private aggregatedDataSubject = new BehaviorSubject<any>({});
   aggregatedData$ = this.aggregatedDataSubject.asObservable();
 
@@ -85,12 +85,12 @@ export class ApiService {
       }
     });
   }
-  
+
   // Load cached data when user is offline on initialization
   private async loadCachedDataOnInit() {
     const user = this.auth.currentUser;
     if (!user) return;
-    
+
     try {
       // Try to load from cache and update signals/subjects
       const cachedReports = await this.offlineStorage.getCachedData(`reports_${user.uid}`);
@@ -98,20 +98,22 @@ export class ApiService {
         this.reportSignal.set(cachedReports);
         this.reportsSubject.next(cachedReports);
       }
-      
+
       const cachedStudies = await this.offlineStorage.getCachedData(`bibleStudies_${user.uid}`);
       if (cachedStudies && cachedStudies.length >= 0) {
         this.bibleStudySignal.set(cachedStudies);
         this.bibleStudiesSubject.next(cachedStudies);
       }
-      
+
       const cachedGoals = await this.offlineStorage.getCachedData(`goals_${user.uid}`);
       if (cachedGoals && cachedGoals.length >= 0) {
         this.goalsSignal.set(cachedGoals);
         this.goalsSubject.next(cachedGoals);
       }
 
-      const cachedMissions = await this.offlineStorage.getCachedData(`missionCompletions_${user.uid}`);
+      const cachedMissions = await this.offlineStorage.getCachedData(
+        `missionCompletions_${user.uid}`,
+      );
       if (cachedMissions && cachedMissions.length >= 0) {
         this.missionCompletionsSignal.set(cachedMissions);
         this.missionCompletionsSubject.next(cachedMissions);
@@ -154,8 +156,7 @@ export class ApiService {
   // calendar month, with margin for month boundaries.
   private reportsWindowStart(): Date {
     const now = new Date();
-    const serviceYearStartYear =
-      now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+    const serviceYearStartYear = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
     const serviceYearStart = new Date(serviceYearStartYear, 8, 1); // Sep 1
     const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     return serviceYearStart < prevMonthStart ? serviceYearStart : prevMonthStart;
@@ -203,12 +204,7 @@ export class ApiService {
     const user = this.auth.currentUser;
     if (!user) return;
 
-    const reportsCollection = collection(
-      this.fireStore,
-      'users',
-      user.uid,
-      'reports',
-    );
+    const reportsCollection = collection(this.fireStore, 'users', user.uid, 'reports');
     // Only stream reports inside the rolling window. Older reports are loaded on
     // demand from the cache (free) by getAllReports() when the calendar browses
     // back. This bounds the per-sync read count instead of pulling all history.
@@ -234,19 +230,21 @@ export class ApiService {
             report_date: data['report_date'] || null,
           };
         });
-        
+
         // Cache the data for offline access
         this.offlineStorage.cacheData(`reports_${user.uid}`, reports).catch(console.error);
-        
+
         this.reportSignal.set(reports);
         this.reportsSubject.next(reports);
-        console.log(`Reports updated: ${reports.length} items (fromCache: ${snapshot.metadata.fromCache})`);
+        console.log(
+          `Reports updated: ${reports.length} items (fromCache: ${snapshot.metadata.fromCache})`,
+        );
       },
       (error) => {
         console.error('Error in reports listener:', error);
         // Try to load from cache if online operation fails
         this.loadReportsFromCache();
-      }
+      },
     );
   }
 
@@ -254,12 +252,7 @@ export class ApiService {
     const user = this.auth.currentUser;
     if (!user) return;
 
-    const bibleStudiesCollection = collection(
-      this.fireStore,
-      'users',
-      user.uid,
-      'bibleStudies',
-    );
+    const bibleStudiesCollection = collection(this.fireStore, 'users', user.uid, 'bibleStudies');
     const studiesQuery = query(bibleStudiesCollection);
 
     // 🔥 Real-time listener for bible studies (works offline with Firestore cache)
@@ -270,19 +263,21 @@ export class ApiService {
           id: doc.id,
           ...doc.data(),
         }));
-        
+
         // Cache the data for offline access
         this.offlineStorage.cacheData(`bibleStudies_${user.uid}`, studies).catch(console.error);
-        
+
         this.bibleStudySignal.set(studies);
         this.bibleStudiesSubject.next(studies);
-        console.log(`Bible studies updated: ${studies.length} items (fromCache: ${snapshot.metadata.fromCache})`);
+        console.log(
+          `Bible studies updated: ${studies.length} items (fromCache: ${snapshot.metadata.fromCache})`,
+        );
       },
       (error) => {
         console.error('Error in bible studies listener:', error);
         // Try to load from cache if online operation fails
         this.loadBibleStudiesFromCache();
-      }
+      },
     );
   }
 
@@ -290,12 +285,7 @@ export class ApiService {
     const user = this.auth.currentUser;
     if (!user) return;
 
-    const goalsCollection = collection(
-      this.fireStore,
-      'users',
-      user.uid,
-      'goals',
-    );
+    const goalsCollection = collection(this.fireStore, 'users', user.uid, 'goals');
     const goalsQuery = query(goalsCollection);
 
     // 🔥 Real-time listener for goals (works offline with Firestore cache)
@@ -306,19 +296,21 @@ export class ApiService {
           id: doc.id,
           ...doc.data(),
         }));
-        
+
         // Cache the data for offline access
         this.offlineStorage.cacheData(`goals_${user.uid}`, goals).catch(console.error);
-        
+
         this.goalsSignal.set(goals);
         this.goalsSubject.next(goals);
-        console.log(`Goals updated: ${goals.length} items (fromCache: ${snapshot.metadata.fromCache})`);
+        console.log(
+          `Goals updated: ${goals.length} items (fromCache: ${snapshot.metadata.fromCache})`,
+        );
       },
       (error) => {
         console.error('Error in goals listener:', error);
         // Try to load from cache if online operation fails
         this.loadGoalsFromCache();
-      }
+      },
     );
   }
 
@@ -326,12 +318,7 @@ export class ApiService {
     const user = this.auth.currentUser;
     if (!user) return;
 
-    const missionsCollection = collection(
-      this.fireStore,
-      'users',
-      user.uid,
-      'missionCompletions',
-    );
+    const missionsCollection = collection(this.fireStore, 'users', user.uid, 'missionCompletions');
     // Only stream the recent window. Lifetime stats (longest streak, total
     // passed) and older practice-calendar months read the full set from cache
     // (free) via getAllMissionCompletions().
@@ -350,16 +337,20 @@ export class ApiService {
         }));
 
         // Cache the data for offline access
-        this.offlineStorage.cacheData(`missionCompletions_${user.uid}`, completions).catch(console.error);
+        this.offlineStorage
+          .cacheData(`missionCompletions_${user.uid}`, completions)
+          .catch(console.error);
 
         this.missionCompletionsSignal.set(completions);
         this.missionCompletionsSubject.next(completions);
-        console.log(`Mission completions updated: ${completions.length} items (fromCache: ${snapshot.metadata.fromCache})`);
+        console.log(
+          `Mission completions updated: ${completions.length} items (fromCache: ${snapshot.metadata.fromCache})`,
+        );
       },
       (error) => {
         console.error('Error in mission completions listener:', error);
         this.loadMissionCompletionsFromCache();
-      }
+      },
     );
   }
 
@@ -400,9 +391,7 @@ export class ApiService {
       console.warn(`${context}: write did not reach Firestore, queued for retry`);
       // If we're online, the reconnect event won't fire, so kick a sync now.
       if (this.networkService.isOnline) {
-        this.syncQueuedOperations().catch((e) =>
-          console.error('Retry sync failed:', e),
-        );
+        this.syncQueuedOperations().catch((e) => console.error('Retry sync failed:', e));
       }
     } catch (queueError) {
       console.error(`${context}: failed to queue write for retry`, queueError);
@@ -445,24 +434,13 @@ export class ApiService {
         (s: any) => s.type === 'bs' && !s.completed && s.active !== false,
       ).length;
 
-      const reportsCollection = collection(
-        this.fireStore,
-        'users',
-        user.uid,
-        'reports',
-      );
+      const reportsCollection = collection(this.fireStore, 'users', user.uid, 'reports');
       // Pre-generate the doc id locally so the caller can optimistically render
       // the new report immediately (even offline) under the SAME id the live
       // listener will later emit — so the optimistic row and the synced row
       // reconcile instead of duplicating.
       const newReportRef = doc(reportsCollection);
-      this.commitWrite(
-        setDoc(newReportRef, report),
-        'create',
-        'reports',
-        report,
-        'Report create',
-      );
+      this.commitWrite(setDoc(newReportRef, report), 'create', 'reports', report, 'Report create');
       return newReportRef.id;
       // The real-time listener will reconcile automatically when the write syncs.
     } catch (error) {
@@ -478,13 +456,7 @@ export class ApiService {
       if (!user) throw new Error('User not logged in');
       if (!report?.id) throw new Error('Report ID is required');
 
-      const reportDoc = doc(
-        this.fireStore,
-        'users',
-        user.uid,
-        'reports',
-        report.id,
-      );
+      const reportDoc = doc(this.fireStore, 'users', user.uid, 'reports', report.id);
 
       this.commitWrite(
         updateDoc(reportDoc, { ...report }),
@@ -506,13 +478,7 @@ export class ApiService {
       if (!user) throw new Error('User not logged in');
       if (!reportId) throw new Error('Report ID is required');
 
-      const reportDoc = doc(
-        this.fireStore,
-        'users',
-        user.uid,
-        'reports',
-        reportId,
-      );
+      const reportDoc = doc(this.fireStore, 'users', user.uid, 'reports', reportId);
 
       this.commitWrite(
         deleteDoc(reportDoc),
@@ -586,12 +552,7 @@ export class ApiService {
       const user = this.auth.currentUser;
       if (!user) throw new Error('User not logged in');
 
-      const bibleStudiesCollection = collection(
-        this.fireStore,
-        'users',
-        user.uid,
-        'bibleStudies',
-      );
+      const bibleStudiesCollection = collection(this.fireStore, 'users', user.uid, 'bibleStudies');
       this.commitWrite(
         addDoc(bibleStudiesCollection, study),
         'create',
@@ -612,13 +573,7 @@ export class ApiService {
       if (!user) throw new Error('User not logged in');
       if (!study?.id) throw new Error('Study ID is required');
 
-      const studyDoc = doc(
-        this.fireStore,
-        'users',
-        user.uid,
-        'bibleStudies',
-        study.id,
-      );
+      const studyDoc = doc(this.fireStore, 'users', user.uid, 'bibleStudies', study.id);
 
       // Use the same pattern as updateGoal for consistency
       const { id, ...updateData } = study;
@@ -642,13 +597,7 @@ export class ApiService {
       if (!user) throw new Error('User not logged in');
       if (!study?.id) throw new Error('Study ID is required');
 
-      const studyDoc = doc(
-        this.fireStore,
-        'users',
-        user.uid,
-        'bibleStudies',
-        study.id,
-      );
+      const studyDoc = doc(this.fireStore, 'users', user.uid, 'bibleStudies', study.id);
 
       this.commitWrite(
         deleteDoc(studyDoc),
@@ -669,19 +618,8 @@ export class ApiService {
       const user = this.auth.currentUser;
       if (!user) throw new Error('User not logged in');
 
-      const goalsCollection = collection(
-        this.fireStore,
-        'users',
-        user.uid,
-        'goals',
-      );
-      this.commitWrite(
-        addDoc(goalsCollection, goal),
-        'create',
-        'goals',
-        goal,
-        'Goal create',
-      );
+      const goalsCollection = collection(this.fireStore, 'users', user.uid, 'goals');
+      this.commitWrite(addDoc(goalsCollection, goal), 'create', 'goals', goal, 'Goal create');
       // Real-time listener will update automatically
     } catch (error) {
       console.error('Error adding goal:', error);
@@ -696,13 +634,7 @@ export class ApiService {
       if (!goal?.id) throw new Error('Goal ID is required');
 
       const goalDoc = doc(this.fireStore, 'users', user.uid, 'goals', goal.id);
-      this.commitWrite(
-        updateDoc(goalDoc, { ...goal }),
-        'update',
-        'goals',
-        goal,
-        'Goal update',
-      );
+      this.commitWrite(updateDoc(goalDoc, { ...goal }), 'update', 'goals', goal, 'Goal update');
       // Real-time listener will update automatically
     } catch (error) {
       console.error('Error updating goal:', error);
@@ -717,13 +649,7 @@ export class ApiService {
       if (!goal?.id) throw new Error('Goal ID is required');
 
       const goalDoc = doc(this.fireStore, 'users', user.uid, 'goals', goal.id);
-      this.commitWrite(
-        deleteDoc(goalDoc),
-        'delete',
-        'goals',
-        { id: goal.id },
-        'Goal delete',
-      );
+      this.commitWrite(deleteDoc(goalDoc), 'delete', 'goals', { id: goal.id }, 'Goal delete');
       // Real-time listener will update automatically
     } catch (error) {
       console.error('Error deleting goal:', error);
@@ -741,13 +667,7 @@ export class ApiService {
 
       const record = { ...data, id: dateId };
 
-      const missionDoc = doc(
-        this.fireStore,
-        'users',
-        user.uid,
-        'missionCompletions',
-        dateId,
-      );
+      const missionDoc = doc(this.fireStore, 'users', user.uid, 'missionCompletions', dateId);
       const { id, ...writeData } = record;
       this.commitWrite(
         setDoc(missionDoc, writeData),
@@ -759,7 +679,12 @@ export class ApiService {
       // Real-time listener will update automatically
     } catch (error) {
       console.error('Error marking mission complete:', error);
-      await this.queueForRetry('create', 'missionCompletions', { ...data, id: dateId }, 'Mission complete');
+      await this.queueForRetry(
+        'create',
+        'missionCompletions',
+        { ...data, id: dateId },
+        'Mission complete',
+      );
     }
   }
 
@@ -769,13 +694,7 @@ export class ApiService {
       if (!user) throw new Error('User not logged in');
       if (!dateId) throw new Error('Date ID is required');
 
-      const missionDoc = doc(
-        this.fireStore,
-        'users',
-        user.uid,
-        'missionCompletions',
-        dateId,
-      );
+      const missionDoc = doc(this.fireStore, 'users', user.uid, 'missionCompletions', dateId);
       this.commitWrite(
         deleteDoc(missionDoc),
         'delete',
@@ -798,12 +717,7 @@ export class ApiService {
   async getAllReports(): Promise<any[]> {
     const user = this.auth.currentUser;
     if (!user) return [];
-    const reportsCollection = collection(
-      this.fireStore,
-      'users',
-      user.uid,
-      'reports',
-    );
+    const reportsCollection = collection(this.fireStore, 'users', user.uid, 'reports');
     const mapReports = (snap: any) =>
       snap.docs.map((doc: any) => {
         const data = doc.data();
@@ -834,14 +748,8 @@ export class ApiService {
   async getAllMissionCompletions(): Promise<any[]> {
     const user = this.auth.currentUser;
     if (!user) return [];
-    const missionsCollection = collection(
-      this.fireStore,
-      'users',
-      user.uid,
-      'missionCompletions',
-    );
-    const mapDocs = (snap: any) =>
-      snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+    const missionsCollection = collection(this.fireStore, 'users', user.uid, 'missionCompletions');
+    const mapDocs = (snap: any) => snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
     try {
       const cached = mapDocs(await getDocsFromCache(missionsCollection));
       if (cached.length === 0 && this.networkService.isOnline) {
@@ -875,12 +783,7 @@ export class ApiService {
         }
         // Try Firestore cache
         try {
-          const reportsCollection = collection(
-            this.fireStore,
-            'users',
-            user.uid,
-            'reports',
-          );
+          const reportsCollection = collection(this.fireStore, 'users', user.uid, 'reports');
           const querySnapshot = await getDocsFromCache(reportsCollection);
           const reportsData = querySnapshot.docs.map((doc) => {
             const data = doc.data();
@@ -897,12 +800,7 @@ export class ApiService {
         }
       }
 
-      const reportsCollection = collection(
-        this.fireStore,
-        'users',
-        user.uid,
-        'reports',
-      );
+      const reportsCollection = collection(this.fireStore, 'users', user.uid, 'reports');
 
       // Prefer in-memory data kept current by the real-time listener (no reads).
       const currentReports = this.reportSignal();
@@ -968,12 +866,7 @@ export class ApiService {
         }
       }
 
-      const bibleStudiesCollection = collection(
-        this.fireStore,
-        'users',
-        user.uid,
-        'bibleStudies',
-      );
+      const bibleStudiesCollection = collection(this.fireStore, 'users', user.uid, 'bibleStudies');
 
       // Prefer in-memory data kept current by the real-time listener (no reads).
       const currentStudies = this.bibleStudySignal();
@@ -1017,12 +910,7 @@ export class ApiService {
         }
         // Try Firestore cache
         try {
-          const goalsCollection = collection(
-            this.fireStore,
-            'users',
-            user.uid,
-            'goals',
-          );
+          const goalsCollection = collection(this.fireStore, 'users', user.uid, 'goals');
           const querySnapshot = await getDocsFromCache(goalsCollection);
           return querySnapshot.docs.map((doc) => ({
             id: doc.id,
@@ -1034,12 +922,7 @@ export class ApiService {
         }
       }
 
-      const goalsCollection = collection(
-        this.fireStore,
-        'users',
-        user.uid,
-        'goals',
-      );
+      const goalsCollection = collection(this.fireStore, 'users', user.uid, 'goals');
 
       // Prefer in-memory data kept current by the real-time listener (no reads).
       const currentGoals = this.goalsSignal();
@@ -1187,12 +1070,7 @@ export class ApiService {
     const user = this.auth.currentUser;
     if (!user) throw new Error('User not logged in');
 
-    const reportsCollection = collection(
-      this.fireStore,
-      'users',
-      user.uid,
-      'reports',
-    );
+    const reportsCollection = collection(this.fireStore, 'users', user.uid, 'reports');
 
     switch (operation.type) {
       case 'create':
@@ -1214,12 +1092,7 @@ export class ApiService {
     const user = this.auth.currentUser;
     if (!user) throw new Error('User not logged in');
 
-    const bibleStudiesCollection = collection(
-      this.fireStore,
-      'users',
-      user.uid,
-      'bibleStudies',
-    );
+    const bibleStudiesCollection = collection(this.fireStore, 'users', user.uid, 'bibleStudies');
 
     switch (operation.type) {
       case 'create':
@@ -1231,7 +1104,13 @@ export class ApiService {
         await updateDoc(studyDoc, updateData);
         break;
       case 'delete':
-        const deleteDocRef = doc(this.fireStore, 'users', user.uid, 'bibleStudies', operation.data.id);
+        const deleteDocRef = doc(
+          this.fireStore,
+          'users',
+          user.uid,
+          'bibleStudies',
+          operation.data.id,
+        );
         await deleteDoc(deleteDocRef);
         break;
     }
@@ -1241,12 +1120,7 @@ export class ApiService {
     const user = this.auth.currentUser;
     if (!user) throw new Error('User not logged in');
 
-    const goalsCollection = collection(
-      this.fireStore,
-      'users',
-      user.uid,
-      'goals',
-    );
+    const goalsCollection = collection(this.fireStore, 'users', user.uid, 'goals');
 
     switch (operation.type) {
       case 'create':
@@ -1272,12 +1146,24 @@ export class ApiService {
       case 'create':
       case 'update':
         // Use setDoc with the date-based ID to keep daily records idempotent
-        const missionDoc = doc(this.fireStore, 'users', user.uid, 'missionCompletions', operation.data.id);
+        const missionDoc = doc(
+          this.fireStore,
+          'users',
+          user.uid,
+          'missionCompletions',
+          operation.data.id,
+        );
         const { id, ...writeData } = operation.data;
         await setDoc(missionDoc, writeData);
         break;
       case 'delete':
-        const deleteDocRef = doc(this.fireStore, 'users', user.uid, 'missionCompletions', operation.data.id);
+        const deleteDocRef = doc(
+          this.fireStore,
+          'users',
+          user.uid,
+          'missionCompletions',
+          operation.data.id,
+        );
         await deleteDoc(deleteDocRef);
         break;
     }

@@ -9,7 +9,7 @@ import { takeUntil } from 'rxjs/operators';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './pwa-install-prompt.component.html',
-  styleUrls: ['./pwa-install-prompt.component.css']
+  styleUrls: ['./pwa-install-prompt.component.css'],
 })
 export class PwaInstallPromptComponent implements OnInit, OnDestroy {
   showPrompt = false;
@@ -18,11 +18,9 @@ export class PwaInstallPromptComponent implements OnInit, OnDestroy {
   constructor(private pwaService: PwaService) {}
 
   ngOnInit() {
-    this.pwaService.showInstallPrompt$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(show => {
-        this.showPrompt = show;
-      });
+    this.pwaService.showInstallPrompt$.pipe(takeUntil(this.destroy$)).subscribe((show) => {
+      this.showPrompt = show;
+    });
   }
 
   ngOnDestroy() {
@@ -41,8 +39,3 @@ export class PwaInstallPromptComponent implements OnInit, OnDestroy {
     this.pwaService.dismissPrompt();
   }
 }
-
-
-
-
-

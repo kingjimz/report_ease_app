@@ -2,19 +2,19 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, interval } from 'rxjs';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class VersionService {
   private readonly VERSION_URL = '/version.json';
   private readonly CHECK_INTERVAL = 30 * 60 * 1000; // Check every 30 minutes
-  private currentVersion: string = '1.0.0';
+  private currentVersion = '1.0.0';
   private updateAvailableSubject = new BehaviorSubject<boolean>(false);
   public updateAvailable$: Observable<boolean> = this.updateAvailableSubject.asObservable();
 
   constructor() {
     // Get current version from localStorage or default
     this.currentVersion = this.getCurrentVersion();
-    
+
     // If version is default, try to fetch from version.json
     if (this.currentVersion === '1.0.0') {
       this.loadVersionFromFile();
@@ -29,10 +29,10 @@ export class VersionService {
       const response = await fetch(this.VERSION_URL + '?t=' + Date.now(), {
         cache: 'no-cache',
         headers: {
-          'Cache-Control': 'no-cache'
-        }
+          'Cache-Control': 'no-cache',
+        },
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         const version = data.version || data.appVersion || '1.0.0';
@@ -50,7 +50,7 @@ export class VersionService {
   initializeVersionChecking(): void {
     // Check immediately
     this.checkVersion();
-    
+
     // Check periodically
     interval(this.CHECK_INTERVAL).subscribe(() => {
       this.checkVersion();
@@ -66,10 +66,10 @@ export class VersionService {
       const response = await fetch(this.VERSION_URL + '?t=' + Date.now(), {
         cache: 'no-cache',
         headers: {
-          'Cache-Control': 'no-cache'
-        }
+          'Cache-Control': 'no-cache',
+        },
       });
-      
+
       if (!response.ok) {
         console.log('Version check failed: HTTP', response.status);
         return false;
@@ -77,7 +77,7 @@ export class VersionService {
 
       const data = await response.json();
       const serverVersion = data.version || data.appVersion || '1.0.0';
-      
+
       if (serverVersion !== this.currentVersion) {
         console.log('New version detected:', serverVersion, 'Current:', this.currentVersion);
         this.updateAvailableSubject.next(true);
@@ -92,7 +92,7 @@ export class VersionService {
           this.updateAvailableSubject.next(false);
         }
       }
-      
+
       return false;
     } catch (error) {
       console.error('Error checking version:', error);
@@ -109,7 +109,7 @@ export class VersionService {
     if (storedVersion) {
       return storedVersion;
     }
-    
+
     // Default version
     return '1.0.0';
   }

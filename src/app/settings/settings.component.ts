@@ -113,8 +113,7 @@ export class SettingsComponent implements OnDestroy {
     if (this.goalFilter) {
       filtered = filtered.filter(
         (goal) =>
-          goal.category &&
-          goal.category.toLowerCase().includes(this.goalFilter.toLowerCase()),
+          goal.category && goal.category.toLowerCase().includes(this.goalFilter.toLowerCase()),
       );
     }
 
@@ -212,18 +211,14 @@ export class SettingsComponent implements OnDestroy {
   }
 
   isFormValid(): boolean {
-    return !!(
-      this.goal_title?.trim() &&
-      this.goal_description?.trim() &&
-      this.category?.trim()
-    );
+    return !!(this.goal_title?.trim() && this.goal_description?.trim() && this.category?.trim());
   }
 
   formatTargetDate(dateString: string): string {
     if (!dateString) return '';
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return dateString;
-    
+
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -235,23 +230,23 @@ export class SettingsComponent implements OnDestroy {
     if (!dateString) return null;
     const targetDate = new Date(dateString);
     if (isNaN(targetDate.getTime())) return null;
-    
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     targetDate.setHours(0, 0, 0, 0);
-    
+
     const diffTime = targetDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     return diffDays;
   }
 
   getGoalStatus(goal: any): string | null {
     if (!goal.target_date) return null;
-    
+
     const daysUntil = this.getDaysUntilTarget(goal.target_date);
     if (daysUntil === null) return null;
-    
+
     if (daysUntil < 0) {
       return 'overdue';
     } else if (daysUntil <= 7) {

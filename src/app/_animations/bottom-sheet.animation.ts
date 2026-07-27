@@ -1,11 +1,4 @@
-import {
-  animate,
-  group,
-  query,
-  style,
-  transition,
-  trigger,
-} from '@angular/animations';
+import { animate, group, query, style, transition, trigger } from '@angular/animations';
 
 // Slide-down + fade-out when a bottom-sheet modal closes.
 //
@@ -20,19 +13,12 @@ import {
 export const bottomSheet = trigger('bottomSheet', [
   transition(':leave', [
     group([
-      query(
-        '.app-sheet-fade, .mission-fade',
-        [animate('220ms ease-in', style({ opacity: 0 }))],
-        { optional: true },
-      ),
+      query('.app-sheet-fade, .mission-fade', [animate('220ms ease-in', style({ opacity: 0 }))], {
+        optional: true,
+      }),
       query(
         '.app-sheet-up, .mission-sheet',
-        [
-          animate(
-            '300ms cubic-bezier(0.32, 0.72, 0, 1)',
-            style({ transform: 'translateY(100%)' }),
-          ),
-        ],
+        [animate('300ms cubic-bezier(0.32, 0.72, 0, 1)', style({ transform: 'translateY(100%)' }))],
         { optional: true },
       ),
     ]),

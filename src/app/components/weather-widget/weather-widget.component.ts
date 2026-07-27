@@ -97,10 +97,7 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
     });
 
     // Background auto-refresh while the dashboard stays open.
-    this.refreshTimer = setInterval(
-      () => this.backgroundRefresh(),
-      this.REFRESH_POLL_MS,
-    );
+    this.refreshTimer = setInterval(() => this.backgroundRefresh(), this.REFRESH_POLL_MS);
   }
 
   /**
@@ -186,11 +183,7 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
     if (!this.weather?.latitude || !this.weather?.longitude) return;
     this.nearbyLoading = true;
     this.weatherSvc
-      .fetchNearbyBarangayWeather(
-        this.weather.latitude,
-        this.weather.longitude,
-        this.weather.city,
-      )
+      .fetchNearbyBarangayWeather(this.weather.latitude, this.weather.longitude, this.weather.city)
       .then((results) => {
         this.nearbyBarangays = results;
         this.recalcStudyMatches();
@@ -201,10 +194,7 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
 
   /** Re-run proximity matching whenever studies or barangays update. */
   private recalcStudyMatches(): void {
-    this.studyMatches = matchStudiesToBarangays(
-      this.activeStudies,
-      this.nearbyBarangays,
-    );
+    this.studyMatches = matchStudiesToBarangays(this.activeStudies, this.nearbyBarangays);
   }
 
   /** Build the ministry context passed to the AI tip and rule-based fallback. */
@@ -295,13 +285,7 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
 
     const hour = this.now.getHours();
     const partOfDay =
-      hour < 6
-        ? 'night'
-        : hour < 12
-        ? 'morning'
-        : hour < 18
-        ? 'afternoon'
-        : 'evening';
+      hour < 6 ? 'night' : hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
     this.weatherSvc
       .getAiTip(this.weather, this.scene, partOfDay, force, this.buildMinistryContext())
       .then((text) => {
@@ -413,9 +397,7 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
     // up to 15 min, so an hour that was "next" at fetch time can lapse before the
     // next refresh — filtering against now (not fetch time) keeps the strip honest.
     const now = Date.now();
-    return (this.weather?.forecast ?? [])
-      .filter((h) => h.time > now)
-      .slice(0, 5);
+    return (this.weather?.forecast ?? []).filter((h) => h.time > now).slice(0, 5);
   }
 
   /** The next 7 days, for the second carousel page ([] when unavailable). */

@@ -7,8 +7,7 @@
     <div *ngIf="activeTab === 'calendar'" class="space-y-4">
       <app-calendar></app-calendar>
     </div>
-    <div [class.hidden]="activeTab !== 'reports' && !forceReportsVisible" 
-         class="space-y-4">
+    <div [class.hidden]="activeTab !== 'reports' && !forceReportsVisible" class="space-y-4">
       <app-reports></app-reports>
     </div>
     <div *ngIf="activeTab === 'goals'" class="space-y-4">
@@ -38,12 +37,16 @@
       <!-- Modal Header -->
       <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
         <div class="flex items-center space-x-2 min-w-0 flex-1">
-          <div class="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex-shrink-0">
+          <div
+            class="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex-shrink-0"
+          >
             <i class="bi bi-clipboard-plus text-white text-base"></i>
           </div>
           <div class="min-w-0 flex-1">
             <h3 class="text-base font-bold text-gray-900 truncate">Generate Report Manually</h3>
-            <p class="text-xs text-gray-500 truncate">Create a ministry service report for a specific date</p>
+            <p class="text-xs text-gray-500 truncate">
+              Create a ministry service report for a specific date
+            </p>
           </div>
         </div>
         <button
@@ -79,10 +82,12 @@
             Report Type *
           </label>
           <div class="flex gap-2">
-            <label class="flex-1 flex items-center justify-center p-2.5 border-2 rounded-lg cursor-pointer transition-all min-w-0"
+            <label
+              class="flex-1 flex items-center justify-center p-2.5 border-2 rounded-lg cursor-pointer transition-all min-w-0"
               [class.border-blue-500]="!isPioneer"
               [class.bg-blue-50]="!isPioneer"
-              [class.border-gray-300]="isPioneer">
+              [class.border-gray-300]="isPioneer"
+            >
               <input
                 type="radio"
                 name="reportType"
@@ -93,10 +98,12 @@
               <i class="bi bi-person mr-1 text-sm flex-shrink-0"></i>
               <span class="font-medium text-sm truncate">Publisher</span>
             </label>
-            <label class="flex-1 flex items-center justify-center p-2.5 border-2 rounded-lg cursor-pointer transition-all min-w-0"
+            <label
+              class="flex-1 flex items-center justify-center p-2.5 border-2 rounded-lg cursor-pointer transition-all min-w-0"
               [class.border-amber-500]="isPioneer"
               [class.bg-amber-50]="isPioneer"
-              [class.border-gray-300]="!isPioneer">
+              [class.border-gray-300]="!isPioneer"
+            >
               <input
                 type="radio"
                 name="reportType"
@@ -227,14 +234,22 @@
   <app-modal (dismissed)="closeMonthlyReportModal()">
     <div class="w-full">
       <!-- Modal Header -->
-      <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+      <div
+        class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700"
+      >
         <div class="flex items-center space-x-2 min-w-0 flex-1">
-          <div class="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex-shrink-0">
+          <div
+            class="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex-shrink-0"
+          >
             <i class="bi bi-clipboard-plus text-white text-base"></i>
           </div>
           <div class="min-w-0 flex-1">
-            <h3 class="text-base font-bold text-gray-900 dark:text-white truncate">Monthly Report</h3>
-            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">Generate a ministry service report for a specific month</p>
+            <h3 class="text-base font-bold text-gray-900 dark:text-white truncate">
+              Monthly Report
+            </h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+              Generate a ministry service report for a specific month
+            </p>
           </div>
         </div>
         <button
@@ -259,7 +274,7 @@
             name="monthlyReportDate"
             required
             class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white cursor-pointer box-border"
-            style="box-sizing: border-box; width: 100%; max-width: 100%;"
+            style="box-sizing: border-box; width: 100%; max-width: 100%"
           />
         </div>
 
@@ -360,7 +375,12 @@
           </button>
           <button
             type="submit"
-            [disabled]="isGeneratingMonthly || !monthlyReportDate || !monthlyJoinedMinistry || (isPioneer && !monthlyHours)"
+            [disabled]="
+              isGeneratingMonthly ||
+              !monthlyReportDate ||
+              !monthlyJoinedMinistry ||
+              (isPioneer && !monthlyHours)
+            "
             class="px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all shadow-sm hover:shadow-md font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span
@@ -388,10 +408,14 @@
     <div class="w-full max-w-md mx-auto">
       <!-- Modal Header -->
       <div class="text-center mb-6">
-        <div class="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl mx-auto mb-4">
+        <div
+          class="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl mx-auto mb-4"
+        >
           <i class="bi bi-award text-white text-3xl"></i>
         </div>
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Welcome to Field Service Tracker!</h2>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          Welcome to Field Service Tracker!
+        </h2>
         <p class="text-gray-600 dark:text-gray-400">Let's set up your profile to get started</p>
       </div>
 
@@ -400,7 +424,7 @@
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
           Are you a pioneer?
         </h3>
-        
+
         <!-- Pioneer Options -->
         <div class="space-y-3">
           <!-- Yes Option -->
@@ -409,18 +433,22 @@
             class="w-full p-4 rounded-xl border-2 transition-all text-left hover:border-amber-400 dark:border-gray-600"
             [ngClass]="{
               'border-amber-500 bg-amber-50 dark:bg-amber-900/20': onboardingPioneerChoice === true,
-              'border-gray-300': onboardingPioneerChoice !== true
+              'border-gray-300': onboardingPioneerChoice !== true,
             }"
           >
             <div class="flex items-center space-x-3">
-              <div class="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex-shrink-0">
+              <div
+                class="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex-shrink-0"
+              >
                 <i class="bi bi-award text-white text-xl"></i>
               </div>
               <div class="flex-1">
                 <p class="font-semibold text-gray-900 dark:text-white">Yes, I'm a pioneer</p>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Your monthly report will include ministry hours</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                  Your monthly report will include ministry hours
+                </p>
               </div>
-              <i 
+              <i
                 *ngIf="onboardingPioneerChoice === true"
                 class="bi bi-check-circle-fill text-amber-500 text-xl"
               ></i>
@@ -433,18 +461,22 @@
             class="w-full p-4 rounded-xl border-2 transition-all text-left hover:border-blue-400 dark:border-gray-600"
             [ngClass]="{
               'border-blue-500 bg-blue-50 dark:bg-blue-900/20': onboardingPioneerChoice === false,
-              'border-gray-300': onboardingPioneerChoice !== false
+              'border-gray-300': onboardingPioneerChoice !== false,
             }"
           >
             <div class="flex items-center space-x-3">
-              <div class="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex-shrink-0">
+              <div
+                class="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex-shrink-0"
+              >
                 <i class="bi bi-person text-white text-xl"></i>
               </div>
               <div class="flex-1">
                 <p class="font-semibold text-gray-900 dark:text-white">No, I'm a publisher</p>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Track your monthly service hours</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                  Track your monthly service hours
+                </p>
               </div>
-              <i 
+              <i
                 *ngIf="onboardingPioneerChoice === false"
                 class="bi bi-check-circle-fill text-blue-500 text-xl"
               ></i>
@@ -454,7 +486,9 @@
       </div>
 
       <!-- Info Message -->
-      <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+      <div
+        class="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
+      >
         <p class="text-sm text-gray-600 dark:text-gray-400 text-center">
           <i class="bi bi-info-circle mr-1"></i>
           You can change this setting anytime in the Configure menu

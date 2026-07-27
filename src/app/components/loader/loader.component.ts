@@ -9,5 +9,5 @@ import { CommonModule } from '@angular/common';
   styleUrl: './loader.component.css',
 })
 export class LoaderComponent {
-  @Input() loadingMessage: string = 'Loading...';
+  @Input() loadingMessage = 'Loading...';
 }

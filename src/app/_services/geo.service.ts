@@ -64,8 +64,7 @@ export class GeoService {
         return;
       }
       navigator.geolocation.getCurrentPosition(
-        (pos) =>
-          resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
         (err) => reject(err),
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 10 * 60 * 1000 },
       );
@@ -102,9 +101,7 @@ export class GeoService {
    * free, no-key Nominatim (OpenStreetMap) endpoint. Returns [] on empty query
    * or failure so callers degrade gracefully.
    */
-  async forwardGeocode(
-    query: string,
-  ): Promise<Array<{ lat: number; lng: number; label: string }>> {
+  async forwardGeocode(query: string): Promise<{ lat: number; lng: number; label: string }[]> {
     if (!query.trim()) return [];
     try {
       const url =
@@ -133,9 +130,7 @@ export class GeoService {
     const dLng = toRad(b.lng - a.lng);
     const lat1 = toRad(a.lat);
     const lat2 = toRad(b.lat);
-    const h =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+    const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
     return 2 * R * Math.asin(Math.sqrt(h));
   }
 
@@ -154,9 +149,7 @@ export class GeoService {
   async getRoute(from: LatLng, to: LatLng): Promise<RouteResult | null> {
     if (!environment.routeApiUrl) return null;
     try {
-      const res: any = await firstValueFrom(
-        this.http.post(environment.routeApiUrl, { from, to }),
-      );
+      const res: any = await firstValueFrom(this.http.post(environment.routeApiUrl, { from, to }));
       if (!Array.isArray(res?.path) || !res.path.length) return null;
       return {
         path: res.path as LatLng[],

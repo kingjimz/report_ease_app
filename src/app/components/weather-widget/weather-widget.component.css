@@ -369,11 +369,11 @@
   transition: transform 0.35s ease;
 }
 .brgy-subpage {
-  width: 50%;          /* = 100% of the visible area */
+  width: 50%; /* = 100% of the visible area */
   flex-shrink: 0;
-  overflow: hidden;    /* clip card borders at the sub-page edge */
+  overflow: hidden; /* clip card borders at the sub-page edge */
   box-sizing: border-box;
-  padding: 0 1px;      /* 1px gutter so borders never sit on the clip edge */
+  padding: 0 1px; /* 1px gutter so borders never sit on the clip edge */
 }
 
 /* Inner carousel for page 1: home ↔ AI analysis slide. */

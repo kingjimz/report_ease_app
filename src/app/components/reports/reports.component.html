@@ -86,7 +86,6 @@
 
         <!-- Reports Grid View -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5 mb-6 sm:mb-8">
-
           <!-- Report Cards -->
           <div
             *ngFor="let report of paginatedReports; let i = index"
@@ -99,11 +98,15 @@
             <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-4 py-3 sm:px-5 sm:py-4">
               <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2.5">
-                  <div class="w-9 h-9 sm:w-11 sm:h-11 bg-white bg-opacity-20 backdrop-blur-sm rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+                  <div
+                    class="w-9 h-9 sm:w-11 sm:h-11 bg-white bg-opacity-20 backdrop-blur-sm rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0"
+                  >
                     <i class="bi bi-calendar text-white text-base sm:text-lg"></i>
                   </div>
                   <div>
-                    <h3 class="text-base sm:text-lg font-semibold text-white">{{ report.month_name }} {{ report.year }}</h3>
+                    <h3 class="text-base sm:text-lg font-semibold text-white">
+                      {{ report.month_name }} {{ report.year }}
+                    </h3>
                     <p class="text-xs sm:text-sm text-blue-100">Monthly Service Report</p>
                   </div>
                 </div>
@@ -113,12 +116,12 @@
                     (click)="toggleDropdown(i)"
                   >
                     <i class="bi bi-download mr-1"></i>
-                    <i 
+                    <i
                       class="bi bi-chevron-down ml-1 transition-transform duration-200 text-xs"
                       [class.rotate-180]="dropdownOpen[i]"
                     ></i>
                   </button>
-                  
+
                   <!-- Dropdown Menu -->
                   <div
                     *ngIf="dropdownOpen[i]"
@@ -144,15 +147,20 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- Card Body -->
             <div class="p-4 sm:p-5">
               <!-- Hours Display (Pioneer only) -->
               <div *ngIf="isPioneer" class="mb-4 sm:mb-5">
                 <div class="flex items-baseline justify-between mb-2">
-                  <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Hours</span>
+                  <span class="text-sm font-medium text-gray-600 dark:text-gray-400"
+                    >Total Hours</span
+                  >
                   <div class="flex items-baseline space-x-1">
-                    <span class="text-3xl sm:text-4xl font-semibold text-gray-900 dark:text-white">{{ report.total_hours }}</span>
+                    <span
+                      class="text-3xl sm:text-4xl font-semibold text-gray-900 dark:text-white"
+                      >{{ report.total_hours }}</span
+                    >
                     <span class="text-base text-gray-500 dark:text-gray-400">hrs</span>
                   </div>
                 </div>
@@ -166,14 +174,22 @@
               </div>
 
               <!-- Bible Studies Count (Publisher only) -->
-              <div *ngIf="!isPioneer"
+              <div
+                *ngIf="!isPioneer"
                 class="p-3 rounded-xl border transition-all bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 mb-3"
               >
                 <div class="flex items-center space-x-2.5">
-                  <i class="bi bi-book-fill text-blue-600 dark:text-blue-400 text-lg flex-shrink-0"></i>
+                  <i
+                    class="bi bi-book-fill text-blue-600 dark:text-blue-400 text-lg flex-shrink-0"
+                  ></i>
                   <div class="flex-1">
-                    <span class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide block">Bible Studies</span>
-                    <p class="text-sm font-semibold text-blue-800 dark:text-blue-300">{{ numberOfBibleStudies }}</p>
+                    <span
+                      class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide block"
+                      >Bible Studies</span
+                    >
+                    <p class="text-sm font-semibold text-blue-800 dark:text-blue-300">
+                      {{ numberOfBibleStudies }}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -181,20 +197,35 @@
               <!-- Participation Status -->
               <div
                 class="p-3 rounded-xl border transition-all"
-                [ngClass]="report.is_joined_ministry ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'"
+                [ngClass]="
+                  report.is_joined_ministry
+                    ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800'
+                    : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                "
               >
                 <div class="flex items-center space-x-2.5">
                   <i
-                    [ngClass]="report.is_joined_ministry ? 'bi bi-check-circle-fill text-emerald-600 dark:text-emerald-400' : 'bi bi-x-circle-fill text-red-600 dark:text-red-400'"
+                    [ngClass]="
+                      report.is_joined_ministry
+                        ? 'bi bi-check-circle-fill text-emerald-600 dark:text-emerald-400'
+                        : 'bi bi-x-circle-fill text-red-600 dark:text-red-400'
+                    "
                     class="text-lg flex-shrink-0"
                   ></i>
                   <div>
-                    <span class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide block">Ministry Participation</span>
+                    <span
+                      class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide block"
+                      >Ministry Participation</span
+                    >
                     <p
                       class="text-sm font-semibold"
-                      [ngClass]="report.is_joined_ministry ? 'text-emerald-800 dark:text-emerald-300' : 'text-red-800 dark:text-red-300'"
+                      [ngClass]="
+                        report.is_joined_ministry
+                          ? 'text-emerald-800 dark:text-emerald-300'
+                          : 'text-red-800 dark:text-red-300'
+                      "
                     >
-                      {{ report.is_joined_ministry ? "Participated" : "Not Participated" }}
+                      {{ report.is_joined_ministry ? 'Participated' : 'Not Participated' }}
                     </p>
                   </div>
                 </div>
@@ -202,10 +233,15 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Pagination Controls -->
-        <div *ngIf="totalPages > 1 && !showAllReports" class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-          <div class="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
+        <div
+          *ngIf="totalPages > 1 && !showAllReports"
+          class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+        >
+          <div
+            class="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0"
+          >
             <!-- Mobile Pagination -->
             <div class="flex sm:hidden items-center space-x-2">
               <button
@@ -216,11 +252,11 @@
                 <i class="bi bi-chevron-left mr-1"></i>
                 Previous
               </button>
-              
+
               <span class="text-xs text-gray-700 px-2">
                 Page {{ currentPage }} of {{ totalPages }}
               </span>
-              
+
               <button
                 (click)="nextPage()"
                 [disabled]="currentPage === totalPages"
@@ -230,7 +266,7 @@
                 <i class="bi bi-chevron-right ml-1"></i>
               </button>
             </div>
-            
+
             <!-- Desktop Pagination -->
             <div class="hidden sm:flex items-center space-x-2">
               <!-- Previous Button -->
@@ -242,21 +278,23 @@
                 <i class="bi bi-chevron-left mr-1"></i>
                 Previous
               </button>
-              
+
               <!-- Page Numbers -->
               <div class="flex items-center space-x-1">
                 <button
                   *ngFor="let page of getPageNumbers()"
                   (click)="goToPage(page)"
-                  [class]="page === currentPage ? 
-                    'bg-blue-600 text-white border-blue-600' : 
-                    'bg-white text-gray-500 border-gray-300 hover:bg-gray-50'"
+                  [class]="
+                    page === currentPage
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-gray-500 border-gray-300 hover:bg-gray-50'
+                  "
                   class="px-3 py-2 text-sm font-medium border rounded-lg transition-colors"
                 >
                   {{ page }}
                 </button>
               </div>
-              
+
               <!-- Next Button -->
               <button
                 (click)="nextPage()"
@@ -267,7 +305,7 @@
                 <i class="bi bi-chevron-right ml-1"></i>
               </button>
             </div>
-            
+
             <!-- Items per page selector -->
             <div class="hidden sm:flex items-center space-x-2 text-sm text-gray-600">
               <span>Show:</span>
@@ -285,13 +323,15 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Table Footer with Summary -->
-        <div class="bg-gray-50 dark:bg-gray-700/50 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+        <div
+          class="bg-gray-50 dark:bg-gray-700/50 px-6 py-4 border-t border-gray-200 dark:border-gray-700"
+        >
           <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
             <span>Total of {{ reports.length }} monthly reports</span>
             <span>
-              Total Hours: 
+              Total Hours:
               <span class="font-semibold text-gray-900 dark:text-white">
                 {{ getTotalHours() }}
               </span>
@@ -303,35 +343,49 @@
       <!-- Empty State -->
       <div *ngIf="!reports || reports.length === 0" class="text-center py-20">
         <div class="max-w-md mx-auto">
-          <div class="flex items-center justify-center w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full mx-auto mb-6">
+          <div
+            class="flex items-center justify-center w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full mx-auto mb-6"
+          >
             <i class="bi bi-clipboard-data text-blue-600 text-4xl"></i>
           </div>
           <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">No Reports Yet</h3>
           <p class="text-gray-600 dark:text-gray-400 text-lg mb-8">
             Your ministry reports will appear here once you start submitting them.
           </p>
-          
+
           <!-- Getting Started Guide -->
           <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm text-left">
             <h4 class="font-semibold text-gray-900 mb-4 text-center">Getting Started</h4>
             <div class="space-y-3">
               <div class="flex items-start space-x-3">
-                <div class="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                <div
+                  class="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center"
+                >
                   <span class="text-blue-600 text-sm font-bold">1</span>
                 </div>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Submit your first ministry report to begin tracking</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                  Submit your first ministry report to begin tracking
+                </p>
               </div>
               <div class="flex items-start space-x-3">
-                <div class="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                <div
+                  class="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center"
+                >
                   <span class="text-blue-600 text-sm font-bold">2</span>
                 </div>
-                <p class="text-sm text-gray-600 dark:text-gray-400">View your monthly progress and statistics</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                  View your monthly progress and statistics
+                </p>
               </div>
               <div class="flex items-start space-x-3">
-                <div class="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                <div
+                  class="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center"
+                >
                   <span class="text-blue-600 text-sm font-bold">3</span>
                 </div>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Download formatted reports for record keeping</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                  Download formatted reports for record keeping
+                </p>
               </div>
             </div>
           </div>
@@ -341,7 +395,9 @@
 
     <!-- Bible Studies Section -->
     <div id="studiesSection" class="container mx-auto px-2 pb-8 scroll-mt-20">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div
+        class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+      >
         <!-- Section Header -->
         <div class="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-5">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -363,13 +419,17 @@
             </button>
           </div>
         </div>
-        
+
         <!-- Search and Filter Bar -->
-        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
+        <div
+          class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600"
+        >
           <div class="flex flex-col sm:flex-row gap-4">
             <!-- Search Input -->
             <div class="flex-1 relative">
-              <i class="bi bi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+              <i
+                class="bi bi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              ></i>
               <input
                 type="text"
                 [(ngModel)]="searchQuery"
@@ -378,7 +438,7 @@
                 class="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
               />
             </div>
-            
+
             <!-- Filter Buttons -->
             <div class="flex items-center gap-2">
               <button
@@ -422,27 +482,36 @@
               </button>
             </div>
           </div>
-          
+
           <!-- Results Count -->
           <div class="mt-3 text-sm text-gray-600 dark:text-gray-400">
-            Showing <span class="font-semibold text-gray-900 dark:text-white">{{ filteredBibleStudies.length }}</span> 
-            of <span class="font-semibold text-gray-900 dark:text-white">{{ bibleStudies.length }}</span> studies
+            Showing
+            <span class="font-semibold text-gray-900 dark:text-white">{{
+              filteredBibleStudies.length
+            }}</span>
+            of
+            <span class="font-semibold text-gray-900 dark:text-white">{{
+              bibleStudies.length
+            }}</span>
+            studies
           </div>
         </div>
-        
+
         <!-- Studies Content -->
         <div *ngIf="filteredBibleStudies && filteredBibleStudies.length > 0; else noStudiesState">
           <!-- Show All Button for Bible Studies -->
           <div *ngIf="filteredBibleStudies.length > 2" class="px-6 pt-6 pb-2">
             <button
               (click)="toggleShowAllBibleStudies()"
-                class="flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-all text-base font-medium text-gray-700 dark:text-gray-300"
+              class="flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-all text-base font-medium text-gray-700 dark:text-gray-300"
             >
               <i [class]="showAllBibleStudies ? 'bi bi-eye-slash mr-2' : 'bi bi-eye mr-2'"></i>
-              {{ showAllBibleStudies ? 'Show Less' : 'Show All (' + filteredBibleStudies.length + ')' }}
+              {{
+                showAllBibleStudies ? 'Show Less' : 'Show All (' + filteredBibleStudies.length + ')'
+              }}
             </button>
           </div>
-          
+
           <!-- Studies Grid -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 p-4 sm:p-6">
             <div
@@ -455,7 +524,11 @@
               <!-- Card Header -->
               <div
                 class="px-4 py-3 border-b relative"
-                [ngClass]="study.type === 'bs' ? 'bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border-emerald-200 dark:border-emerald-800' : 'bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-amber-200 dark:border-amber-800'"
+                [ngClass]="
+                  study.type === 'bs'
+                    ? 'bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border-emerald-200 dark:border-emerald-800'
+                    : 'bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-amber-200 dark:border-amber-800'
+                "
               >
                 <!-- Overdue Indicator (hidden once completed) -->
                 <div
@@ -476,11 +549,17 @@
                   <div class="min-w-0 flex-1">
                     <span
                       class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold mb-0.5"
-                      [ngClass]="study.type === 'bs' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'"
+                      [ngClass]="
+                        study.type === 'bs'
+                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                          : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+                      "
                     >
                       {{ study.type === 'bs' ? 'Bible Study' : 'Return Visit' }}
                     </span>
-                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white line-clamp-1">{{ study.bible_study }}</h3>
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white line-clamp-1">
+                      {{ study.bible_study }}
+                    </h3>
                   </div>
                 </div>
               </div>
@@ -489,18 +568,27 @@
               <div class="p-4">
                 <!-- Address -->
                 <div *ngIf="showAddressField" class="mb-2.5 flex items-start space-x-2">
-                  <i class="bi bi-geo-alt text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0 text-sm"></i>
-                  <p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">{{ study.address }}</p>
+                  <i
+                    class="bi bi-geo-alt text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0 text-sm"
+                  ></i>
+                  <p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+                    {{ study.address }}
+                  </p>
                 </div>
 
                 <!-- Schedule -->
                 <div class="mb-3 flex items-center space-x-2">
                   <i class="bi bi-clock text-gray-400 dark:text-gray-500 flex-shrink-0 text-sm"></i>
-                  <p class="text-xs font-medium text-gray-700 dark:text-gray-300">{{ formatScheduleForDisplay(study.schedule) }}</p>
+                  <p class="text-xs font-medium text-gray-700 dark:text-gray-300">
+                    {{ formatScheduleForDisplay(study.schedule) }}
+                  </p>
                 </div>
 
                 <!-- Last Study Date -->
-                <div *ngIf="study.updated_at" class="pt-3 border-t border-gray-200 dark:border-gray-700">
+                <div
+                  *ngIf="study.updated_at"
+                  class="pt-3 border-t border-gray-200 dark:border-gray-700"
+                >
                   <div class="flex items-center justify-between">
                     <span class="text-xs text-gray-500 dark:text-gray-400">Last studied</span>
                     <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">
@@ -511,17 +599,26 @@
                 </div>
 
                 <!-- Active / Inactive toggle -->
-                <div *ngIf="!study.completed" class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <div
+                  *ngIf="!study.completed"
+                  class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between"
+                >
                   <div class="flex items-center gap-1.5">
-                    <i class="bi text-xs"
-                      [ngClass]="(study.active ?? true)
-                        ? 'bi-circle-fill text-emerald-500'
-                        : 'bi-circle-fill text-gray-400 dark:text-gray-500'"
+                    <i
+                      class="bi text-xs"
+                      [ngClass]="
+                        (study.active ?? true)
+                          ? 'bi-circle-fill text-emerald-500'
+                          : 'bi-circle-fill text-gray-400 dark:text-gray-500'
+                      "
                     ></i>
-                    <span class="text-xs font-medium"
-                      [ngClass]="(study.active ?? true)
-                        ? 'text-emerald-700 dark:text-emerald-400'
-                        : 'text-gray-500 dark:text-gray-400'"
+                    <span
+                      class="text-xs font-medium"
+                      [ngClass]="
+                        (study.active ?? true)
+                          ? 'text-emerald-700 dark:text-emerald-400'
+                          : 'text-gray-500 dark:text-gray-400'
+                      "
                     >
                       {{ (study.active ?? true) ? 'Active' : 'Inactive' }}
                     </span>
@@ -530,7 +627,9 @@
                     type="button"
                     (click)="toggleStudyActive(study, $event)"
                     class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none"
-                    [ngClass]="(study.active ?? true) ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'"
+                    [ngClass]="
+                      (study.active ?? true) ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'
+                    "
                   >
                     <span
                       class="inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transform transition-transform"
@@ -545,43 +644,58 @@
                     type="button"
                     (click)="toggleStudyCompleted(study, $event)"
                     class="w-full inline-flex items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors"
-                    [ngClass]="study.completed
-                      ? 'bg-green-500 text-white hover:bg-green-600'
-                      : 'border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-green-500 hover:text-green-600 dark:hover:text-green-400'"
-                    [attr.aria-label]="(study.completed ? 'Mark as not completed: ' : 'Mark as completed: ') + study.bible_study"
+                    [ngClass]="
+                      study.completed
+                        ? 'bg-green-500 text-white hover:bg-green-600'
+                        : 'border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-green-500 hover:text-green-600 dark:hover:text-green-400'
+                    "
+                    [attr.aria-label]="
+                      (study.completed ? 'Mark as not completed: ' : 'Mark as completed: ') +
+                      study.bible_study
+                    "
                   >
-                    <i class="bi" [ngClass]="study.completed ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+                    <i
+                      class="bi"
+                      [ngClass]="study.completed ? 'bi-check-circle-fill' : 'bi-circle'"
+                    ></i>
                     {{ study.completed ? 'Completed' : 'Mark as completed' }}
                   </button>
                 </div>
               </div>
-              
+
               <!-- Hover Indicator -->
-              <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                   [ngClass]="study.type === 'rv' ? 'from-amber-500 to-orange-500' : ''"></div>
+              <div
+                class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                [ngClass]="study.type === 'rv' ? 'from-amber-500 to-orange-500' : ''"
+              ></div>
             </div>
           </div>
         </div>
-        
+
         <!-- Empty State Template -->
         <ng-template #noStudiesState>
           <div class="px-6 py-16 text-center">
             <div class="max-w-lg mx-auto">
-              <div class="flex items-center justify-center w-24 h-24 bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-3xl mx-auto mb-6">
+              <div
+                class="flex items-center justify-center w-24 h-24 bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-3xl mx-auto mb-6"
+              >
                 <i class="bi bi-book text-emerald-600 dark:text-emerald-400 text-4xl"></i>
               </div>
               <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-                {{ searchQuery || filterType !== 'all' ? 'No Results Found' : 'No Bible Studies Yet' }}
+                {{
+                  searchQuery || filterType !== 'all' ? 'No Results Found' : 'No Bible Studies Yet'
+                }}
               </h3>
               <p class="text-gray-600 dark:text-gray-400 mb-8 text-lg">
                 <span *ngIf="searchQuery || filterType !== 'all'">
                   Try adjusting your search or filter to find what you're looking for.
                 </span>
                 <span *ngIf="!searchQuery && filterType === 'all'">
-                  Start tracking your spiritual conversations and return visits by adding your first study.
+                  Start tracking your spiritual conversations and return visits by adding your first
+                  study.
                 </span>
               </p>
-              
+
               <!-- Call to Action Button -->
               <button
                 *ngIf="!searchQuery && filterType === 'all'"
@@ -591,28 +705,51 @@
                 <i class="bi bi-plus-lg mr-2"></i>
                 Add Your First Study
               </button>
-              
+
               <!-- Quick Guide -->
-              <div *ngIf="!searchQuery && filterType === 'all'" class="bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl p-6 text-left border border-emerald-200 dark:border-emerald-800">
-                <h4 class="font-semibold text-emerald-900 dark:text-emerald-300 mb-4 text-center">Getting Started</h4>
+              <div
+                *ngIf="!searchQuery && filterType === 'all'"
+                class="bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl p-6 text-left border border-emerald-200 dark:border-emerald-800"
+              >
+                <h4 class="font-semibold text-emerald-900 dark:text-emerald-300 mb-4 text-center">
+                  Getting Started
+                </h4>
                 <div class="space-y-3 text-sm">
                   <div class="flex items-start space-x-3">
-                    <div class="flex-shrink-0 w-7 h-7 bg-emerald-100 dark:bg-emerald-900/40 rounded-full flex items-center justify-center">
-                      <span class="text-emerald-600 dark:text-emerald-400 text-xs font-bold">1</span>
+                    <div
+                      class="flex-shrink-0 w-7 h-7 bg-emerald-100 dark:bg-emerald-900/40 rounded-full flex items-center justify-center"
+                    >
+                      <span class="text-emerald-600 dark:text-emerald-400 text-xs font-bold"
+                        >1</span
+                      >
                     </div>
-                      <p class="text-sm text-emerald-800 dark:text-emerald-300 pt-1">Click "Add Your First Study" to create a new entry</p>
+                    <p class="text-sm text-emerald-800 dark:text-emerald-300 pt-1">
+                      Click "Add Your First Study" to create a new entry
+                    </p>
                   </div>
                   <div class="flex items-start space-x-3">
-                    <div class="flex-shrink-0 w-7 h-7 bg-emerald-100 dark:bg-emerald-900/40 rounded-full flex items-center justify-center">
-                      <span class="text-emerald-600 dark:text-emerald-400 text-xs font-bold">2</span>
+                    <div
+                      class="flex-shrink-0 w-7 h-7 bg-emerald-100 dark:bg-emerald-900/40 rounded-full flex items-center justify-center"
+                    >
+                      <span class="text-emerald-600 dark:text-emerald-400 text-xs font-bold"
+                        >2</span
+                      >
                     </div>
-                    <p class="text-sm text-emerald-800 dark:text-emerald-300 pt-1">Choose between Bible Study or Return Visit</p>
+                    <p class="text-sm text-emerald-800 dark:text-emerald-300 pt-1">
+                      Choose between Bible Study or Return Visit
+                    </p>
                   </div>
                   <div class="flex items-start space-x-3">
-                    <div class="flex-shrink-0 w-7 h-7 bg-emerald-100 dark:bg-emerald-900/40 rounded-full flex items-center justify-center">
-                      <span class="text-emerald-600 dark:text-emerald-400 text-xs font-bold">3</span>
+                    <div
+                      class="flex-shrink-0 w-7 h-7 bg-emerald-100 dark:bg-emerald-900/40 rounded-full flex items-center justify-center"
+                    >
+                      <span class="text-emerald-600 dark:text-emerald-400 text-xs font-bold"
+                        >3</span
+                      >
                     </div>
-                    <p class="text-sm text-emerald-800 dark:text-emerald-300 pt-1">Track your progress and schedule follow-ups</p>
+                    <p class="text-sm text-emerald-800 dark:text-emerald-300 pt-1">
+                      Track your progress and schedule follow-ups
+                    </p>
                   </div>
                 </div>
               </div>
@@ -629,8 +766,10 @@
           <!-- Modal Header -->
           <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
             <div class="flex items-center space-x-3">
-              <div class="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg">
-                <i 
+              <div
+                class="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg"
+              >
+                <i
                   class="text-white text-lg"
                   [ngClass]="studySelected.type === 'bs' ? 'bi bi-book' : 'bi bi-arrow-repeat'"
                 ></i>
@@ -638,14 +777,23 @@
               <div>
                 <h3 class="text-lg font-bold text-gray-900">
                   <span class="hidden sm:inline">{{ studySelected.bible_study }}</span>
-                  <span class="sm:hidden">{{ formatNameForMobile(studySelected.bible_study) }}</span>
+                  <span class="sm:hidden">{{
+                    formatNameForMobile(studySelected.bible_study)
+                  }}</span>
                 </h3>
                 <span
                   class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-1"
-                  [ngClass]="studySelected.type === 'rv' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'"
+                  [ngClass]="
+                    studySelected.type === 'rv'
+                      ? 'bg-amber-100 text-amber-800'
+                      : 'bg-emerald-100 text-emerald-800'
+                  "
                 >
-                  <i [ngClass]="studySelected.type === 'rv' ? 'bi bi-arrow-repeat' : 'bi bi-book'" class="mr-1"></i>
-                  {{ studySelected.type === "rv" ? "Return Visit" : "Bible Study" }}
+                  <i
+                    [ngClass]="studySelected.type === 'rv' ? 'bi bi-arrow-repeat' : 'bi bi-book'"
+                    class="mr-1"
+                  ></i>
+                  {{ studySelected.type === 'rv' ? 'Return Visit' : 'Bible Study' }}
                 </span>
               </div>
             </div>
@@ -714,10 +862,7 @@
                 [distanceLabel]="distanceLabel"
               ></app-location-map>
 
-              <p
-                *ngIf="!studySelected.location && !showRepin"
-                class="text-sm text-gray-500"
-              >
+              <p *ngIf="!studySelected.location && !showRepin" class="text-sm text-gray-500">
                 No pin saved yet. Add one so you can navigate back next time.
               </p>
 
@@ -739,7 +884,9 @@
                   class="text-sm font-medium text-emerald-700 hover:text-emerald-800"
                 >
                   <i class="bi bi-pin-map mr-1"></i>
-                  {{ showRepin ? 'Done editing' : (studySelected.location ? 'Change pin' : 'Add a pin') }}
+                  {{
+                    showRepin ? 'Done editing' : studySelected.location ? 'Change pin' : 'Add a pin'
+                  }}
                 </button>
               </div>
             </div>
@@ -750,7 +897,7 @@
                 <i class="bi bi-journal-text text-emerald-600 mr-2"></i>
                 Study Progress
               </h4>
-              
+
               <!-- Next Lesson Input -->
               <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -773,7 +920,7 @@
                       class="text-base"
                     ></i>
                     <span class="ml-2 text-sm font-medium">
-                      {{ isCopied ? "Copied!" : "Copy" }}
+                      {{ isCopied ? 'Copied!' : 'Copy' }}
                     </span>
                   </button>
                 </div>
@@ -803,20 +950,30 @@
     <!-- Delete Confirmation Modal -->
     <ng-container *ngIf="studyDelete">
       <div [@bottomSheet] class="fixed inset-0 z-[100000] flex flex-col justify-end">
-        <div class="app-sheet-fade absolute inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm" (click)="closeDeleteModal()"></div>
-        <div appDragToClose (dismissed)="closeDeleteModal()" class="app-sheet-up relative w-full max-w-md mx-auto bg-white rounded-t-2xl shadow-2xl px-8 pb-8 pt-3 max-h-[88vh] overflow-y-auto">
+        <div
+          class="app-sheet-fade absolute inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm"
+          (click)="closeDeleteModal()"
+        ></div>
+        <div
+          appDragToClose
+          (dismissed)="closeDeleteModal()"
+          class="app-sheet-up relative w-full max-w-md mx-auto bg-white rounded-t-2xl shadow-2xl px-8 pb-8 pt-3 max-h-[88vh] overflow-y-auto"
+        >
           <div class="flex justify-center pb-4">
             <span class="w-10 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600"></span>
           </div>
           <!-- Modal Header -->
-          <div class="flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mx-auto mb-6">
+          <div
+            class="flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mx-auto mb-6"
+          >
             <i class="bi bi-exclamation-triangle text-red-600 text-2xl"></i>
           </div>
-          
+
           <div class="text-center mb-8">
             <h3 class="text-xl font-bold text-gray-900 mb-2">Confirm Deletion</h3>
             <p class="text-gray-600 leading-relaxed">
-              Are you sure you want to delete this study? This action cannot be undone and all associated data will be permanently removed.
+              Are you sure you want to delete this study? This action cannot be undone and all
+              associated data will be permanently removed.
             </p>
           </div>
 
@@ -846,7 +1003,9 @@
           <!-- Modal Header -->
           <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
             <div class="flex items-center space-x-3">
-              <div class="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg">
+              <div
+                class="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg"
+              >
                 <i class="bi bi-plus-lg text-white text-lg"></i>
               </div>
               <div>
@@ -883,7 +1042,7 @@
                     name="bible_study"
                     required
                     class="w-full min-w-0 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
-                    style="box-sizing: border-box; width: 100%;"
+                    style="box-sizing: border-box; width: 100%"
                     placeholder="Enter person's name"
                   />
                 </div>
@@ -897,7 +1056,7 @@
                     name="type"
                     required
                     class="w-full min-w-0 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
-                    style="box-sizing: border-box; width: 100%;"
+                    style="box-sizing: border-box; width: 100%"
                   >
                     <option value="rv">Return Visit</option>
                     <option value="bs">Bible Study</option>
@@ -924,7 +1083,7 @@
                     name="address"
                     rows="2"
                     class="w-full min-w-0 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm resize-none"
-                    style="box-sizing: border-box; width: 100%;"
+                    style="box-sizing: border-box; width: 100%"
                     placeholder="Enter the address"
                   ></textarea>
                   <p class="mt-1 text-xs text-gray-500">
@@ -948,7 +1107,7 @@
                     name="schedule"
                     required
                     class="w-full min-w-0 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
-                    style="box-sizing: border-box; width: 100%; max-width: 100%;"
+                    style="box-sizing: border-box; width: 100%; max-width: 100%"
                   />
                 </div>
               </div>
@@ -971,17 +1130,14 @@
                   required
                   rows="3"
                   class="w-full min-w-0 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm resize-none"
-                  style="box-sizing: border-box; width: 100%;"
+                  style="box-sizing: border-box; width: 100%"
                   placeholder="Enter the next lesson or topic to discuss"
                 ></textarea>
               </div>
             </div>
 
             <!-- Alert Messages -->
-            <app-alerts
-              [isSuccess]="isSuccess"
-              [alertMessage]="alertMessage"
-            ></app-alerts>
+            <app-alerts [isSuccess]="isSuccess" [alertMessage]="alertMessage"></app-alerts>
 
             <!-- Modal Footer -->
             <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
@@ -1016,15 +1172,23 @@
   <app-modal (dismissed)="closeAddReportModal()">
     <div class="w-full">
       <!-- Modal Header -->
-      <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+      <div
+        class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700"
+      >
         <div class="flex items-center space-x-2 min-w-0 flex-1">
-          <div class="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex-shrink-0">
+          <div
+            class="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex-shrink-0"
+          >
             <i class="bi bi-calendar-plus text-white text-base"></i>
           </div>
           <div class="min-w-0 flex-1">
             <h3 class="text-base font-bold text-gray-900 dark:text-white truncate">Add Report</h3>
-            <p class="text-xs text-gray-500 dark:text-gray-400 truncate hidden sm:block">Create a ministry service report</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 truncate sm:hidden">Add a service report</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate hidden sm:block">
+              Create a ministry service report
+            </p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate sm:hidden">
+              Add a service report
+            </p>
           </div>
         </div>
         <button
@@ -1051,7 +1215,7 @@
             (click)="openDatePicker($event)"
             (focus)="openDatePicker($event)"
             class="w-full min-w-0 p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white cursor-pointer box-border"
-            style="box-sizing: border-box; max-width: 100%;"
+            style="box-sizing: border-box; max-width: 100%"
           />
         </div>
 
@@ -1172,7 +1336,12 @@
           </button>
           <button
             type="submit"
-            [disabled]="isSubmittingReport || !reportDate || (isPioneer && !reportHours && !reportMinutes) || !reportJoinedMinistry"
+            [disabled]="
+              isSubmittingReport ||
+              !reportDate ||
+              (isPioneer && !reportHours && !reportMinutes) ||
+              !reportJoinedMinistry
+            "
             class="px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span
@@ -1186,4 +1355,3 @@
     </div>
   </app-modal>
 </ng-container>
-

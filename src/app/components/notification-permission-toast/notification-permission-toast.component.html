@@ -9,26 +9,23 @@
         Get daily reminders to join ministry plus end-of-month report alerts.
       </p>
       <p class="notification-toast-message" *ngIf="isBlocked">
-        Notifications are currently blocked. Please enable them in your browser settings to receive daily ministry reminders and report alerts.
+        Notifications are currently blocked. Please enable them in your browser settings to receive
+        daily ministry reminders and report alerts.
       </p>
     </div>
     <div class="notification-toast-actions">
-      <button 
-        class="btn-enable" 
-        (click)="requestPermission()" 
+      <button
+        class="btn-enable"
+        (click)="requestPermission()"
         [disabled]="isRequesting"
-        title="Enable Notifications">
+        title="Enable Notifications"
+      >
         <span *ngIf="!isRequesting">Enable</span>
         <span *ngIf="isRequesting">Enabling...</span>
       </button>
-      <button 
-        *ngIf="!isBlocked"
-        class="btn-close" 
-        (click)="dismissPrompt()" 
-        title="Dismiss">
+      <button *ngIf="!isBlocked" class="btn-close" (click)="dismissPrompt()" title="Dismiss">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
   </div>
 </div>
-

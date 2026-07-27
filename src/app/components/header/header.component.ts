@@ -40,16 +40,16 @@ export class HeaderComponent implements OnInit, OnDestroy {
   currentMonthName = '';
   private bibleStudiesSubscription?: Subscription;
   private reportsSubscription?: Subscription;
-  
+
   // Notification settings
   notificationsEnabled = false;
   notificationPermission = 'default';
   isRequestingPermission = false;
-  
+
   // Theme settings
   isDarkMode = false;
   private themeSubscription?: Subscription;
-  
+
   // Update settings
   isCheckingUpdate = false;
   updateAvailable = false;
@@ -81,14 +81,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.checkReportReminder();
     this.updateNotificationStatus();
     this.checkUpdateStatus();
-    
+
     // Subscribe to theme changes
-    this.themeSubscription = this.themeService.darkMode$.subscribe(isDark => {
+    this.themeSubscription = this.themeService.darkMode$.subscribe((isDark) => {
       this.isDarkMode = isDark;
     });
-    
+
     // Subscribe to permission changes
-    this.notificationService.permission$.subscribe(permission => {
+    this.notificationService.permission$.subscribe((permission) => {
       if (permission.granted) {
         this.notificationPermission = 'granted';
       } else if (permission.denied) {
@@ -98,13 +98,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
       }
       this.updateNotificationStatus();
     });
-    
+
     // Subscribe to update availability
     if (this.swUpdateService.isEnabled()) {
       this.swUpdateService.updateAvailable$.subscribe(() => {
         this.updateAvailable = true;
       });
-      
+
       // Also subscribe to update status changes (for iOS version service)
       this.swUpdateService.updateAvailableStatus$.subscribe((hasUpdate) => {
         this.updateAvailable = hasUpdate;
@@ -137,7 +137,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
       }
 
       if (Notification.permission === 'denied') {
-        alert('Notifications are blocked. Please enable them in your browser settings:\n\nChrome/Edge: Settings > Privacy and security > Site settings > Notifications\n\nFirefox: Settings > Privacy & Security > Permissions > Notifications\n\nSafari: Preferences > Websites > Notifications');
+        alert(
+          'Notifications are blocked. Please enable them in your browser settings:\n\nChrome/Edge: Settings > Privacy and security > Site settings > Notifications\n\nFirefox: Settings > Privacy & Security > Permissions > Notifications\n\nSafari: Preferences > Websites > Notifications',
+        );
         return;
       }
 
@@ -178,7 +180,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   loadSettings() {
-    this.settingsService.settings$.subscribe(settings => {
+    this.settingsService.settings$.subscribe((settings) => {
       this.isPioneer = settings.isPioneer;
       this.locationEnabled = settings.locationEnabled;
     });
@@ -208,17 +210,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
     const currentDay = now.getDate();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
-    
+
     // Get the last day of the current month
     const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-    
+
     // Show reminder from 25th to last day of month
     // Hide reminder from 1st to 24th
     if (currentDay >= 25 && currentDay <= lastDayOfMonth) {
       // Check if monthly report has been submitted for current month
       const hasMonthlyReport = this.hasMonthlyReportSubmitted(currentMonth, currentYear);
       this.showReportReminder = !hasMonthlyReport;
-      
+
       // Set current month name for display
       this.currentMonthName = now.toLocaleString('default', { month: 'long' });
     } else {
@@ -230,7 +232,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     // Check if any report exists for the current month
     return this.reports.some((report) => {
       if (!report.report_date) return false;
-      
+
       let reportDate: Date;
       if (report.report_date.toDate && typeof report.report_date.toDate === 'function') {
         reportDate = report.report_date.toDate();
@@ -241,7 +243,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       } else {
         reportDate = new Date(report.report_date);
       }
-      
+
       return reportDate.getMonth() === month && reportDate.getFullYear() === year;
     });
   }
@@ -422,7 +424,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.settingsService.setIsPioneer(this.isPioneer);
     this.showSuccessMessage = true;
     this.successMessage = `Pioneer status ${this.isPioneer ? 'enabled' : 'disabled'}. Dashboard updated!`;
-    
+
     setTimeout(() => {
       this.showSuccessMessage = false;
     }, 3000);
@@ -445,7 +447,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     // The new state is the opposite of the old state
     this.showSuccessMessage = true;
     this.successMessage = `Theme switched to ${!wasDark ? 'dark' : 'light'} mode`;
-    
+
     setTimeout(() => {
       this.showSuccessMessage = false;
     }, 3000);
@@ -453,7 +455,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   async checkUpdateStatus() {
     this.isUpdateEnabled = this.swUpdateService.isEnabled();
-    
+
     // For iOS, check version to ensure state is accurate after reload
     if (this.swUpdateService.isIOSDevice()) {
       // Wait for version check to complete to get accurate update status
@@ -462,7 +464,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     } else {
       this.updateAvailable = this.swUpdateService.isUpdateAvailable();
     }
-    
+
     // Update app version display
     this.updateAppVersion();
   }
@@ -473,10 +475,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
       const response = await fetch('/version.json?t=' + Date.now(), {
         cache: 'no-cache',
         headers: {
-          'Cache-Control': 'no-cache'
-        }
+          'Cache-Control': 'no-cache',
+        },
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         const version = data.version || data.appVersion || '1.0.0';
@@ -507,7 +509,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     try {
       const hasUpdate = await this.swUpdateService.checkForUpdates();
       this.updateAvailable = hasUpdate || this.swUpdateService.isUpdateAvailable();
-      
+
       this.showSuccessMessage = true;
       if (this.updateAvailable) {
         this.successMessage = 'Update available! The app will reload to install it.';
@@ -518,7 +520,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       } else {
         this.successMessage = 'You are using the latest version';
       }
-      
+
       setTimeout(() => {
         this.showSuccessMessage = false;
       }, 3000);

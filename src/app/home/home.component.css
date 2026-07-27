@@ -33,7 +33,7 @@
     grid-template-columns: 1.5rem minmax(0, 1fr) 1.5rem; /* Equal margins on both sides */
     padding: 0;
   }
-  
+
   .home-content {
     grid-column: 2;
     width: 100%;
@@ -48,7 +48,7 @@
     margin-right: auto;
     padding: 0;
   }
-  
+
   .home-content {
     grid-column: 1;
   }
@@ -63,7 +63,9 @@
 .tab-card-container {
   background-color: var(--card-bg);
   border-color: var(--border-color);
-  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  transition:
+    transform 0.3s ease-in-out,
+    opacity 0.3s ease-in-out;
   transform: translateY(0);
   will-change: transform;
   opacity: 1;

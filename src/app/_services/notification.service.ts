@@ -76,9 +76,7 @@ export class NotificationService {
 
     try {
       const permission =
-        Notification.permission === 'granted'
-          ? 'granted'
-          : await Notification.requestPermission();
+        Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
       this.checkPermissionStatus();
 
       if (permission === 'granted') {
@@ -211,7 +209,7 @@ export class NotificationService {
     }
   }
 
-  setNotificationTime(hour: number, minute: number = 0) {
+  setNotificationTime(hour: number, minute = 0) {
     localStorage.setItem(this.NOTIFICATION_TIME_KEY, JSON.stringify({ hour, minute }));
   }
 

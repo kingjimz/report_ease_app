@@ -54,15 +54,9 @@
   </div>
 
   <!-- Chat panel -->
-  <div
-    *ngIf="open"
-    class="fixed inset-0 z-[9990] sm:inset-auto sm:bottom-24 sm:right-4"
-  >
+  <div *ngIf="open" class="fixed inset-0 z-[9990] sm:inset-auto sm:bottom-24 sm:right-4">
     <!-- Backdrop (mobile): tap to close -->
-    <div
-      class="absolute inset-0 bg-black/30 sm:hidden"
-      (click)="toggle()"
-    ></div>
+    <div class="absolute inset-0 bg-black/30 sm:hidden" (click)="toggle()"></div>
 
     <div
       class="chat-panel absolute inset-x-0 bottom-0 flex max-h-[80vh] flex-col rounded-t-2xl bg-white shadow-2xl dark:bg-gray-800 sm:static sm:h-[28rem] sm:w-96 sm:max-h-[80vh] sm:rounded-2xl"
@@ -110,9 +104,11 @@
         >
           <div
             class="max-w-[85%] whitespace-normal rounded-2xl px-3 py-2 text-sm"
-            [ngClass]="m.role === 'user'
-              ? 'bg-blue-600 text-white rounded-br-sm'
-              : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-bl-sm'"
+            [ngClass]="
+              m.role === 'user'
+                ? 'bg-blue-600 text-white rounded-br-sm'
+                : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-bl-sm'
+            "
           >
             {{ m.content }}
           </div>
@@ -153,7 +149,9 @@
           [(ngModel)]="draft"
           name="draft"
           [disabled]="chat.loading || chat.limitReached"
-          [placeholder]="chat.limitReached ? 'Daily limit reached — resets tomorrow' : 'Ask about the app...'"
+          [placeholder]="
+            chat.limitReached ? 'Daily limit reached — resets tomorrow' : 'Ask about the app...'
+          "
           autocomplete="off"
           class="min-w-0 flex-1 rounded-full border border-gray-300 bg-gray-50 px-4 py-2 text-sm text-gray-800 outline-none focus:border-blue-500 disabled:opacity-60 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
         />

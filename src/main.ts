@@ -11,7 +11,7 @@ if (environment.production) {
 // Enhanced error handling for iOS compatibility
 bootstrapApplication(AppComponent, appConfig).catch((err) => {
   console.error('Angular bootstrap error:', err);
-  
+
   // On iOS, show a user-friendly error message if bootstrap fails
   if (typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent)) {
     const appRoot = document.querySelector('app-root');
@@ -33,7 +33,7 @@ bootstrapApplication(AppComponent, appConfig).catch((err) => {
       `;
     }
   }
-  
+
   // Re-throw to ensure it's logged
   throw err;
 });

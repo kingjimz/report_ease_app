@@ -5,8 +5,12 @@
 
     <!-- Upcoming / Overdue Studies -->
     <div class="mb-3 px-0">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+      <div
+        class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+      >
+        <div
+          class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between"
+        >
           <h2 class="text-base font-semibold text-gray-900 dark:text-white flex items-center">
             <i class="bi bi-calendar-event text-emerald-600 dark:text-emerald-400 mr-2"></i>
             Upcoming Studies
@@ -21,7 +25,10 @@
         </div>
 
         <!-- Studies list -->
-        <div *ngIf="upcomingStudies.length > 0" class="divide-y divide-gray-100 dark:divide-gray-700">
+        <div
+          *ngIf="upcomingStudies.length > 0"
+          class="divide-y divide-gray-100 dark:divide-gray-700"
+        >
           <div
             *ngFor="let study of upcomingStudies"
             (click)="navigateToStudy(study)"
@@ -29,26 +36,36 @@
           >
             <div
               class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-              [ngClass]="study.type === 'bs' ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-amber-100 dark:bg-amber-900/30'"
+              [ngClass]="
+                study.type === 'bs'
+                  ? 'bg-emerald-100 dark:bg-emerald-900/30'
+                  : 'bg-amber-100 dark:bg-amber-900/30'
+              "
             >
               <i
                 class="text-sm"
-                [ngClass]="study.type === 'bs'
-                  ? 'bi bi-book text-emerald-600 dark:text-emerald-400'
-                  : 'bi bi-arrow-repeat text-amber-600 dark:text-amber-400'"
+                [ngClass]="
+                  study.type === 'bs'
+                    ? 'bi bi-book text-emerald-600 dark:text-emerald-400'
+                    : 'bi bi-arrow-repeat text-amber-600 dark:text-amber-400'
+                "
               ></i>
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ study.bible_study }}</p>
+              <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                {{ study.bible_study }}
+              </p>
               <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
                 {{ formatSchedule(study.schedule) }}
               </p>
             </div>
             <span
               class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0"
-              [ngClass]="isOverdue(study)
-                ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'"
+              [ngClass]="
+                isOverdue(study)
+                  ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                  : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+              "
             >
               {{ isOverdue(study) ? 'Overdue' : getDaysUntil(study) }}
             </span>
@@ -57,10 +74,14 @@
 
         <!-- Empty state -->
         <div *ngIf="upcomingStudies.length === 0" class="px-5 py-4 text-center">
-          <div class="flex items-center justify-center w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl mx-auto mb-2">
+          <div
+            class="flex items-center justify-center w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl mx-auto mb-2"
+          >
             <i class="bi bi-journal-plus text-emerald-600 dark:text-emerald-400 text-lg"></i>
           </div>
-          <p class="text-sm font-medium text-gray-900 dark:text-white mb-0.5">No upcoming studies</p>
+          <p class="text-sm font-medium text-gray-900 dark:text-white mb-0.5">
+            No upcoming studies
+          </p>
           <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
             Track your Bible studies and return visits so you never miss a session.
           </p>
@@ -78,14 +99,23 @@
     <!-- Key Metrics Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3 px-0">
       <!-- Monthly Hours Card -->
-      <div (click)="navigateTo('reports')" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 cursor-pointer hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600 transition-all active:scale-[0.98]">
+      <div
+        (click)="navigateTo('reports')"
+        class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 cursor-pointer hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600 transition-all active:scale-[0.98]"
+      >
         <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center justify-center w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
+          <div
+            class="flex items-center justify-center w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl"
+          >
             <i class="bi bi-clock-history text-blue-600 dark:text-blue-400 text-lg"></i>
           </div>
           <span
             class="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-medium"
-            [ngClass]="monthlyHours - prevMonthHours >= 0 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'"
+            [ngClass]="
+              monthlyHours - prevMonthHours >= 0
+                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+            "
           >
             <i [ngClass]="getTrendIcon()" class="mr-1 text-xs"></i>
             {{ Math.abs(monthlyHours - prevMonthHours) }}
@@ -96,48 +126,73 @@
       </div>
 
       <!-- Weekly Hours Card -->
-      <div (click)="navigateTo('calendar')" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 cursor-pointer hover:shadow-md hover:border-purple-300 dark:hover:border-purple-600 transition-all active:scale-[0.98]">
+      <div
+        (click)="navigateTo('calendar')"
+        class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 cursor-pointer hover:shadow-md hover:border-purple-300 dark:hover:border-purple-600 transition-all active:scale-[0.98]"
+      >
         <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center justify-center w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
+          <div
+            class="flex items-center justify-center w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-xl"
+          >
             <i class="bi bi-calendar-week text-purple-600 dark:text-purple-400 text-lg"></i>
           </div>
         </div>
-        <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ weeklyHours.toFixed(1) }}</p>
+        <p class="text-2xl font-semibold text-gray-900 dark:text-white">
+          {{ weeklyHours.toFixed(1) }}
+        </p>
         <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Hrs this week</p>
       </div>
 
       <!-- Bible Studies Card -->
-      <div (click)="navigateTo('reports')" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 cursor-pointer hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-600 transition-all active:scale-[0.98]">
+      <div
+        (click)="navigateTo('reports')"
+        class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 cursor-pointer hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-600 transition-all active:scale-[0.98]"
+      >
         <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center justify-center w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl">
+          <div
+            class="flex items-center justify-center w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl"
+          >
             <i class="bi bi-book text-emerald-600 dark:text-emerald-400 text-lg"></i>
           </div>
         </div>
-        <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ numberOfBibleStudies }}</p>
+        <p class="text-2xl font-semibold text-gray-900 dark:text-white">
+          {{ numberOfBibleStudies }}
+        </p>
         <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Active Bible studies</p>
       </div>
 
       <!-- Return Visits Card -->
-      <div (click)="navigateTo('reports')" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 cursor-pointer hover:shadow-md hover:border-amber-300 dark:hover:border-amber-600 transition-all active:scale-[0.98]">
+      <div
+        (click)="navigateTo('reports')"
+        class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 cursor-pointer hover:shadow-md hover:border-amber-300 dark:hover:border-amber-600 transition-all active:scale-[0.98]"
+      >
         <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center justify-center w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-xl">
+          <div
+            class="flex items-center justify-center w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-xl"
+          >
             <i class="bi bi-arrow-repeat text-amber-600 dark:text-amber-400 text-lg"></i>
           </div>
         </div>
-        <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ numberOfReturnVisits }}</p>
+        <p class="text-2xl font-semibold text-gray-900 dark:text-white">
+          {{ numberOfReturnVisits }}
+        </p>
         <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Active return visits</p>
       </div>
     </div>
 
     <!-- Activity Chart (full width) -->
     <div class="mb-3 px-0">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 sm:p-6">
+      <div
+        class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 sm:p-6"
+      >
         <div class="flex items-center justify-between mb-5 gap-4">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
             <i class="bi bi-graph-up-arrow text-blue-600 dark:text-blue-400 mr-2"></i>
             Activity {{ currentYear }}
           </h2>
-          <div class="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+          <div
+            class="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg"
+          >
             <div class="w-2.5 h-2.5 bg-blue-500 rounded-full"></div>
             <span class="text-xs text-gray-700 dark:text-gray-300 font-medium">Daily Reports</span>
           </div>
@@ -148,17 +203,24 @@
 
     <!-- Daily Practice Card -->
     <div *ngIf="practice" class="mb-3 px-0">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div
+        class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+      >
         <!-- Header -->
-        <div class="bg-gradient-to-r from-amber-500 to-orange-600 px-5 py-4 flex items-center justify-between gap-3">
+        <div
+          class="bg-gradient-to-r from-amber-500 to-orange-600 px-5 py-4 flex items-center justify-between gap-3"
+        >
           <div class="flex items-center gap-3 min-w-0">
-            <div class="flex items-center justify-center w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex-shrink-0">
+            <div
+              class="flex items-center justify-center w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex-shrink-0"
+            >
               <i class="bi bi-bookmark-star text-white text-xl"></i>
             </div>
             <div class="min-w-0">
               <h2 class="text-base sm:text-lg font-semibold text-white">Daily Practice</h2>
               <p class="text-white/90 text-xs truncate">
-                {{ practice.verse.reference }} &middot; Practice {{ practice.position }} of {{ practiceTotal }}
+                {{ practice.verse.reference }} &middot; Practice {{ practice.position }} of
+                {{ practiceTotal }}
               </p>
             </div>
           </div>
@@ -183,13 +245,19 @@
           <!-- Progress -->
           <div class="mb-4">
             <div class="flex items-center justify-between text-xs mb-1.5">
-              <span class="text-gray-500 dark:text-gray-400">{{ practice.doneSteps }}/{{ practice.totalSteps }} steps done</span>
-              <span class="font-semibold text-amber-600 dark:text-amber-400">{{ practice.progressPercent }}%</span>
+              <span class="text-gray-500 dark:text-gray-400"
+                >{{ practice.doneSteps }}/{{ practice.totalSteps }} steps done</span
+              >
+              <span class="font-semibold text-amber-600 dark:text-amber-400"
+                >{{ practice.progressPercent }}%</span
+              >
             </div>
             <div class="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
               <div
                 class="h-full rounded-full transition-all duration-300"
-                [ngClass]="practice.passed ? 'bg-green-500' : 'bg-gradient-to-r from-amber-500 to-orange-600'"
+                [ngClass]="
+                  practice.passed ? 'bg-green-500' : 'bg-gradient-to-r from-amber-500 to-orange-600'
+                "
                 [style.width.%]="practice.progressPercent"
               ></div>
             </div>
@@ -199,11 +267,16 @@
             type="button"
             (click)="goToPractice()"
             class="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-semibold text-sm text-white transition-colors"
-            [ngClass]="practice.passed
-              ? 'bg-green-500 hover:bg-green-600'
-              : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700'"
+            [ngClass]="
+              practice.passed
+                ? 'bg-green-500 hover:bg-green-600'
+                : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700'
+            "
           >
-            <i class="bi" [ngClass]="practice.passed ? 'bi-check-circle-fill' : 'bi-arrow-right-circle'"></i>
+            <i
+              class="bi"
+              [ngClass]="practice.passed ? 'bi-check-circle-fill' : 'bi-arrow-right-circle'"
+            ></i>
             {{ practice.passed ? 'Practice passed, review it' : 'Open Daily Practice' }}
           </button>
 
@@ -226,15 +299,23 @@
   <app-modal (dismissed)="closeAddReportModal()">
     <div class="w-full">
       <!-- Modal Header -->
-      <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+      <div
+        class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700"
+      >
         <div class="flex items-center space-x-2 min-w-0 flex-1">
-          <div class="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex-shrink-0">
+          <div
+            class="flex items-center justify-center w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex-shrink-0"
+          >
             <i class="bi bi-calendar-plus text-white text-base"></i>
           </div>
           <div class="min-w-0 flex-1">
             <h3 class="text-base font-bold text-gray-900 dark:text-white truncate">Add Report</h3>
-            <p class="text-xs text-gray-500 dark:text-gray-400 truncate hidden sm:block">Create a ministry service report for a specific date</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 truncate sm:hidden">Add a service report</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate hidden sm:block">
+              Create a ministry service report for a specific date
+            </p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate sm:hidden">
+              Add a service report
+            </p>
           </div>
         </div>
         <button
@@ -261,7 +342,7 @@
             (click)="openDatePicker($event)"
             (focus)="openDatePicker($event)"
             class="w-full min-w-0 p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white cursor-pointer box-border"
-            style="box-sizing: border-box; max-width: 100%;"
+            style="box-sizing: border-box; max-width: 100%"
           />
         </div>
 
@@ -382,7 +463,12 @@
           </button>
           <button
             type="submit"
-            [disabled]="isSubmittingReport || !reportDate || (isPioneer && !reportHours && !reportMinutes) || !reportJoinedMinistry"
+            [disabled]="
+              isSubmittingReport ||
+              !reportDate ||
+              (isPioneer && !reportHours && !reportMinutes) ||
+              !reportJoinedMinistry
+            "
             class="px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm hover:shadow-md font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span

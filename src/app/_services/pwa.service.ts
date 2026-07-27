@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PwaService {
   private promptEvent: any = null;
@@ -59,7 +59,7 @@ export class PwaService {
         const lastShownDate = new Date(parseInt(lastShown, 10));
         const now = new Date();
         const hoursSinceLastShown = (now.getTime() - lastShownDate.getTime()) / (1000 * 60 * 60);
-        
+
         // If more than 24 hours, clear dismissal and allow showing again
         if (hoursSinceLastShown >= 24) {
           localStorage.removeItem(this.PROMPT_DISMISSED_KEY);
@@ -76,7 +76,7 @@ export class PwaService {
     if (lastShown) {
       const lastShownDate = new Date(parseInt(lastShown, 10));
       const today = new Date();
-      
+
       // Check if it's the same day
       if (
         lastShownDate.getDate() === today.getDate() &&
@@ -104,7 +104,7 @@ export class PwaService {
 
     this.promptEvent.prompt();
     const { outcome } = await this.promptEvent.userChoice;
-    
+
     if (outcome === 'accepted') {
       console.log('User accepted the install prompt');
       this.promptEvent = null;
@@ -139,8 +139,3 @@ export class PwaService {
     return this.promptEvent;
   }
 }
-
-
-
-
-

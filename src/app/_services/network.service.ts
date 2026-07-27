@@ -3,7 +3,7 @@ import { BehaviorSubject, fromEvent, merge } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class NetworkService {
   private onlineStatusSubject = new BehaviorSubject<boolean>(navigator.onLine);
@@ -13,7 +13,7 @@ export class NetworkService {
     // Listen to online/offline events
     merge(
       fromEvent(window, 'online').pipe(map(() => true)),
-      fromEvent(window, 'offline').pipe(map(() => false))
+      fromEvent(window, 'offline').pipe(map(() => false)),
     ).subscribe((isOnline) => {
       this.onlineStatusSubject.next(isOnline);
       console.log(`Network status changed: ${isOnline ? 'Online' : 'Offline'}`);
@@ -24,4 +24,3 @@ export class NetworkService {
     return this.onlineStatusSubject.value;
   }
 }
-

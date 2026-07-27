@@ -138,7 +138,7 @@
 }
 
 /* Fix iOS date input overflow in modals */
-:host ::ng-deep input[type="date"] {
+:host ::ng-deep input[type='date'] {
   width: 100% !important;
   max-width: 100% !important;
   min-width: 0 !important;

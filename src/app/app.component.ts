@@ -19,7 +19,14 @@ import { Subscription } from 'rxjs';
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
-  imports: [RouterOutlet, CommonModule, PwaInstallPromptComponent, NotificationPermissionToastComponent, AppUpdateToastComponent, ChatbotWidgetComponent],
+  imports: [
+    RouterOutlet,
+    CommonModule,
+    PwaInstallPromptComponent,
+    NotificationPermissionToastComponent,
+    AppUpdateToastComponent,
+    ChatbotWidgetComponent,
+  ],
 })
 export class AppComponent implements OnInit, OnDestroy {
   isOnline = true;
@@ -41,18 +48,16 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnInit() {
     // Initialize version checking (for iOS support)
     this.initializeVersionChecking();
-    
+
     // Subscribe to network status
-    this.networkSubscription = this.networkService.onlineStatus$.subscribe(
-      (isOnline) => {
-        this.isOnline = isOnline;
-        if (isOnline) {
-          console.log('App is back online, syncing data...');
-        } else {
-          console.log('App is offline, using cached data');
-        }
+    this.networkSubscription = this.networkService.onlineStatus$.subscribe((isOnline) => {
+      this.isOnline = isOnline;
+      if (isOnline) {
+        console.log('App is back online, syncing data...');
+      } else {
+        console.log('App is offline, using cached data');
       }
-    );
+    });
     this.isOnline = this.networkService.isOnline;
 
     // Initialize notifications
@@ -92,10 +97,10 @@ export class AppComponent implements OnInit, OnDestroy {
   private async initializeVersionChecking() {
     // Fetch version from version.json first
     await this.loadVersionFromFile();
-    
+
     // Detect iOS
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    
+
     if (isIOS) {
       // Initialize version checking for iOS
       this.versionService.initializeVersionChecking();
@@ -112,10 +117,10 @@ export class AppComponent implements OnInit, OnDestroy {
       const response = await fetch('/version.json?t=' + Date.now(), {
         cache: 'no-cache',
         headers: {
-          'Cache-Control': 'no-cache'
-        }
+          'Cache-Control': 'no-cache',
+        },
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         const version = data.version || data.appVersion || '1.0.0';

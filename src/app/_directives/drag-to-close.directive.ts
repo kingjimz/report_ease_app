@@ -44,7 +44,10 @@ export class DragToCloseDirective implements OnInit, OnDestroy {
   private readonly startSlop = 6; // px before we classify the gesture
   private readonly closeThreshold = 110; // px pulled down to dismiss
 
-  constructor(elRef: ElementRef<HTMLElement>, private zone: NgZone) {
+  constructor(
+    elRef: ElementRef<HTMLElement>,
+    private zone: NgZone,
+  ) {
     this.el = elRef.nativeElement;
   }
 
@@ -52,9 +55,7 @@ export class DragToCloseDirective implements OnInit, OnDestroy {
     // The scrollable region is an inner container for the shared modal, or the
     // panel itself for the simpler sheets. Fall back to the panel either way.
     this.scrollEl =
-      (this.el.querySelector(
-        '.overflow-y-auto, .overflow-y-scroll',
-      ) as HTMLElement) || this.el;
+      (this.el.querySelector('.overflow-y-auto, .overflow-y-scroll') as HTMLElement) || this.el;
 
     // Listen outside Angular so finger moves don't trigger change detection.
     this.zone.runOutsideAngular(() => {
@@ -122,8 +123,7 @@ export class DragToCloseDirective implements OnInit, OnDestroy {
       this.zone.run(() => this.dismissed.emit());
     } else {
       // Snap back into place.
-      this.el.style.transition =
-        'transform 220ms cubic-bezier(0.32, 0.72, 0, 1)';
+      this.el.style.transition = 'transform 220ms cubic-bezier(0.32, 0.72, 0, 1)';
       this.el.style.transform = 'translateY(0)';
     }
   };
