@@ -7,6 +7,13 @@ interface QueuedOperation {
   data: any;
   timestamp: number;
   retries: number;
+  /**
+   * Identity of the write, so repeated attempts at the same document collapse
+   * onto one row instead of each minting a fresh entry with a clean retry
+   * budget. Empty for creates without an id - those are genuinely distinct
+   * events and must never merge. Absent on rows written before this existed.
+   */
+  dedupeKey?: string;
 }
 
 @Injectable({
@@ -71,28 +78,50 @@ export class OfflineStorageService {
     data: any,
   ): Promise<string> {
     const db = await this.ensureDB();
-    const operation: QueuedOperation = {
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      type,
-      collection,
-      data,
-      timestamp: Date.now(),
-      retries: 0,
-    };
+    // Creates have no document id yet, so they can never be deduplicated.
+    const dedupeKey = data?.id ? `${type}:${collection}:${data.id}` : '';
 
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(['operations'], 'readwrite');
       const store = transaction.objectStore('operations');
-      const request = store.add(operation);
+      const existingRequest = store.getAll();
 
-      request.onsuccess = () => {
-        console.log(`Operation queued: ${type} ${collection}`, operation.id);
-        resolve(operation.id);
+      existingRequest.onsuccess = () => {
+        const existing = dedupeKey
+          ? (existingRequest.result as QueuedOperation[]).find((op) => op.dedupeKey === dedupeKey)
+          : undefined;
+
+        const operation: QueuedOperation = {
+          // Reuse the id so the sync loop's removeOperation(op.id) still matches.
+          id: existing?.id ?? `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          type,
+          collection,
+          data,
+          timestamp: Date.now(),
+          // Carry the budget forward. Minting retries: 0 on every enqueue is why
+          // maxRetries never fired and a failing write could queue forever.
+          retries: existing?.retries ?? 0,
+          dedupeKey,
+        };
+
+        // put, not add: add() rejects when the key already exists, and merging
+        // onto an existing row is the whole point.
+        const request = store.put(operation);
+
+        request.onsuccess = () => {
+          console.log(`Operation queued: ${type} ${collection}`, operation.id);
+          resolve(operation.id);
+        };
+
+        request.onerror = () => {
+          console.error('Failed to queue operation:', request.error);
+          reject(request.error);
+        };
       };
 
-      request.onerror = () => {
-        console.error('Failed to queue operation:', request.error);
-        reject(request.error);
+      existingRequest.onerror = () => {
+        console.error('Failed to read operation queue:', existingRequest.error);
+        reject(existingRequest.error);
       };
     });
   }

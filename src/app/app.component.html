@@ -2,6 +2,7 @@
 <app-notification-permission-toast></app-notification-permission-toast>
 <app-app-update-toast></app-app-update-toast>
 <app-chatbot-widget *ngIf="loggedIn"></app-chatbot-widget>
+<app-team-map-launcher *ngIf="loggedIn"></app-team-map-launcher>
 <div *ngIf="!isOnline" class="offline-banner">
   <div class="offline-content">
     <span class="offline-icon">📡</span>

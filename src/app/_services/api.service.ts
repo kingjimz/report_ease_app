@@ -31,6 +31,21 @@ export class ApiService implements OnDestroy {
   private bibleStudiesSubject = new BehaviorSubject<any[]>([]);
   bibleStudies$ = this.bibleStudiesSubject.asObservable();
 
+  /**
+   * Bible studies, but ONLY from snapshots reflecting committed server state -
+   * never a cache echo, an optimistic local mutation, or a rollback.
+   *
+   * Exists so background maintenance can write back safely. Writing from a
+   * plain bibleStudies$ subscriber is a closed loop: the write mutates the
+   * local cache (emit), the server rejects it (rollback, emit), and the
+   * subscriber fires again. Documents on this stream are confirmed to exist on
+   * the backend, so a write against them cannot fail that way.
+   *
+   * Null means "no server snapshot yet" - offline, or still connecting.
+   */
+  private bibleStudiesServerSyncedSubject = new BehaviorSubject<any[] | null>(null);
+  bibleStudiesServerSynced$ = this.bibleStudiesServerSyncedSubject.asObservable();
+
   private reportsSubject = new BehaviorSubject<any[]>([]);
   reports$ = this.reportsSubject.asObservable();
 
@@ -75,6 +90,11 @@ export class ApiService implements OnDestroy {
         }
       } else {
         this.cleanupListeners();
+        // Drop the cached collection blobs on sign-out. They are uid-keyed and
+        // rebuilt from the first server snapshot after the next sign-in, so
+        // nothing is lost - but keeping them lets a stale entry outlive the
+        // session that produced it, with nothing anywhere to prune it.
+        this.offlineStorage.clearCache().catch(console.error);
       }
     });
 
@@ -197,6 +217,9 @@ export class ApiService implements OnDestroy {
       this.unsubscribeMissionCompletions();
       this.unsubscribeMissionCompletions = undefined;
     }
+    // Back to "no server snapshot yet", so one user never inherits the
+    // previous user's confirmed list.
+    this.bibleStudiesServerSyncedSubject.next(null);
     this.listenersUserId = undefined;
   }
 
@@ -231,8 +254,10 @@ export class ApiService implements OnDestroy {
           };
         });
 
-        // Cache the data for offline access
-        this.offlineStorage.cacheData(`reports_${user.uid}`, reports).catch(console.error);
+        // Cache committed server state only - see listenToBibleStudies.
+        if (!snapshot.metadata.fromCache) {
+          this.offlineStorage.cacheData(`reports_${user.uid}`, reports).catch(console.error);
+        }
 
         this.reportSignal.set(reports);
         this.reportsSubject.next(reports);
@@ -264,11 +289,26 @@ export class ApiService implements OnDestroy {
           ...doc.data(),
         }));
 
-        // Cache the data for offline access
-        this.offlineStorage.cacheData(`bibleStudies_${user.uid}`, studies).catch(console.error);
+        // Mirror ONLY committed server state into our own cache. Caching a
+        // fromCache snapshot can persist a document that never landed
+        // server-side (an offline create that was later rejected, say), and
+        // nothing prunes this blob afterwards, so that ghost would outlive
+        // every later sync.
+        if (!snapshot.metadata.fromCache) {
+          this.offlineStorage.cacheData(`bibleStudies_${user.uid}`, studies).catch(console.error);
+        }
 
         this.bibleStudySignal.set(studies);
         this.bibleStudiesSubject.next(studies);
+
+        // Server-confirmed only: safe for background maintenance to write back
+        // to. hasPendingWrites matters as well as fromCache - a server snapshot
+        // can still carry an unacknowledged local create, which is exactly how
+        // a document that does not exist on the backend sneaks in.
+        if (!snapshot.metadata.fromCache && !snapshot.metadata.hasPendingWrites) {
+          this.bibleStudiesServerSyncedSubject.next(studies);
+        }
+
         console.log(
           `Bible studies updated: ${studies.length} items (fromCache: ${snapshot.metadata.fromCache})`,
         );
@@ -297,8 +337,10 @@ export class ApiService implements OnDestroy {
           ...doc.data(),
         }));
 
-        // Cache the data for offline access
-        this.offlineStorage.cacheData(`goals_${user.uid}`, goals).catch(console.error);
+        // Cache committed server state only - see listenToBibleStudies.
+        if (!snapshot.metadata.fromCache) {
+          this.offlineStorage.cacheData(`goals_${user.uid}`, goals).catch(console.error);
+        }
 
         this.goalsSignal.set(goals);
         this.goalsSubject.next(goals);
@@ -336,10 +378,12 @@ export class ApiService implements OnDestroy {
           ...doc.data(),
         }));
 
-        // Cache the data for offline access
-        this.offlineStorage
-          .cacheData(`missionCompletions_${user.uid}`, completions)
-          .catch(console.error);
+        // Cache committed server state only - see listenToBibleStudies.
+        if (!snapshot.metadata.fromCache) {
+          this.offlineStorage
+            .cacheData(`missionCompletions_${user.uid}`, completions)
+            .catch(console.error);
+        }
 
         this.missionCompletionsSignal.set(completions);
         this.missionCompletionsSubject.next(completions);
@@ -359,27 +403,45 @@ export class ApiService implements OnDestroy {
     this.cleanupListeners();
   }
 
+  // The three setters below all guard on reference equality.
+  //
+  // getBibleStudies()/getGoals() hand back the signal's own array, so a caller
+  // that reads then republishes is re-emitting the exact object every
+  // subscriber already holds - costing each of them a full recompute for no
+  // change. A genuine mutation always builds a new array (a .filter() result,
+  // a fresh aggregation), so it still emits.
   updateAggregatedData(data: any) {
+    if (data === this.aggregatedDataSubject.value) return;
     this.aggregatedDataSubject.next(data);
   }
 
   updateBibleStudies(data: any[]) {
+    if (data === this.bibleStudiesSubject.value) return;
     this.bibleStudiesSubject.next(data);
   }
 
-  updateReports(data: any[]) {
-    this.reportsSubject.next(data);
-  }
-
   notifyGoalChange(data: any[]) {
+    if (data === this.goalsSubject.value) return;
     this.goalsSubject.next(data);
   }
 
-  // Durability net: when a write fails for ANY reason (offline, rule denial,
-  // unreachable backend, transient error), queue it so it is retried on the next
-  // sync rather than silently dropped. A write that throws never committed to the
-  // server, so re-queuing cannot create duplicates. Queued writes flush on
-  // reconnect, on app start, and immediately below when we're already online.
+  // Failures a retry can never fix: the target document is gone, or the payload
+  // itself is malformed. Queuing these creates a permanent loop, because
+  // queueForRetry kicks a sync immediately while online, that sync fails the
+  // same way, and every later write re-triggers the whole cycle.
+  //
+  // Rule denials are deliberately NOT in here: those are usually a deploy lag
+  // and do become writable later, which is what the queue is for.
+  private isPermanentWriteError(error: unknown): boolean {
+    const code = (error as { code?: string })?.code;
+    return code === 'not-found' || code === 'invalid-argument';
+  }
+
+  // Durability net: when a write fails for a reason a retry could fix (offline,
+  // rule denial, unreachable backend, transient error), queue it so it is retried
+  // on the next sync rather than silently dropped. A write that throws never
+  // committed to the server, so re-queuing cannot create duplicates. Queued writes
+  // flush on reconnect, on app start, and immediately below when we're already online.
   private async queueForRetry(
     type: 'create' | 'update' | 'delete',
     collection: 'reports' | 'bibleStudies' | 'goals' | 'missionCompletions',
@@ -417,6 +479,14 @@ export class ApiService implements OnDestroy {
     context: string,
   ): void {
     op.catch((error) => {
+      if (this.isPermanentWriteError(error)) {
+        // e.g. updating a document that no longer exists server-side. A retry
+        // can never succeed, so drop it. One concise line rather than an
+        // error-with-stack plus a follow-up warning.
+        const code = (error as { code?: string })?.code;
+        console.warn(`${context}: dropped, cannot succeed (${code})`);
+        return;
+      }
       console.error(`${context}: Firestore write rejected`, error);
       this.queueForRetry(type, collection, data, context);
     });
@@ -1053,6 +1123,15 @@ export class ApiService implements OnDestroy {
           await this.offlineStorage.removeOperation(operation.id);
           console.log(`Successfully synced operation ${operation.id}`);
         } catch (error) {
+          if (this.isPermanentWriteError(error)) {
+            // Retrying cannot help (the target document is gone, or the payload
+            // is malformed). Drop it now instead of burning the retry budget and
+            // re-logging the same failure on every later sync.
+            const code = (error as { code?: string })?.code;
+            console.warn(`Operation ${operation.id} dropped, cannot succeed (${code})`);
+            await this.offlineStorage.removeOperation(operation.id);
+            continue;
+          }
           console.error(`Error syncing operation ${operation.id}:`, error);
           await this.offlineStorage.incrementRetry(operation.id);
         }

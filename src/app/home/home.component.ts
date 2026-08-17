@@ -9,7 +9,7 @@ import {
 import { AuthService } from '../_services/auth.service';
 import { Router } from '@angular/router';
 import { CalendarComponent } from '../components/calendar/calendar.component';
-import { TabCardComponent } from '../components/tab-card/tab-card.component';
+import { TabCardComponent, DEFAULT_TAB, isTabId } from '../components/tab-card/tab-card.component';
 import { HeaderComponent } from '../components/header/header.component';
 import { CommonModule } from '@angular/common';
 import { ReportsComponent } from '../components/reports/reports.component';
@@ -151,16 +151,20 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       this.userEmail = user?.email ?? '';
     });
 
-    // Load persisted tab from localStorage
+    // Load persisted tab from localStorage. Anything not in the current tab
+    // list (e.g. the retired 'map' tab) would render an empty content area,
+    // so fall back rather than trusting whatever was stored.
     const persistedTab = localStorage.getItem('activeTab');
     if (persistedTab) {
-      this.activeTab = persistedTab;
-      this.selectedTab = persistedTab;
-      this.navigationService.changeTab(persistedTab);
+      const restored = isTabId(persistedTab) ? persistedTab : DEFAULT_TAB;
+      this.activeTab = restored;
+      this.selectedTab = restored;
+      this.navigationService.changeTab(restored);
     }
 
     // Subscribe to navigation service for tab changes
-    this.navigationService.tabChange$.subscribe((tabId) => {
+    this.navigationService.tabChange$.subscribe((rawTabId) => {
+      const tabId = isTabId(rawTabId) ? rawTabId : DEFAULT_TAB;
       this.activeTab = tabId;
       this.selectedTab = tabId;
       // Persist the active tab

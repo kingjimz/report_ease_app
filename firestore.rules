@@ -10,7 +10,51 @@ service cloud.firestore {
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
-    
+
+    // Group membership: the member doc's existence IS the membership. Costs one
+    // document read per rule evaluation, so prefer resource.data where the doc
+    // being written is already in scope.
+    function isGroupMember(groupId) {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid));
+    }
+
+    // Group ownership, for rules on subcollections where the group doc is not in
+    // scope. The null guard matters: after the group doc is deleted this must
+    // return false rather than error out.
+    function isGroupOwner(groupId) {
+      let group = get(/databases/$(database)/documents/groups/$(groupId));
+      return isAuthenticated() && group != null && group.data.ownerUid == request.auth.uid;
+    }
+
+    // Shared shape check for a live position, used by groups/{id}/locations.
+    function isValidLocation() {
+      return request.resource.data.keys().hasOnly(['lat', 'lng', 'updatedAt', 'expiresAt', 'displayName', 'photoURL'])
+        && request.resource.data.lat is number
+        && request.resource.data.lat >= -90 && request.resource.data.lat <= 90
+        && request.resource.data.lng is number
+        && request.resource.data.lng >= -180 && request.resource.data.lng <= 180
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.expiresAt is timestamp
+        && request.resource.data.expiresAt > request.time
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() > 0
+        && request.resource.data.displayName.size() <= 100
+        && (request.resource.data.photoURL == null
+            || (request.resource.data.photoURL is string
+                && request.resource.data.photoURL.size() <= 500));
+    }
+
+    // Shared shape check for a group member's denormalized profile.
+    function isValidMemberProfile() {
+      return request.resource.data.displayName is string
+        && request.resource.data.displayName.size() > 0
+        && request.resource.data.displayName.size() <= 100
+        && (request.resource.data.photoURL == null
+            || (request.resource.data.photoURL is string
+                && request.resource.data.photoURL.size() <= 500));
+    }
+
     // Users collection - users can only read/write their own data
     match /users/{userId} {
       // Allow users to read/write their own user document
@@ -41,6 +85,105 @@ service cloud.firestore {
       // account (Admin credentials bypass these rules).
       match /pushSubscriptions/{subId} {
         allow read, write: if isOwner(userId);
+      }
+
+      // Personal mirror of the groups this user has joined. A bookmark list,
+      // not the source of truth - groups/{id}/members is. It exists so "my
+      // groups" is one owner-scoped query instead of a collection-group query
+      // needing its own index and read rule. It can drift (a group owner cannot
+      // write into another user's tree to remove an entry), so the client
+      // self-heals stale entries on use.
+      match /groups/{groupId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // Groups: private location-sharing groups for the ministry. The document ID
+    // IS the 8-char share code, so possession of the code is what grants the
+    // ability to join.
+    match /groups/{groupId} {
+      // A single get by ID is allowed to any signed-in user - the ID is the
+      // secret, and the doc holds only a name and an owner uid. This is also
+      // what lets a removed member cheaply detect a deleted group and clean up
+      // their own leftovers, so do not tighten it.
+      allow get: if isAuthenticated();
+      // Listing would defeat the whole scheme by enumerating every code.
+      allow list: if false;
+
+      allow create: if isAuthenticated()
+        && request.resource.data.keys().hasOnly(['name', 'ownerUid', 'createdAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 40;
+
+      // resource.data rather than isGroupOwner(): the doc is already in scope,
+      // so this costs no extra read. Only the name may change.
+      allow update: if isAuthenticated()
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['name', 'ownerUid', 'createdAt'])
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 40;
+
+      allow delete: if isAuthenticated() && resource.data.ownerUid == request.auth.uid;
+
+      // Roster. Each user writes only their own doc, so membership cannot be
+      // forged and nobody can spam docs.
+      match /members/{memberId} {
+        // A user may always read their OWN member doc, member or not. Requiring
+        // membership to read it is circular - joining has to check whether it
+        // already joined, and a removed member has to be able to discover that
+        // it was removed. Both look up exactly this one document.
+        allow get: if isOwner(memberId) || isGroupMember(groupId);
+        // The full roster stays members-only.
+        allow list: if isGroupMember(groupId);
+
+        // existsAfter, not exists: creating a group writes the group doc and the
+        // owner's member doc in one batch, and exists() sees pre-batch state,
+        // so exists() would make group creation fail outright. The only extra
+        // case existsAfter admits is one where the same batch created the group.
+        allow create: if isOwner(memberId)
+          && existsAfter(/databases/$(database)/documents/groups/$(groupId))
+          && !exists(/databases/$(database)/documents/groups/$(groupId)/bans/$(request.auth.uid))
+          && request.resource.data.keys().hasOnly(['displayName', 'photoURL', 'joinedAt'])
+          && request.resource.data.joinedAt == request.time
+          && isValidMemberProfile();
+
+        // Let a member refresh their own name/photo. Without this they are
+        // frozen at their first-join profile forever, since create no longer
+        // applies once the doc exists.
+        allow update: if isOwner(memberId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoURL'])
+          && isValidMemberProfile();
+
+        // isOwner first on purpose: it short-circuits, so leaving still works
+        // after the group doc itself is gone.
+        allow delete: if isOwner(memberId) || isGroupOwner(groupId);
+      }
+
+      // Live positions, one doc per member, overwritten on every update.
+      match /locations/{memberId} {
+        allow read: if isGroupMember(groupId);
+
+        // isGroupMember is checked on update as well as create. It costs an
+        // extra read per position write, but it is exactly what makes a removal
+        // stick: without it a removed member keeps updating an existing doc.
+        allow create, update: if isOwner(memberId)
+          && isGroupMember(groupId)
+          && isValidLocation();
+
+        allow delete: if isOwner(memberId) || isGroupOwner(groupId);
+      }
+
+      // Removal list. Without it "remove member" is cosmetic - the removed
+      // user still holds the code and rejoins in one tap.
+      match /bans/{memberId} {
+        allow read: if isGroupMember(groupId);
+        allow write: if isGroupOwner(groupId);
       }
     }
   }

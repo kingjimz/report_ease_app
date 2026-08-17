@@ -8,6 +8,7 @@ import { PwaInstallPromptComponent } from './components/pwa-install-prompt/pwa-i
 import { NotificationPermissionToastComponent } from './components/notification-permission-toast/notification-permission-toast.component';
 import { AppUpdateToastComponent } from './components/app-update-toast/app-update-toast.component';
 import { ChatbotWidgetComponent } from './components/chatbot-widget/chatbot-widget.component';
+import { TeamMapLauncherComponent } from './components/team-map/team-map-launcher.component';
 import { ThemeService } from './services/theme.service';
 import { NetworkService } from './_services/network.service';
 import { NotificationService } from './_services/notification.service';
@@ -26,11 +27,12 @@ import { Subscription } from 'rxjs';
     NotificationPermissionToastComponent,
     AppUpdateToastComponent,
     ChatbotWidgetComponent,
+    TeamMapLauncherComponent,
   ],
 })
 export class AppComponent implements OnInit, OnDestroy {
   isOnline = true;
-  /** Gates the help chatbot — hidden on login/register (no signed-in user). */
+  /** Gates the floating widgets — hidden on login/register (no signed-in user). */
   loggedIn = false;
   private networkSubscription?: Subscription;
 

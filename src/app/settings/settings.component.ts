@@ -66,8 +66,10 @@ export class SettingsComponent implements OnDestroy {
 
   async loadGoals() {
     try {
+      // No notifyGoalChange here: getGoals() returns the array the subject
+      // already holds, so republishing it is a no-op that makes every
+      // subscriber recompute. The listener publishes real changes.
       this.goals = await this.api.getGoals();
-      this.api.notifyGoalChange(this.goals);
     } catch (error) {
       console.error('Error loading goals:', error);
     }

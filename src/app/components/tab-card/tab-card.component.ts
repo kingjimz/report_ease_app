@@ -14,6 +14,20 @@ import { Subscription } from 'rxjs';
 import { bottomSheet } from '../../_animations/bottom-sheet.animation';
 import { DragToCloseDirective } from '../../_directives/drag-to-close.directive';
 
+/**
+ * Every tab the bottom nav can land on. Exported so callers that restore a
+ * persisted tab can validate against the same list this component renders --
+ * an unknown id leaves the home content area blank.
+ */
+export const TAB_IDS = ['dashboard', 'calendar', 'reports', 'goals'] as const;
+export type TabId = (typeof TAB_IDS)[number];
+
+export const DEFAULT_TAB: TabId = 'dashboard';
+
+export function isTabId(value: string | null): value is TabId {
+  return !!value && (TAB_IDS as readonly string[]).includes(value);
+}
+
 @Component({
   standalone: true,
   selector: 'app-tab-card',
@@ -33,7 +47,7 @@ export class TabCardComponent implements OnInit, OnChanges, OnDestroy {
   showReportTypePicker = false;
   private navigationSubscription?: Subscription;
 
-  tabs = [
+  tabs: { id: TabId; title: string; icon: string; description: string }[] = [
     {
       id: 'dashboard',
       title: 'Home',

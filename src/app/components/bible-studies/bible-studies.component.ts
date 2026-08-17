@@ -145,14 +145,10 @@ export class BibleStudiesComponent implements OnInit {
       this.next_lesson = '';
       this.isSuccess = true;
       this.alertMessage = 'Study added! View reports section.';
-      this.api
-        .getBibleStudies()
-        .then((data) => {
-          this.api.updateBibleStudies(data);
-        })
-        .catch((error) => {
-          console.error('Error updating Bible studies:', error);
-        });
+      // No re-read and republish here: the onSnapshot listener already
+      // publishes the new study, and getBibleStudies() hands back the very
+      // array the subject holds, so pushing it back was a no-op that forced
+      // every subscriber to recompute.
     } catch (error) {
       console.error('Error submitting data', error);
       this.isSuccess = false;

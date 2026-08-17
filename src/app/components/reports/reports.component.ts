@@ -1,5 +1,7 @@
 import { Component, Signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
+// Aliased: `filter` is already used as a destructured parameter name below.
+import { filter as rxFilter, take } from 'rxjs/operators';
 import { ApiService } from '../../_services/api.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -100,6 +102,20 @@ export class ReportsComponent implements OnInit, OnDestroy {
   reportSuccess = false;
   reportAlertMessage = '';
 
+  /**
+   * Study IDs already auto-flagged inactive during this session.
+   *
+   * Redundant now that the trigger is a one-shot on the server-confirmed
+   * stream, and kept deliberately as a second, independent barrier: this
+   * auto-flag has already caused one runaway write loop, and the `active ===
+   * false` guard alone cannot stop a repeat (each emission hands back fresh
+   * objects, so the flag set locally is gone by the next pass).
+   */
+  private autoFlaggedStudyIds = new Set<string>();
+
+  /** Held so loadBibleStudies() can replace rather than stack subscriptions. */
+  private studiesSub?: Subscription;
+
   constructor(
     public api: ApiService,
     public util: UtilService,
@@ -133,6 +149,21 @@ export class ReportsComponent implements OnInit, OnDestroy {
         this.showStudyModal = true;
       }),
     );
+
+    // Auto-flagging writes to Firestore, so it is driven from the
+    // server-confirmed stream and runs exactly once, never from the
+    // bibleStudies$ handler. Writing from inside that handler is a closed
+    // loop: the write emits, the rejection rolls back and emits again, and
+    // the handler fires once more. Offline there is simply no emission, and
+    // it self-heals as soon as a server snapshot arrives.
+    this.subs.push(
+      this.api.bibleStudiesServerSynced$
+        .pipe(
+          rxFilter((studies): studies is any[] => !!studies),
+          take(1),
+        )
+        .subscribe((studies) => this.autoFlagInactiveStudies(studies)),
+    );
   }
 
   loadUserSettings() {
@@ -150,33 +181,33 @@ export class ReportsComponent implements OnInit, OnDestroy {
   }
 
   async loadBibleStudies() {
-    this.subs.push(
-      this.api.bibleStudies$.subscribe((data) => {
-        if (data && data.length > 0) {
-          this.bibleStudies = data;
-          // Auto-flag overdue studies that haven't been studied this month
-          this.autoFlagInactiveStudies();
-          // Completed studies stay as a record but are excluded from active counts.
-          // Only count studies that are active (not flagged inactive).
-          this.numberOfBibleStudies = this.bibleStudies.filter(
-            (study) => study.type === 'bs' && !study.completed && study.active !== false,
-          ).length;
-          this.numberOfReturnVisits = this.bibleStudies.filter(
-            (study) => study.type === 'rv' && !study.completed,
-          ).length;
-          this.numberOfCompletedStudies = this.bibleStudies.filter(
-            (study) => study.completed,
-          ).length;
-          this.applyFilters();
-        } else {
-          this.bibleStudies = [];
-          this.filteredBibleStudies = [];
-          this.numberOfBibleStudies = 0;
-          this.numberOfReturnVisits = 0;
-          this.numberOfCompletedStudies = 0;
-        }
-      }),
-    );
+    // Guard against double-subscribing. This method used to be re-called after
+    // every save and add, and because <app-reports> is hidden with [class.hidden]
+    // rather than *ngIf the component is never destroyed - so the handlers piled
+    // up for the whole session and every emission ran all of them.
+    this.studiesSub?.unsubscribe();
+    this.studiesSub = this.api.bibleStudies$.subscribe((data) => {
+      if (data && data.length > 0) {
+        this.bibleStudies = data;
+        // Completed studies stay as a record but are excluded from active counts.
+        // Only count studies that are active (not flagged inactive).
+        this.numberOfBibleStudies = this.bibleStudies.filter(
+          (study) => study.type === 'bs' && !study.completed && study.active !== false,
+        ).length;
+        this.numberOfReturnVisits = this.bibleStudies.filter(
+          (study) => study.type === 'rv' && !study.completed,
+        ).length;
+        this.numberOfCompletedStudies = this.bibleStudies.filter((study) => study.completed).length;
+        this.applyFilters();
+      } else {
+        this.bibleStudies = [];
+        this.filteredBibleStudies = [];
+        this.numberOfBibleStudies = 0;
+        this.numberOfReturnVisits = 0;
+        this.numberOfCompletedStudies = 0;
+      }
+    });
+    this.subs.push(this.studiesSub);
   }
 
   applyFilters() {
@@ -552,11 +583,14 @@ export class ReportsComponent implements OnInit, OnDestroy {
   }
 
   /** Auto-flag overdue + not-studied-this-month studies as inactive, then persist. */
-  autoFlagInactiveStudies() {
-    this.bibleStudies.forEach((study) => {
+  autoFlagInactiveStudies(studies: any[]) {
+    studies.forEach((study) => {
       if (study.completed) return;
       if (study.active === false) return; // already inactive, don't override manual choice
+      if (!study.id) return;
+      if (this.autoFlaggedStudyIds.has(study.id)) return; // see autoFlaggedStudyIds
       if (this.isStudyOverdue(study) && !this.isStudiedThisMonth(study)) {
+        this.autoFlaggedStudyIds.add(study.id);
         study.active = false;
         this.api.updateStudy({ id: study.id, active: false });
       }
@@ -631,27 +665,15 @@ export class ReportsComponent implements OnInit, OnDestroy {
       .then(() => {
         this.closeStudyDetails();
         // Optimistically drop the study from the local view rather than
-        // re-reading (refreshBibleStudies): the delete is applied to the local
-        // cache/signal asynchronously, so an immediate re-read races ahead of
-        // it and resurrects the study offline. The listener keeps things
-        // consistent once the delete settles.
+        // re-reading: the delete is applied to the local cache/signal
+        // asynchronously, so an immediate re-read races ahead of it and
+        // resurrects the study offline. The listener keeps things consistent
+        // once the delete settles.
         this.bibleStudies = this.bibleStudies.filter((s) => s.id !== study.id);
         this.api.updateBibleStudies(this.bibleStudies);
       })
       .catch((error) => {
         console.error('Error deleting study:', error);
-      });
-  }
-
-  refreshBibleStudies() {
-    this.api
-      .getBibleStudies()
-      .then((data) => {
-        this.bibleStudies = data;
-        this.api.updateBibleStudies(data);
-      })
-      .catch((error) => {
-        console.error('Error refreshing Bible studies:', error);
       });
   }
 
@@ -684,14 +706,12 @@ export class ReportsComponent implements OnInit, OnDestroy {
       studyData.location = location;
     }
 
-    this.api
-      .updateStudy(studyData)
-      .then(() => {
-        this.loadBibleStudies();
-      })
-      .catch((error) => {
-        console.error('Error updating study:', error);
-      });
+    // No reload afterwards: the write lands in the local cache immediately,
+    // onSnapshot fires, and the existing bibleStudies$ subscription refreshes
+    // the list. Re-calling loadBibleStudies() here only stacked another handler.
+    this.api.updateStudy(studyData).catch((error) => {
+      console.error('Error updating study:', error);
+    });
   }
 
   async addStudy() {
@@ -724,7 +744,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
       this.isSuccess = true;
       this.alertMessage = 'Study added successfully!';
       this.showStudyModal = false;
-      this.loadBibleStudies();
+      // The listener publishes the new study; no manual reload needed.
     } catch (error) {
       console.error('Error adding study:', error);
       this.isSuccess = false;

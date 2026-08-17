@@ -12,6 +12,10 @@ import { GoogleAuthProvider } from 'firebase/auth';
 import { BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
 import { NetworkService } from './network.service';
+import { LocationSharingService } from './location-sharing.service';
+
+/** How long logout waits for the location cleanup before signing out anyway. */
+const LOGOUT_CLEANUP_TIMEOUT_MS = 2500;
 
 @Injectable({
   providedIn: 'root',
@@ -25,6 +29,7 @@ export class AuthService {
     private auth: Auth,
     private router: Router,
     private networkService: NetworkService,
+    private locationSharing: LocationSharingService,
   ) {
     onAuthStateChanged(this.auth, (user) => {
       this.userSubject.next(user);
@@ -66,6 +71,18 @@ export class AuthService {
 
   async logout() {
     try {
+      // Remove the shared location pins while still signed in - the rules
+      // reject the delete once the auth token is gone.
+      //
+      // Time-boxed on purpose. Under the persistent local cache a write promise
+      // only settles on server ack, so offline this would never resolve and the
+      // user could not sign out at all. Firestore keeps the mutation queue per
+      // user, so an unsent delete replays on their next sign-in; failing that,
+      // the pin ages off the map client-side and the TTL policy sweeps the doc.
+      await Promise.race([
+        this.locationSharing.prepareForLogout(),
+        new Promise((resolve) => setTimeout(resolve, LOGOUT_CLEANUP_TIMEOUT_MS)),
+      ]);
       await signOut(this.auth);
       this.userSubject.next(null);
       this.router.navigate(['/login']);
