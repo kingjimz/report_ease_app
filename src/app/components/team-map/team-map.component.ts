@@ -7,6 +7,7 @@ import {
   HostListener,
   Output,
   ViewChild,
+  computed,
   effect,
   Injector,
   runInInjectionContext,
@@ -18,15 +19,21 @@ import 'leaflet-rotate';
 import { Auth } from '@angular/fire/auth';
 import { LocationSharingService, SharedLocation } from '../../_services/location-sharing.service';
 import { GroupsService, GroupMember } from '../../_services/groups.service';
+import { GeoService, LatLng, RouteResult, TravelProfile } from '../../_services/geo.service';
+import { RouteGuidance } from '../../_services/route-guidance';
 import { addBaseLayers } from '../../_utils/leaflet-layers';
+import { avatarColorFor, escapeHtml } from '../../_utils/avatar';
 import { ModalComponent } from '../modal/modal.component';
 import { GroupSheetComponent } from './group-sheet.component';
+import { MemberSheetComponent } from './member-sheet.component';
 
 // Staleness thresholds: fresh pins are full color, quiet ones fade, and
 // anything older than HIDE_MS is removed (the sharer's app is closed).
 const FADE_MS = 5 * 60 * 1000;
 const HIDE_MS = 15 * 60 * 1000;
 const CONSENT_KEY = 'liveShareConsented';
+/** Remembered walk/drive choice, so an overseer sets it once. */
+const PROFILE_KEY = 'teamMapTravelProfile';
 
 /**
  * Group map: shows everyone in the active group who has opted into sharing.
@@ -38,7 +45,7 @@ const CONSENT_KEY = 'liveShareConsented';
 @Component({
   selector: 'app-team-map',
   standalone: true,
-  imports: [CommonModule, ModalComponent, GroupSheetComponent],
+  imports: [CommonModule, ModalComponent, GroupSheetComponent, MemberSheetComponent],
   template: `
     <div class="flex flex-col flex-1 min-h-0 bg-white">
       <!-- Header: close + count + toggle. Inset for the status bar because the
@@ -100,27 +107,130 @@ const CONSENT_KEY = 'liveShareConsented';
         </button>
       </div>
       <p
-        *ngIf="sharingSvc.error() || groupsSvc.error()"
+        *ngIf="sharingSvc.error() || groupsSvc.error() || navError"
         class="shrink-0 px-4 py-2 text-xs text-amber-700 bg-amber-50 border-b border-amber-100"
       >
-        <i class="bi bi-exclamation-triangle mr-1"></i>{{ sharingSvc.error() || groupsSvc.error() }}
+        <i class="bi bi-exclamation-triangle mr-1"></i
+        >{{ sharingSvc.error() || groupsSvc.error() || navError }}
       </p>
+
+      <!-- Live guidance. Sits in the flex column rather than over the map, so it
+           never contests z-index with Leaflet's panes and both maps read alike. -->
+      <div
+        *ngIf="guidance.state().navigating"
+        class="shrink-0 flex items-center gap-3 px-4 py-2.5 bg-emerald-600 text-white"
+      >
+        <i class="bi text-xl shrink-0" [ngClass]="guidance.state().icon"></i>
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-semibold truncate">
+            {{ guidance.state().instruction || 'Getting your position…' }}
+          </p>
+          <p *ngIf="guidance.state().nextDistanceLabel" class="text-xs text-emerald-100">
+            in {{ guidance.state().nextDistanceLabel }}
+          </p>
+        </div>
+        <button
+          type="button"
+          (click)="guidance.toggleVoice()"
+          [attr.aria-label]="guidance.voiceOn ? 'Mute voice guidance' : 'Unmute voice guidance'"
+          class="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg hover:bg-emerald-700 transition-colors"
+        >
+          <i class="bi" [ngClass]="guidance.voiceOn ? 'bi-volume-up-fill' : 'bi-volume-mute'"></i>
+        </button>
+      </div>
 
       <!-- Map. 'isolate' pens in Leaflet's panes (z 400-800) so they can't
            escape into the surrounding stacking context. -->
       <div class="relative isolate flex-1 min-h-0">
         <div #mapEl class="absolute inset-0 bg-gray-100"></div>
+        <!-- Owner-only entry point. A pin is a small target on a phone, so the
+             list behind this button is the primary way in; tapping a pin is the
+             shortcut. Hidden mid-trip, when Stop is the only action that makes
+             sense. -->
+        <button
+          *ngIf="groupsSvc.isActiveGroupOwner() && !navTargetUid && routableMembers().length"
+          type="button"
+          (click)="openMemberPicker()"
+          title="Directions to a member"
+          class="absolute bottom-16 right-2 z-[1200] flex items-center gap-1.5 px-2.5 h-8 bg-emerald-600 text-white hover:bg-emerald-700 rounded-md shadow transition-colors"
+        >
+          <i class="bi bi-signpost-2"></i>
+          <span class="text-xs font-medium">Directions</span>
+        </button>
+
+        <!-- Doubles as the recentre control while navigating, and lifts clear of
+             the guidance footer. -->
         <button
           type="button"
-          (click)="recenter()"
-          title="Show everyone"
-          class="absolute bottom-6 right-2 z-[1200] flex items-center justify-center w-8 h-8 bg-white/90 text-gray-700 hover:bg-white rounded-md shadow transition-colors"
+          (click)="navTargetUid ? recenterOnMe() : recenter()"
+          [title]="navTargetUid ? 'Recentre on me' : 'Show everyone'"
+          class="absolute right-2 z-[1200] flex items-center justify-center w-8 h-8 bg-white/90 text-gray-700 hover:bg-white rounded-md shadow transition-colors"
+          [ngClass]="navTargetUid ? 'bottom-28' : 'bottom-6'"
         >
-          <i class="bi bi-people-fill"></i>
+          <i class="bi" [ngClass]="navTargetUid ? 'bi-crosshair' : 'bi-people-fill'"></i>
         </button>
+        <!-- Trip status while navigating. Replaces the idle panels rather than
+             stacking with them; the FAB lifts to clear it. -->
+        <div
+          *ngIf="navTarget as target"
+          class="absolute inset-x-0 bottom-0 z-[1100] px-3 py-2.5 bg-white border-t border-gray-200"
+        >
+          <div class="flex items-center gap-2">
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-semibold text-gray-800 truncate">
+                To {{ target.displayName }}
+              </p>
+              <p class="text-xs text-gray-500 truncate">
+                {{
+                  guidance.state().remainingLabel ||
+                    (navFrozen
+                      ? 'Paused, they stopped sharing'
+                      : routing
+                        ? 'Finding a route…'
+                        : 'Waiting for GPS…')
+                }}
+              </p>
+            </div>
+            <div class="flex gap-0.5 p-0.5 bg-gray-100 rounded-lg shrink-0">
+              <button
+                type="button"
+                (click)="setProfile('walk')"
+                aria-label="Walking directions"
+                [attr.aria-pressed]="travelProfile === 'walk'"
+                class="flex items-center justify-center w-8 h-7 text-xs rounded-md transition-colors"
+                [ngClass]="travelProfile === 'walk' ? 'bg-emerald-600 text-white' : 'text-gray-600'"
+              >
+                <i class="bi bi-person-walking"></i>
+              </button>
+              <button
+                type="button"
+                (click)="setProfile('drive')"
+                aria-label="Driving directions"
+                [attr.aria-pressed]="travelProfile === 'drive'"
+                class="flex items-center justify-center w-8 h-7 text-xs rounded-md transition-colors"
+                [ngClass]="
+                  travelProfile === 'drive' ? 'bg-emerald-600 text-white' : 'text-gray-600'
+                "
+              >
+                <i class="bi bi-car-front-fill"></i>
+              </button>
+            </div>
+            <button
+              type="button"
+              (click)="endNav()"
+              class="shrink-0 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+            >
+              {{ navFrozen ? 'Clear' : 'Stop' }}
+            </button>
+          </div>
+          <p *ngIf="guidance.state().stale" class="mt-1.5 text-xs text-amber-700">
+            <i class="bi bi-exclamation-triangle mr-1"></i>Route may be out of date.
+          </p>
+        </div>
+
         <!-- No group yet: the map is meaningless until you are in one. -->
         <div
-          *ngIf="!groupsSvc.activeGroupId()"
+          *ngIf="!groupsSvc.activeGroupId() && !navTargetUid"
           class="absolute inset-x-0 bottom-0 z-[1100] px-4 py-3 bg-white/95 text-center"
         >
           <p class="mb-2 text-xs text-gray-600">
@@ -137,7 +247,7 @@ const CONSENT_KEY = 'liveShareConsented';
 
         <!-- In a group, but nobody is broadcasting. -->
         <div
-          *ngIf="groupsSvc.activeGroupId() && visibleCount === 0"
+          *ngIf="groupsSvc.activeGroupId() && visibleCount === 0 && !navTargetUid"
           class="absolute inset-x-0 bottom-0 z-[1100] px-4 py-2 bg-white/90 text-center"
         >
           <p class="text-xs text-gray-600">
@@ -154,6 +264,19 @@ const CONSENT_KEY = 'liveShareConsented';
 
     <!-- Group switcher / management -->
     <app-group-sheet *ngIf="showGroups" (closed)="showGroups = false"></app-group-sheet>
+
+    <!-- Pick a member, then travel mode. Ownership is re-checked here because it
+         resolves asynchronously and can drop while the sheet is open. -->
+    <app-member-sheet
+      *ngIf="sheetOpen && groupsSvc.isActiveGroupOwner()"
+      [members]="routableMembers()"
+      [initialUid]="sheetInitialUid"
+      [myPosition]="sharingSvc.myPosition()"
+      [profile]="travelProfile"
+      (closed)="closeMemberPicker()"
+      (navigate)="startNavigation($event.uid, $event.profile)"
+      (centerOn)="centerOnMember($event)"
+    ></app-member-sheet>
 
     <!-- One-time consent modal -->
     <app-modal *ngIf="showConsent" [dismissible]="false">
@@ -251,6 +374,24 @@ export class TeamMapComponent implements AfterViewInit, OnDestroy {
   showGroups = false;
   visibleCount = 0;
 
+  /** Member picker: open flag plus an optional preselection from a pin tap. */
+  sheetOpen = false;
+  sheetInitialUid: string | null = null;
+  navTargetUid: string | null = null;
+  navError: string | null = null;
+  routing = false;
+  /**
+   * The target stopped sharing mid-trip. The drawn route is kept on screen,
+   * because a half-finished walk is more useful than a blank map, but progress
+   * stops until they reappear or the owner clears it.
+   */
+  navFrozen = false;
+  travelProfile: TravelProfile = 'walk';
+
+  /** Progress engine. Built here, not in ngAfterViewInit, so the template can
+   *  read its state on first paint. */
+  readonly guidance: RouteGuidance;
+
   private map?: L.Map;
   private markers = new Map<string, L.Marker>();
   private meMarker?: L.Marker;
@@ -260,12 +401,32 @@ export class TeamMapComponent implements AfterViewInit, OnDestroy {
   private resizeObserver?: ResizeObserver;
   private zooming = false;
 
+  /** Navigation layers, owned here so the engine stays free of Leaflet. */
+  private routeLine?: L.Polyline;
+  private connector?: L.Polyline;
+  private youDot?: L.CircleMarker;
+  /** Where the drawn line ends, which is the anchor the route was fetched to. */
+  private routeEnd: LatLng | null = null;
+  private framedRoute = false;
+  /** Camera follows until the user drags, exactly like a native nav app. */
+  private following = true;
+  private fetchingRoute = false;
+  /** Last known target, so a frozen session can still name who it was for. */
+  private navTargetLast: SharedLocation | null = null;
+
   constructor(
     public sharingSvc: LocationSharingService,
     public groupsSvc: GroupsService,
+    private geo: GeoService,
     private auth: Auth,
     private injector: Injector,
-  ) {}
+  ) {
+    const saved = localStorage.getItem(PROFILE_KEY);
+    if (saved === 'walk' || saved === 'drive') this.travelProfile = saved;
+    this.guidance = new RouteGuidance(this.geo, {
+      onFix: (cur, _state, firstFix) => this.onGuidanceFix(cur, firstFix),
+    });
+  }
 
   ngAfterViewInit(): void {
     this.map = L.map(this.mapEl.nativeElement, {
@@ -286,6 +447,9 @@ export class TeamMapComponent implements AfterViewInit, OnDestroy {
     // Marker slide transitions clash with zoom animation transforms.
     this.map.on('zoomstart', () => this.setZooming(true));
     this.map.on('zoomend', () => this.setZooming(false));
+    // Once the user takes the camera, keep it until they ask for it back. This
+    // is the difference between a map that helps and one that fights you.
+    this.map.on('dragstart', () => (this.following = false));
 
     this.sharingSvc.startListening();
     // The roster is only worth a listener while the map is on screen; it drives
@@ -298,10 +462,61 @@ export class TeamMapComponent implements AfterViewInit, OnDestroy {
       // My own pin follows the raw GPS feed: appears instantly on opt-in and
       // moves on every fix, ahead of the throttled Firestore writes.
       effect(() => this.renderMeMarker(this.sharingSvc.myPosition()));
-      // A group switch swaps out every pin, so start over on framing.
+      // A group switch swaps out every pin, so start over on framing. Any
+      // navigation belonged to the old group, so it goes too.
+      effect(
+        () => {
+          this.groupsSvc.activeGroupId();
+          untracked(() => {
+            this.endNav();
+            this.resetFraming();
+          });
+        },
+        // These four all reach into RouteGuidance, which writes its state
+        // signal. Angular 18 needs that declared; v19 allows it by default.
+        { allowSignalWrites: true },
+      );
+      // Losing ownership mid-session withdraws the whole feature.
+      effect(
+        () => {
+          const owner = this.groupsSvc.isActiveGroupOwner();
+          untracked(() => {
+            if (owner) return;
+            this.closeMemberPicker();
+            this.endNav();
+          });
+        },
+        { allowSignalWrites: true },
+      );
+      // The destination moves. Re-anchor every update, but only spend a routing
+      // request when the drift has earned one.
+      effect(
+        () => {
+          const locations = this.sharingSvc.locations();
+          untracked(() => this.onTargetMoved(locations));
+        },
+        { allowSignalWrites: true },
+      );
+      // While sharing, LocationSharingService already holds a GPS watch; reuse
+      // its fixes rather than asking the device for a second one.
+      effect(
+        () => {
+          const pos = this.sharingSvc.myPosition();
+          untracked(() => {
+            if (pos && this.navTargetUid && this.sharingSvc.sharing()) this.guidance.feed(pos);
+          });
+        },
+        { allowSignalWrites: true },
+      );
+      // Sharing toggled mid-trip. The borrowed fix stream just appeared or
+      // vanished, so hand the watch over in whichever direction is now correct.
       effect(() => {
-        this.groupsSvc.activeGroupId();
-        untracked(() => this.resetFraming());
+        const sharing = this.sharingSvc.sharing();
+        untracked(() => {
+          if (!this.navTargetUid || this.navFrozen) return;
+          this.guidance.useOwnWatch(!sharing);
+          if (!sharing) this.ensureYouDot();
+        });
       });
     });
     // Re-age pins even when no snapshots arrive.
@@ -319,6 +534,7 @@ export class TeamMapComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.guidance.destroy();
     this.sharingSvc.stopListening();
     this.groupsSvc.stopMembersListening();
     if (this.ageTimer) clearInterval(this.ageTimer);
@@ -333,6 +549,7 @@ export class TeamMapComponent implements AfterViewInit, OnDestroy {
   @HostListener('document:keydown.escape')
   onEscape(): void {
     if (this.showGroups) this.showGroups = false;
+    else if (this.sheetOpen) this.closeMemberPicker();
   }
 
   /** Drop every pin and re-frame; used when the group underneath changes. */
@@ -379,6 +596,273 @@ export class TeamMapComponent implements AfterViewInit, OnDestroy {
     this.map.fitBounds(L.latLngBounds(points), { padding: [50, 50], maxZoom: 16 });
   }
 
+  /* ----------------------------- navigation ----------------------------- */
+
+  /**
+   * Everyone the owner could actually travel to: sharing, fresh, and not
+   * themselves. Drives both the picker list and whether the button is shown.
+   *
+   * A computed, not a getter: this is bound to a template input, and a getter
+   * handing back a fresh array on every change-detection pass trips Angular's
+   * dev-mode NG0100 check.
+   */
+  readonly routableMembers = computed(() => {
+    const myUid = this.auth.currentUser?.uid;
+    const now = Date.now();
+    return this.sharingSvc
+      .locations()
+      .filter((l) => l.uid !== myUid && now - l.updatedAt.getTime() <= HIDE_MS);
+  });
+
+  /** The member currently being navigated to. */
+  get navTarget(): SharedLocation | null {
+    if (!this.navTargetUid) return null;
+    return (
+      this.sharingSvc.locations().find((l) => l.uid === this.navTargetUid) ??
+      this.navTargetLast ??
+      null
+    );
+  }
+
+  /**
+   * Tapping a pin. The handler is attached to every marker unconditionally and
+   * gates inside, because ownership arrives asynchronously and re-rendering all
+   * pins whenever it changes would be a lot of churn for a boolean.
+   */
+  private onMemberPinTap(uid: string): void {
+    if (!this.groupsSvc.isActiveGroupOwner()) return;
+    if (uid === this.auth.currentUser?.uid) return;
+    if (this.navTargetUid) return;
+    this.sheetInitialUid = uid;
+    this.sheetOpen = true;
+  }
+
+  /** Open the picker with no preselection, from the Directions button. */
+  openMemberPicker(): void {
+    this.sheetInitialUid = null;
+    this.sheetOpen = true;
+  }
+
+  closeMemberPicker(): void {
+    this.sheetOpen = false;
+    this.sheetInitialUid = null;
+  }
+
+  centerOnMember(uid: string): void {
+    const target = this.routableMembers().find((l) => l.uid === uid);
+    if (!target || !this.map) return;
+    this.closeMemberPicker();
+    this.map.setView([target.lat, target.lng], Math.max(this.map.getZoom(), 17));
+  }
+
+  recenterOnMe(): void {
+    const pos = this.sharingSvc.myPosition() ?? this.youDot?.getLatLng();
+    if (!pos || !this.map) return;
+    this.following = true;
+    this.map.setView([pos.lat, pos.lng], Math.max(this.map.getZoom(), 17));
+  }
+
+  async startNavigation(uid: string, profile: TravelProfile): Promise<void> {
+    const target = this.routableMembers().find((l) => l.uid === uid);
+    if (!target) return;
+    this.setProfile(profile);
+    this.closeMemberPicker();
+    this.navError = null;
+    this.navTargetUid = target.uid;
+    this.following = true;
+    this.framedRoute = false;
+    // Skip the engine's own watch when sharing already provides a fix stream.
+    this.guidance.start({ ownWatch: !this.sharingSvc.sharing() });
+    if (!this.sharingSvc.sharing()) this.ensureYouDot();
+    await this.fetchRoute(target, false);
+  }
+
+  setProfile(profile: TravelProfile): void {
+    if (this.travelProfile === profile) return;
+    this.travelProfile = profile;
+    localStorage.setItem(PROFILE_KEY, profile);
+    const target = this.navTarget;
+    if (!target || this.navFrozen) return;
+    // An explicit choice is worth a request immediately, floor or not.
+    this.guidance.requestReroute();
+    void this.fetchRoute(target, true);
+  }
+
+  /** Stop navigating and drop every layer it owns. */
+  endNav(message?: string): void {
+    this.guidance.stop();
+    this.navTargetUid = null;
+    this.navTargetLast = null;
+    this.navFrozen = false;
+    this.navError = message ?? null;
+    this.routeLine?.remove();
+    this.routeLine = undefined;
+    this.connector?.remove();
+    this.connector = undefined;
+    this.youDot?.remove();
+    this.youDot = undefined;
+    this.routeEnd = null;
+    this.framedRoute = false;
+    this.following = true;
+  }
+
+  /**
+   * A new position snapshot for the target. Cheap work every time: move the
+   * anchor and redraw the dashed tail. Expensive work only when the lease is up.
+   */
+  private onTargetMoved(locations: SharedLocation[]): void {
+    if (!this.navTargetUid) return;
+    const target = locations.find((l) => l.uid === this.navTargetUid);
+    if (!target || Date.now() - target.updatedAt.getTime() > HIDE_MS) {
+      this.freezeNav('They stopped sharing. The last route is still on the map.');
+      return;
+    }
+
+    this.navTargetLast = target;
+    if (this.navFrozen) {
+      // They came back. Pick the trip up rather than making the owner restart.
+      this.navFrozen = false;
+      this.navError = null;
+      this.guidance.start({ ownWatch: !this.sharingSvc.sharing() });
+      void this.fetchRoute(target, false);
+      return;
+    }
+
+    this.guidance.setDestination(target);
+    this.drawConnector(target);
+    if (this.guidance.shouldReroute(target, this.travelProfile)) {
+      void this.fetchRoute(target, true);
+    }
+  }
+
+  /** Stop progress but keep the drawn route, so the screen stays useful. */
+  private freezeNav(message: string): void {
+    if (!this.navTargetUid || this.navFrozen) return;
+    this.guidance.stop();
+    this.navFrozen = true;
+    this.navError = message;
+  }
+
+  /**
+   * Fetch and draw a route. A silent flag distinguishes a background reroute, which
+   * must never tear down a working session just because one call failed, from
+   * the first attempt, where there is nothing to fall back to.
+   */
+  private async fetchRoute(target: SharedLocation, silent: boolean): Promise<void> {
+    if (this.fetchingRoute) return;
+    this.fetchingRoute = true;
+    if (!silent) this.routing = true;
+    try {
+      const from = await this.ownPosition();
+      if (!from) {
+        if (!silent) this.endNav('Turn on location to get directions.');
+        return;
+      }
+      const route = await this.geo.getRoute(from, target, this.travelProfile);
+      if (!route) {
+        if (!silent) {
+          this.endNav(
+            this.geo.canRoute()
+              ? 'Could not find a route right now. Try Google Maps instead.'
+              : 'In-app directions are not set up yet.',
+          );
+        }
+        return;
+      }
+      this.guidance.setRoute(route, target);
+      this.drawRoute(from, route, target);
+      this.connector?.remove();
+      this.connector = undefined;
+      if (!this.sharingSvc.sharing()) this.ensureYouDot(from);
+      // Prime the labels with the fix we already have. Without this the banner
+      // reads "Getting your position…" until the OS volunteers a new fix, which
+      // for someone standing still can be the better part of a minute.
+      this.guidance.feed(from);
+    } finally {
+      this.fetchingRoute = false;
+      this.routing = false;
+    }
+  }
+
+  /** Prefer the fix the sharing watch already has over prompting for a new one. */
+  private async ownPosition(): Promise<LatLng | null> {
+    const shared = this.sharingSvc.myPosition();
+    if (shared) return shared;
+    try {
+      return await this.geo.getCurrentCoords();
+    } catch {
+      return null;
+    }
+  }
+
+  private onGuidanceFix(cur: LatLng, firstFix: boolean): void {
+    this.youDot?.setLatLng([cur.lat, cur.lng]);
+    if (!this.map) return;
+    if (firstFix) {
+      this.following = true;
+      this.map.setView([cur.lat, cur.lng], Math.max(this.map.getZoom(), 17));
+    } else if (this.following) {
+      this.map.panTo([cur.lat, cur.lng], { animate: true });
+    }
+  }
+
+  /**
+   * The owner's own dot. Only needed when they are not sharing, because their
+   * avatar pin is already on the map when they are.
+   */
+  private ensureYouDot(at?: LatLng): void {
+    if (!this.map || this.youDot) return;
+    const pos = at ?? this.sharingSvc.myPosition();
+    if (!pos) return;
+    this.youDot = L.circleMarker([pos.lat, pos.lng], {
+      radius: 7,
+      color: '#1d4ed8',
+      fillColor: '#3b82f6',
+      fillOpacity: 1,
+      weight: 3,
+    }).addTo(this.map);
+  }
+
+  private drawRoute(from: LatLng, route: RouteResult, to: LatLng): void {
+    if (!this.map) return;
+    this.routeLine?.remove();
+    // ORS snaps route ends to the nearest road; anchor the drawn line to the
+    // real start and target so it visibly joins both, as the study map does.
+    const points: [number, number][] = [
+      [from.lat, from.lng],
+      ...route.path.map((p) => [p.lat, p.lng] as [number, number]),
+      [to.lat, to.lng],
+    ];
+    this.routeLine = L.polyline(points, { color: '#059669', weight: 5, opacity: 0.8 }).addTo(
+      this.map,
+    );
+    this.routeEnd = { lat: to.lat, lng: to.lng };
+    // Frame once. A reroute yanking the camera mid-walk is worse than no framing.
+    if (!this.framedRoute) {
+      this.framedRoute = true;
+      this.map.fitBounds(this.routeLine.getBounds(), { padding: [30, 30] });
+    }
+  }
+
+  /**
+   * Dashed leg from where the route ends to where the member actually is. This
+   * is what buys the 30s reroute floor: motion stays visible for free, and the
+   * solid line never pretends to be more current than it is.
+   */
+  private drawConnector(target: SharedLocation): void {
+    this.connector?.remove();
+    this.connector = undefined;
+    if (!this.map || !this.routeEnd) return;
+    if (this.guidance.tailDistanceKm < 0.02) return;
+    this.connector = L.polyline(
+      [
+        [this.routeEnd.lat, this.routeEnd.lng],
+        [target.lat, target.lng],
+      ],
+      { color: '#6b7280', weight: 3, opacity: 0.75, dashArray: '6 8' },
+    ).addTo(this.map);
+  }
+
   /* ------------------------------ rendering ------------------------------ */
 
   private renderMarkers(locations: SharedLocation[], members: GroupMember[]): void {
@@ -420,6 +904,7 @@ export class TeamMapComponent implements AfterViewInit, OnDestroy {
       } else {
         const marker = L.marker([loc.lat, loc.lng], { icon: this.avatarIcon(loc, stale) })
           .bindTooltip(this.lastSeenLabel(loc, age), { direction: 'top', offset: [0, -22] })
+          .on('click', () => this.onMemberPinTap(loc.uid))
           .addTo(this.map);
         this.markers.set(loc.uid, marker);
       }
@@ -480,9 +965,9 @@ export class TeamMapComponent implements AfterViewInit, OnDestroy {
   private meIcon(): L.DivIcon {
     const user = this.auth.currentUser;
     const name = user?.displayName || user?.email?.split('@')[0] || 'You';
-    const initial = this.escapeHtml(name.charAt(0).toUpperCase());
+    const initial = escapeHtml(name.charAt(0).toUpperCase());
     const photo = user?.photoURL
-      ? `<img src="${this.escapeHtml(user.photoURL)}" referrerpolicy="no-referrer"
+      ? `<img src="${escapeHtml(user.photoURL)}" referrerpolicy="no-referrer"
            style="width:100%;height:100%;object-fit:cover;border-radius:50%"
            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
          <span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;
@@ -507,16 +992,16 @@ export class TeamMapComponent implements AfterViewInit, OnDestroy {
     const mins = Math.floor(ageMs / 60_000);
     const when = mins < 1 ? 'just now' : mins === 1 ? '1 min ago' : `${mins} min ago`;
     const isMe = loc.uid === this.auth.currentUser?.uid;
-    return `${this.escapeHtml(loc.displayName)}${isMe ? ' (you)' : ''} · ${when}`;
+    return `${escapeHtml(loc.displayName)}${isMe ? ' (you)' : ''} · ${when}`;
   }
 
   /** 36px avatar circle: photo when available, colored initial otherwise. */
   private avatarIcon(loc: SharedLocation, stale: boolean): L.DivIcon {
-    const initial = this.escapeHtml((loc.displayName || '?').charAt(0).toUpperCase());
-    const color = this.colorFor(loc.uid);
+    const initial = escapeHtml((loc.displayName || '?').charAt(0).toUpperCase());
+    const color = avatarColorFor(loc.uid);
     const opacity = stale ? 0.5 : 1;
     const photo = loc.photoURL
-      ? `<img src="${this.escapeHtml(loc.photoURL)}" referrerpolicy="no-referrer"
+      ? `<img src="${escapeHtml(loc.photoURL)}" referrerpolicy="no-referrer"
            style="width:100%;height:100%;object-fit:cover;border-radius:50%"
            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
          <span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;
@@ -530,7 +1015,7 @@ export class TeamMapComponent implements AfterViewInit, OnDestroy {
           box-shadow:0 1px 4px rgba(0,0,0,.35);overflow:hidden;background:#fff">${photo}</div>
         <div style="margin-top:2px;text-align:center;font-size:10px;font-weight:600;color:#111;
           text-shadow:0 0 3px #fff,0 0 3px #fff;white-space:nowrap;max-width:90px;overflow:hidden;
-          text-overflow:ellipsis">${this.escapeHtml(loc.displayName)}</div>
+          text-overflow:ellipsis">${escapeHtml(loc.displayName)}</div>
       </div>`,
       iconSize: [36, 50],
       iconAnchor: [18, 18],
@@ -545,21 +1030,5 @@ export class TeamMapComponent implements AfterViewInit, OnDestroy {
       const el = marker.getElement();
       if (el) el.classList.toggle('team-pin-nozoom', zooming);
     }
-  }
-
-  private colorFor(uid: string): string {
-    const palette = ['#059669', '#2563eb', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#db2777'];
-    let hash = 0;
-    for (let i = 0; i < uid.length; i++) hash = (hash * 31 + uid.charCodeAt(i)) | 0;
-    return palette[Math.abs(hash) % palette.length];
-  }
-
-  private escapeHtml(s: string): string {
-    return s
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
   }
 }

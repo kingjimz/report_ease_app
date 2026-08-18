@@ -13,6 +13,23 @@ binding = "AI"
 [triggers]
 crons = ["0 22 * * *", "0 10 * * *"]
 
+# Per-client rate limit for POST /route. Guards the OpenRouteService free tier
+# (~2000 requests/day, 40/min) from a single runaway client, since the endpoint
+# is unauthenticated. namespace_id is any stable number unique within this
+# Worker; it is not an account-level resource, so nothing needs creating first.
+# The Worker skips limiting entirely when this binding is absent (local dev).
+[[ratelimits]]
+name = "ROUTE_LIMITER"
+namespace_id = "1001"
+simple = { limit = 30, period = 60 }
+
+# OPTIONAL daily budget breaker for /route. Also skipped when absent. To enable:
+#   wrangler kv namespace create ROUTE_KV
+# then paste the returned id below and uncomment.
+# [[kv_namespaces]]
+# binding = "ROUTE_KV"
+# id = "<paste-id-here>"
+
 [vars]
 # Lock CORS to your app's origin in production, e.g. "https://reportease-app.web.app".
 # Leave as "*" while testing locally.

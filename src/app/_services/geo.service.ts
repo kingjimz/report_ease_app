@@ -10,6 +10,12 @@ export interface LatLng {
   lng: number;
 }
 
+/**
+ * How the route should be calculated. Matches the short keys the Worker's
+ * /route endpoint allowlists; it maps them to OpenRouteService profile ids.
+ */
+export type TravelProfile = 'drive' | 'walk';
+
 /** A single turn-by-turn maneuver along a route. */
 export interface RouteStep {
   /** Human instruction, e.g. "Turn left onto Rizal Street". */
@@ -140,16 +146,26 @@ export class GeoService {
   }
 
   /**
-   * Driving route between two points. Calls our Cloudflare Worker /route
-   * endpoint, which proxies OpenRouteService using a server-side key (so no key
-   * ships in this bundle). Returns the path + road distance + ETA for the
-   * in-app route line, or null on any failure so the map degrades to the
-   * straight-line distance.
+   * Route between two points. Calls our Cloudflare Worker /route endpoint,
+   * which proxies OpenRouteService using a server-side key (so no key ships in
+   * this bundle). Returns the path + road distance + ETA for the in-app route
+   * line, or null on any failure so the map degrades to the straight-line
+   * distance.
+   *
+   * `profile` defaults to driving so callers written before walking existed
+   * behave exactly as before, and an older deployed Worker that ignores the
+   * field still returns a driving route.
    */
-  async getRoute(from: LatLng, to: LatLng): Promise<RouteResult | null> {
+  async getRoute(
+    from: LatLng,
+    to: LatLng,
+    profile: TravelProfile = 'drive',
+  ): Promise<RouteResult | null> {
     if (!environment.routeApiUrl) return null;
     try {
-      const res: any = await firstValueFrom(this.http.post(environment.routeApiUrl, { from, to }));
+      const res: any = await firstValueFrom(
+        this.http.post(environment.routeApiUrl, { from, to, profile }),
+      );
       if (!Array.isArray(res?.path) || !res.path.length) return null;
       return {
         path: res.path as LatLng[],
@@ -196,7 +212,7 @@ export class GeoService {
     return `${km.toFixed(1)} km`;
   }
 
-  /** Format a driving time: "8 min" or "1 h 12 min". */
+  /** Format a travel time: "8 min" or "1 h 12 min". */
   formatDuration(min: number): string {
     const total = Math.round(min);
     if (total < 60) return `${total} min`;

@@ -4,7 +4,8 @@
  *
  *   POST /            -> weather "before you head out" tip
  *   POST /chat        -> app-scoped help chatbot (answers only about the app)
- *   POST /route       -> driving route to a study pin (proxies OpenRouteService)
+ *   POST /route       -> walking/driving route between two points (proxies
+ *                        OpenRouteService), edge-cached and rate limited
  *
  * Bindings / vars (see wrangler.toml):
  *   AI              (binding) - Workers AI; runs the model on Cloudflare
@@ -51,10 +52,8 @@ export default {
 
     const path = new URL(request.url).pathname;
     if (path.endsWith('/push/test')) return handlePushTest(body, env, cors);
-    if (path.endsWith('/route')) return handleRoute(body, env, cors);
-    return path.endsWith('/chat')
-      ? handleChat(body, env, cors)
-      : handleTip(body, env, cors);
+    if (path.endsWith('/route')) return handleRoute(body, env, cors, request, ctx);
+    return path.endsWith('/chat') ? handleChat(body, env, cors) : handleTip(body, env, cors);
   },
 
   /**
@@ -133,8 +132,18 @@ function studiesScheduledToday(studies, now) {
 }
 
 const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 /**
@@ -244,10 +253,7 @@ async function sendDailyReminders(env, slot) {
   for (const { name, uid, subscription } of subs) {
     try {
       if (needReports && !reportCache.has(uid)) {
-        reportCache.set(
-          uid,
-          await hasReportForMonth(projectId, token, uid, now.year, now.month),
-        );
+        reportCache.set(uid, await hasReportForMonth(projectId, token, uid, now.year, now.month));
       }
       if (needStudies && !studyCache.has(uid)) {
         const all = await listBibleStudies(projectId, token, uid);
@@ -303,28 +309,76 @@ async function handlePushTest(body, env, cors) {
 /* ------------------------------ Routing -------------------------------- */
 
 /**
- * Proxy a driving-route request to OpenRouteService using the server-side
- * ORS_API_KEY secret, and return a slimmed result the client can draw directly.
- * Body: { from: {lat,lng}, to: {lat,lng} }.
+ * Travel profiles we expose, mapped to OpenRouteService profile ids. The
+ * client sends the short key; nothing client-supplied is ever interpolated
+ * into the upstream URL.
  */
-async function handleRoute(body, env, cors) {
+const ORS_PROFILES = {
+  drive: 'driving-car',
+  walk: 'foot-walking',
+  cycle: 'cycling-regular',
+};
+
+/**
+ * Cache key coordinate precision. 3 decimal places is roughly 110 m, which is
+ * already inside the error ORS introduces by snapping route ends to the nearest
+ * road (the client redraws the first and last leg to the true points anyway).
+ * Coarse keys are the point: a team map following a moving member re-requests
+ * near-identical pairs, and this collapses them onto one upstream call.
+ */
+const CACHE_COORD_DP = 3;
+const CACHE_TTL_S = 300;
+
+/** Per-minute ceiling per client when the rate limiter binding is present. */
+const ROUTE_RATE_KEY_PREFIX = 'route';
+/** Daily ceiling, held under the ORS free tier's ~2000 so there is headroom. */
+const DAILY_ROUTE_BUDGET = 1800;
+
+/**
+ * Proxy a route request to OpenRouteService using the server-side ORS_API_KEY
+ * secret, and return a slimmed result the client can draw directly.
+ * Body: { from: {lat,lng}, to: {lat,lng}, profile?: 'drive'|'walk'|'cycle' }.
+ *
+ * `profile` is optional and defaults to driving, so clients built before it
+ * existed keep working unchanged.
+ */
+async function handleRoute(body, env, cors, request, ctx) {
   const from = body.from;
   const to = body.to;
-  if (
-    !env.ORS_API_KEY ||
-    !isCoord(from) ||
-    !isCoord(to)
-  ) {
+  if (!env.ORS_API_KEY || !isCoord(from) || !isCoord(to)) {
     return json({ error: 'Missing key or coordinates' }, 400, cors);
   }
 
+  const profileKey = ORS_PROFILES[String(body.profile || '')] ? String(body.profile) : 'drive';
+  const orsProfile = ORS_PROFILES[profileKey];
+
+  // Cache is checked before any limit: a hit costs no upstream quota, so it
+  // must never be refused.
+  const cacheKey = routeCacheKey(profileKey, from, to);
+  const cache = caches.default;
+  const cached = await cache.match(cacheKey);
+  if (cached) {
+    return withRouteHeaders(await cached.text(), 200, cors, 'hit');
+  }
+
+  const refusal = await routeBudgetRefusal(env, request, ctx);
+  if (refusal) return json({ error: refusal }, 429, cors);
+
   try {
     const url =
-      `https://api.openrouteservice.org/v2/directions/driving-car` +
+      `https://api.openrouteservice.org/v2/directions/${orsProfile}` +
       `?api_key=${env.ORS_API_KEY}` +
       `&start=${from.lng},${from.lat}&end=${to.lng},${to.lat}`;
     const res = await fetch(url);
-    if (!res.ok) return json({ error: 'Route lookup failed' }, 502, cors);
+    if (!res.ok) {
+      // Pass the upstream reason through: ORS caps foot-walking at 100 km and
+      // says so, which is far more useful than a bare failure.
+      return json(
+        { error: 'Route lookup failed', detail: (await res.text()).slice(0, 300) },
+        502,
+        cors,
+      );
+    }
 
     const data = await res.json();
     const feature = data?.features?.[0];
@@ -350,20 +404,87 @@ async function handleRoute(body, env, cors) {
       }
     }
 
-    return json(
-      {
-        // ORS gives [lon, lat]; hand the client {lat, lng}.
-        path: coords.map((c) => ({ lat: c[1], lng: c[0] })),
-        distanceKm: summary.distance / 1000,
-        durationMin: summary.duration / 60,
-        steps,
-      },
-      200,
-      cors,
-    );
+    const payload = JSON.stringify({
+      // ORS gives [lon, lat]; hand the client {lat, lng}.
+      path: coords.map((c) => ({ lat: c[1], lng: c[0] })),
+      distanceKm: summary.distance / 1000,
+      durationMin: summary.duration / 60,
+      steps,
+      profile: profileKey,
+    });
+
+    // Store without CORS headers so the cached copy stays valid if the allowed
+    // origin is later changed; they are re-added on the way out.
+    if (ctx) {
+      ctx.waitUntil(
+        cache.put(
+          cacheKey,
+          new Response(payload, {
+            headers: {
+              'Content-Type': 'application/json',
+              'Cache-Control': `max-age=${CACHE_TTL_S}`,
+            },
+          }),
+        ),
+      );
+    }
+    return withRouteHeaders(payload, 200, cors, 'miss');
   } catch (err) {
     return json({ error: 'Route lookup failed', detail: String(err) }, 502, cors);
   }
+}
+
+/** Synthetic GET key; the Cache API cannot match on a POST. */
+function routeCacheKey(profileKey, from, to) {
+  const r = (n) => Number(n).toFixed(CACHE_COORD_DP);
+  return (
+    `https://route.cache/v1/${profileKey}/` +
+    `${r(from.lat)},${r(from.lng)}/${r(to.lat)},${r(to.lng)}`
+  );
+}
+
+function withRouteHeaders(payload, status, cors, cacheState) {
+  return new Response(payload, {
+    status,
+    headers: { 'Content-Type': 'application/json', 'X-Route-Cache': cacheState, ...cors },
+  });
+}
+
+/**
+ * Two guards, both optional so the Worker still runs with neither binding
+ * configured: a per-minute limiter keyed on client IP, and a coarse daily
+ * budget in KV. Returns a message when the request should be refused, or null.
+ */
+async function routeBudgetRefusal(env, request, ctx) {
+  if (env.ROUTE_LIMITER) {
+    const ip = request?.headers.get('CF-Connecting-IP') || 'unknown';
+    try {
+      const { success } = await env.ROUTE_LIMITER.limit({
+        key: `${ROUTE_RATE_KEY_PREFIX}:${ip}`,
+      });
+      if (!success) return 'Too many route requests. Try again in a minute.';
+    } catch {
+      // A limiter failure must not take routing down with it.
+    }
+  }
+
+  if (env.ROUTE_KV) {
+    const day = new Date().toISOString().slice(0, 10);
+    const key = `route:${day}`;
+    try {
+      const used = Number((await env.ROUTE_KV.get(key)) || 0);
+      if (used >= DAILY_ROUTE_BUDGET) return 'Daily routing budget reached.';
+      // Read-modify-write is not atomic; this is a coarse breaker, and a few
+      // lost increments under concurrency do not matter at this granularity.
+      const write = env.ROUTE_KV.put(key, String(used + 1), { expirationTtl: 172800 });
+      if (ctx) ctx.waitUntil(write);
+      else await write;
+    } catch {
+      // Same reasoning: never fail a route because the counter is unavailable.
+    }
+  }
+
+  return null;
 }
 
 function isCoord(c) {
@@ -378,9 +499,7 @@ async function handleTip(body, env, cors) {
   const description = String(body.description || 'clear').slice(0, 40);
   const city = String(body.city || 'your area').slice(0, 60);
   const partOfDay = String(body.partOfDay || 'day').slice(0, 12);
-  const temperature = Number.isFinite(body.temperature)
-    ? Math.round(body.temperature)
-    : null;
+  const temperature = Number.isFinite(body.temperature) ? Math.round(body.temperature) : null;
   const forecastText = String(body.forecastText || '').slice(0, 300);
   const ministry = body.ministry || null;
 
@@ -408,7 +527,8 @@ async function handleTip(body, env, cors) {
     (isMinistryTime
       ? `You are a helpful assistant for a Jehovah's Witness using a field-ministry app. ` +
         `Write a short, warm, practical message (max 50 words) for ministry ` +
-        `over the next few hours. ` + ministryInstruction
+        `over the next few hours. ` +
+        ministryInstruction
       : `You are a helpful weather assistant. It is ${partOfDay}, outside of normal ` +
         `field-ministry hours, so do NOT mention ministry, preaching, field service, ` +
         `or going door to door. Write a short, warm, practical message (max 50 words) ` +
@@ -534,7 +654,9 @@ async function handleChat(body, env, cors) {
     .slice(-10)
     .map((m) => ({
       role: m && m.role === 'assistant' ? 'assistant' : 'user',
-      content: String((m && m.content) || '').trim().slice(0, 1000),
+      content: String((m && m.content) || '')
+        .trim()
+        .slice(0, 1000),
     }))
     .filter((m) => m.content);
 
@@ -548,12 +670,10 @@ async function handleChat(body, env, cors) {
     ? `${CHAT_SYSTEM_PROMPT}\n\n--- THE USER'S CURRENT DATA ---\n${context}`
     : CHAT_SYSTEM_PROMPT;
 
-  return runModel(
-    env,
-    cors,
-    [{ role: 'system', content: system }, ...turns],
-    { temperature: 0.3, max_tokens: 400 },
-  );
+  return runModel(env, cors, [{ role: 'system', content: system }, ...turns], {
+    temperature: 0.3,
+    max_tokens: 400,
+  });
 }
 
 /* ------------------------------- Shared -------------------------------- */
