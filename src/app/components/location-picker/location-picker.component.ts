@@ -78,7 +78,7 @@ export interface PickedLocation {
           <li
             *ngFor="let r of searchResults"
             (click)="selectResult(r)"
-            class="px-3 py-2 text-xs text-gray-700 hover:bg-emerald-50 cursor-pointer border-b border-gray-100 last:border-0"
+            class="px-3 py-2 text-xs text-gray-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer border-b border-gray-100 last:border-0"
           >
             <i class="bi bi-geo-alt text-emerald-600 mr-1"></i>{{ r.label }}
           </li>

@@ -21,6 +21,9 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { NetworkService } from './network.service';
 import { OfflineStorageService } from './offline-storage.service';
 
+/** A queued write that never got a server ack in time. See withTimeout. */
+class SyncTimeoutError extends Error {}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -65,6 +68,16 @@ export class ApiService implements OnDestroy {
   private unsubscribeGoals?: () => void;
   private unsubscribeMissionCompletions?: () => void;
   private isSyncing = false;
+  // Ops attempted per sync pass. A large queue is worked through across several
+  // passes instead of monopolising the connection (and the console) in one go.
+  private static readonly MAX_OPS_PER_SYNC = 25;
+  // A run of unsyncable ops means the batch is stale, not that the next row will
+  // fare better. Stop the pass rather than grinding through thousands of them.
+  private static readonly MAX_CONSECUTIVE_DROPS = 3;
+  // Firestore write promises resolve only on SERVER ack, which never arrives if
+  // connectivity drops mid-drain. Without a ceiling the pass hangs and
+  // isSyncing stays true for the life of the tab, blocking every later sync.
+  private static readonly OP_TIMEOUT_MS = 15000;
   // Tracks which user the live listeners are currently attached for, so a
   // repeat auth event for the same user doesn't tear them down and re-subscribe
   // (a re-subscribe can trigger a fresh full-collection sync = billed reads).
@@ -1091,58 +1104,121 @@ export class ApiService implements OnDestroy {
     }
 
     this.isSyncing = true;
-    console.log('Starting sync of queued operations...');
 
     try {
-      const operations = await this.offlineStorage.getQueuedOperations();
-      console.log(`Found ${operations.length} queued operations`);
+      // Local-only, so it is free to run every pass: evicts rows too old to
+      // replay and trims the queue to its cap before we spend a single request.
+      await this.offlineStorage
+        .pruneOperations()
+        .catch((e) => console.error('Queue prune failed:', e));
 
-      for (const operation of operations) {
+      const queued = await this.offlineStorage.getQueuedOperations();
+      if (queued.length === 0) {
+        return;
+      }
+
+      const batch = queued.slice(0, ApiService.MAX_OPS_PER_SYNC);
+      let synced = 0;
+      let dropped = 0;
+      let handedOff = 0;
+      let consecutiveDrops = 0;
+      let stoppedEarly = false;
+
+      for (const operation of batch) {
         try {
           if (operation.retries >= this.offlineStorage.getMaxRetries()) {
-            console.warn(`Operation ${operation.id} exceeded max retries, removing`);
             await this.offlineStorage.removeOperation(operation.id);
+            dropped++;
             continue;
           }
 
-          switch (operation.collection) {
-            case 'reports':
-              await this.syncReportOperation(operation);
-              break;
-            case 'bibleStudies':
-              await this.syncBibleStudyOperation(operation);
-              break;
-            case 'goals':
-              await this.syncGoalOperation(operation);
-              break;
-            case 'missionCompletions':
-              await this.syncMissionCompletionOperation(operation);
-              break;
+          await this.withTimeout(this.runQueuedOperation(operation), operation.id);
+          await this.offlineStorage.removeOperation(operation.id);
+          synced++;
+          consecutiveDrops = 0;
+        } catch (error) {
+          if (error instanceof SyncTimeoutError) {
+            // No server ack in time - almost always connectivity. The write is
+            // now a pending mutation inside Firestore's own cache, which replays
+            // it on reconnect, so keeping our copy would duplicate it. Hand it
+            // over and end the pass; retrying the rest would only pile up more
+            // timeouts.
+            await this.offlineStorage.removeOperation(operation.id);
+            handedOff++;
+            stoppedEarly = true;
+            break;
           }
 
-          await this.offlineStorage.removeOperation(operation.id);
-          console.log(`Successfully synced operation ${operation.id}`);
-        } catch (error) {
           if (this.isPermanentWriteError(error)) {
             // Retrying cannot help (the target document is gone, or the payload
             // is malformed). Drop it now instead of burning the retry budget and
             // re-logging the same failure on every later sync.
-            const code = (error as { code?: string })?.code;
-            console.warn(`Operation ${operation.id} dropped, cannot succeed (${code})`);
             await this.offlineStorage.removeOperation(operation.id);
+            dropped++;
+            consecutiveDrops++;
+            if (consecutiveDrops >= ApiService.MAX_CONSECUTIVE_DROPS) {
+              stoppedEarly = true;
+              break;
+            }
             continue;
           }
+
           console.error(`Error syncing operation ${operation.id}:`, error);
           await this.offlineStorage.incrementRetry(operation.id);
+          consecutiveDrops = 0;
         }
       }
 
-      console.log('Sync completed');
+      // One line per pass, not two per row: a stale backlog used to bury the
+      // console under thousands of drop/remove pairs.
+      if (synced || dropped || handedOff) {
+        const remaining = await this.offlineStorage.countOperations().catch(() => -1);
+        console.log(
+          `Sync: ${synced} synced, ${dropped} unsyncable, ${handedOff} left to Firestore, ` +
+            `${remaining} still queued${stoppedEarly ? ' (pass stopped early)' : ''}`,
+        );
+      }
     } catch (error) {
       console.error('Error during sync:', error);
     } finally {
       this.isSyncing = false;
     }
+  }
+
+  private runQueuedOperation(operation: any): Promise<void> {
+    switch (operation.collection) {
+      case 'reports':
+        return this.syncReportOperation(operation);
+      case 'bibleStudies':
+        return this.syncBibleStudyOperation(operation);
+      case 'goals':
+        return this.syncGoalOperation(operation);
+      case 'missionCompletions':
+        return this.syncMissionCompletionOperation(operation);
+      default:
+        return Promise.resolve();
+    }
+  }
+
+  // The underlying write is NOT cancelled on timeout - Firestore keeps it as a
+  // pending mutation and replays it itself. We only stop waiting.
+  private withTimeout<T>(op: Promise<T>, operationId: string): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      const timer = setTimeout(
+        () => reject(new SyncTimeoutError(`Operation ${operationId} timed out`)),
+        ApiService.OP_TIMEOUT_MS,
+      );
+      op.then(
+        (value) => {
+          clearTimeout(timer);
+          resolve(value);
+        },
+        (error) => {
+          clearTimeout(timer);
+          reject(error);
+        },
+      );
+    });
   }
 
   private async syncReportOperation(operation: any): Promise<void> {

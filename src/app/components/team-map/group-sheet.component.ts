@@ -64,13 +64,17 @@ const SHARING_CUTOFF_MS = 15 * 60 * 1000;
 
           <ul *ngIf="groupsSvc.groups().length > 0" class="mb-4 space-y-2">
             <li *ngFor="let group of groupsSvc.groups()">
+              <!-- Tinted rows need an explicit dark variant. styles.css flips
+                   .dark .text-gray-* to a near-white, but it only darkens
+                   bg-white/bg-gray-*, so a bg-emerald-50 row kept its light
+                   tint and the group name above the code went invisible. -->
               <div
                 class="flex items-center gap-3 p-3 rounded-lg border transition-colors"
                 [ngClass]="
                   isStale(group.id)
-                    ? 'border-amber-200 bg-amber-50'
+                    ? 'border-amber-200 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/30'
                     : group.id === groupsSvc.activeGroupId()
-                      ? 'border-emerald-300 bg-emerald-50'
+                      ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/30'
                       : 'border-gray-200 bg-white'
                 "
               >
@@ -84,14 +88,14 @@ const SHARING_CUTOFF_MS = 15 * 60 * 1000;
                   <p *ngIf="!isStale(group.id)" class="text-xs text-gray-500 font-mono">
                     {{ code(group.id) }}
                   </p>
-                  <p *ngIf="isStale(group.id)" class="text-xs text-amber-700">
+                  <p *ngIf="isStale(group.id)" class="text-xs text-amber-700 dark:text-amber-300">
                     No longer available
                   </p>
                 </button>
 
                 <i
                   *ngIf="group.id === groupsSvc.activeGroupId() && !isStale(group.id)"
-                  class="bi bi-check-circle-fill text-emerald-600 shrink-0"
+                  class="bi bi-check-circle-fill text-emerald-600 dark:text-emerald-400 shrink-0"
                   aria-label="Active group"
                 ></i>
 
